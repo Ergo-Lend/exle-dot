@@ -1,0 +1,84 @@
+package ergotools.client
+
+import config.Configs
+import org.ergoplatform.appkit.{Address, CoveringBoxes, ErgoClient, InputBox, RestApiErgoClient}
+import play.api.Logger
+import errors.connectionException
+
+import scala.collection.JavaConverters._
+import javax.inject.Singleton
+
+@Singleton
+class Client {
+  private val logger: Logger = Logger(this.getClass)
+  private var client: ErgoClient = _
+
+  def setClient(): Long = {
+    print("ni hao")
+    try {
+      client = RestApiErgoClient.create(Configs.nodeUrl, Configs.networkType, "", Configs.explorerUrl)
+      client.execute(ctx => {
+        ctx.getHeight
+      })
+    } catch {
+      case e: Throwable =>
+        logger.error(message = s"Could not set client! ${e.getMessage}.")
+        0L
+    }
+  }
+
+  def getClient: ErgoClient = {
+    client
+  }
+
+  /**
+   * @return current height of the blockchain
+   */
+  def getHeight: Long = {
+    try {
+      client.execute(ctx => ctx.getHeight)
+    } catch {
+      case _: Throwable => throw connectionException()
+    }
+  }
+
+  def getUnspentBox(address: Address): List[InputBox] = {
+    client.execute(ctx =>
+      try {
+        ctx.getUnspentBoxesFor(address, 0, 100).asScala.toList
+      } catch {
+        case _: Throwable => throw connectionException()
+      }
+    )
+  }
+
+  def getAllUnspentBox(address: Address): List[InputBox] = {
+    client.execute(ctx =>
+      try {
+        ctx.getCoveringBoxesFor(address, (1e9 * 1e8).toLong).getBoxes.asScala.toList
+      } catch {
+        case _: Throwable => throw connectionException()
+      }
+    )
+  }
+
+  def getUnspentBox2(address: Address, amount: Long): CoveringBoxes = {
+    client.execute(ctx =>
+      try {
+        ctx.getCoveringBoxesFor(address, amount)
+      } catch {
+        case _: Throwable => throw connectionException()
+      }
+    )
+  }
+
+  def getCoveringBoxesFor(address: Address, amount: Long): CoveringBoxes = {
+    client.execute(ctx =>
+      try {
+        ctx.getCoveringBoxesFor(address, amount)
+      } catch {
+        case _: Throwable => throw connectionException()
+      }
+    )
+  }
+}

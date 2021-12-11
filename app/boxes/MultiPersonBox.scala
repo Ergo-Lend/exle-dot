@@ -1,0 +1,5 @@
+package boxes
+
+class MultiPersonBox {
+
+}

@@ -1,0 +1,12 @@
+2021-12-09 22:40:28 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "create_requests" not found; SQL statement:
+insert into "create_requests" ("name","description","goal","deadline_height","repayment_height","interest_rate","state","borrower_address","payment_address","create_tx_id","time_stamp","ttl","deleted")  values (?,?,?,?,?,?,?,?,?,?,?,?,?) [42102-200]
+2021-12-09 22:41:21 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "create_requests" not found; SQL statement:
+insert into "create_requests" ("name","description","goal","deadline_height","repayment_height","interest_rate","state","borrower_address","payment_address","create_tx_id","time_stamp","ttl","deleted")  values (?,?,?,?,?,?,?,?,?,?,?,?,?) [42102-200]
+2021-12-09 22:42:36 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "create_requests" not found; SQL statement:
+insert into "create_requests" ("name","description","goal","deadline_height","repayment_height","interest_rate","state","borrower_address","payment_address","create_tx_id","time_stamp","ttl","deleted")  values (?,?,?,?,?,?,?,?,?,?,?,?,?) [42102-200]
+2021-12-09 22:42:41 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "create_requests" not found; SQL statement:
+insert into "create_requests" ("name","description","goal","deadline_height","repayment_height","interest_rate","state","borrower_address","payment_address","create_tx_id","time_stamp","ttl","deleted")  values (?,?,?,?,?,?,?,?,?,?,?,?,?) [42102-200]

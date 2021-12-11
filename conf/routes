@@ -1,0 +1,21 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# https://www.playframework.com/documentation/latest/ScalaRouting
+# ~~~~
+
+# An example controller showing a sample home page
+
+GET     /              features.lend.LendController.test
+# Lend
+GET     /api/lend/test              features.lend.LendController.test
+GET     /api/lend/:lendId           features.lend.LendController.getLendFundById(lendId: String)
+POST    /api/lend/create            features.lend.LendController.createLendFund
+
+# Explorer
+GET     /api/explorer/test              features.base.ExplorerController.test
+GET     /api/explorer/box               features.base.ExplorerController.getBoxById
+GET     /api/explorer/txs               features.base.ExplorerController.getTxsInMempoolByAddress
+GET     /api/explorer/txs/confirmation  features.base.ExplorerController.getTxConfirmation
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
