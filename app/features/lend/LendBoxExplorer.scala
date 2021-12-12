@@ -6,15 +6,19 @@ import ergotools.TxState.TxState
 import ergotools.client.Client
 import ergotools.explorer.Explorer
 import errors.{connectionException, explorerException, parseException}
+import features.lend.boxes.{LendingBox, SingleLenderLendingBox}
+import features.lend.boxes.registers.{FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import helpers.StackTrace
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{BlockchainContext, ErgoClientException, InputBox}
+import org.ergoplatform.appkit.{BlockchainContext, ErgoClientException, ErgoValue, InputBox}
 import play.api.Logger
 import io.circe.{Json => ciJson}
 import play.api.libs.json.{JsValue, Json}
 import sigmastate.serialization.ErgoTreeSerializer
+import special.collection.Coll
 
 import javax.inject.Inject
+import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
 class LendBoxExplorer @Inject()(client: Client) extends Explorer {
@@ -85,6 +89,81 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
         throw new Throwable("Something is wrong")
     }
   }
+
+  def getLendBoxes(offset: Int, limit: Int): ListBuffer[LendingBox] = {
+    try {
+      var lendBoxCount = 0
+      var lendBoxes: ListBuffer[LendingBox] = ListBuffer()
+      var explorerOffset: Int = 0
+      var boxes = getUnspentTokenBoxes(Configs.token.service, 0, 100)
+      val total = boxes.hcursor.downField("total").as[Int].getOrElse(0)
+
+      while(lendBoxCount < offset + limit && explorerOffset < total) {
+        Try {
+          // @todo kelim make this into a function
+          // Get boxes where tokenId == ErgoLendBox token
+          val items = boxes.hcursor.downField("items").as[Seq[ciJson]].getOrElse(throw new Throwable("parse error"))
+            .filter(_.hcursor.downField("assets").as[Seq[ciJson]].getOrElse(null).size > 1)
+            .filter(_.hcursor.downField("assets").as[Seq[ciJson]].getOrElse(null).head
+              .hcursor.downField("tokenId").as[String].getOrElse("") == Configs.token.service)
+
+          for (i <- items.indices) {
+            lendBoxCount += 1
+            if (lendBoxCount - 1 >= offset && lendBoxCount <= offset + limit) {
+              val id = items(i).hcursor.downField("assets").as[Seq[ciJson]].getOrElse(null)(1)
+                .hcursor.downField("tokenId").as[String].getOrElse("")
+              val value = items(i).hcursor.downField("value").as[Seq[ciJson]].getOrElse(null)(1)
+                .hcursor.downField("tokenId").as[Long].getOrElse(0)
+              val registers = items(i).hcursor.downField("additionalRegisters").as[ciJson].getOrElse(null)
+
+              // @todo kelim make this into a function
+              // JSON to Boxes class
+              val r4: Array[Long] = ErgoValue.fromHex(registers.hcursor.downField("R4").as[ciJson].getOrElse(null)
+                .hcursor.downField("serializedValue").as[String].getOrElse(""))
+                .getValue.asInstanceOf[Coll[Long]].toArray
+              val r5: Array[Coll[Byte]] = ErgoValue.fromHex(registers.hcursor.downField("R5").as[ciJson].getOrElse(null)
+                .hcursor.downField("serializedValue").as[String].getOrElse(""))
+                .getValue.asInstanceOf[Coll[Coll[Byte]]].toArray
+              val r6: Array[Byte] = ErgoValue.fromHex(registers.hcursor.downField("R6").as[ciJson].getOrElse(null)
+                .hcursor.downField("serializedValue").as[String].getOrElse(""))
+                .getValue.asInstanceOf[Coll[Byte]].toArray
+
+              val fundingInfoRegister = new FundingInfoRegister(r4)
+              val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(r5)
+              val lenderRegister = new SingleLenderRegister(r6)
+              val lendBox = new SingleLenderLendingBox(
+                value,
+                fundingInfoRegister,
+                lendingProjectDetailsRegister,
+                lenderRegister)
+
+              lendBoxes += lendBox
+            }
+          }
+        }
+
+        explorerOffset += 100
+        boxes = getUnspentTokenBoxes(Configs.token.service, explorerOffset, 100)
+      }
+
+      // @todo kelim do we return total boxes?
+      var totalBoxes = lendBoxCount - offset
+      if (lendBoxCount > limit + offset) totalBoxes = limit
+      else if (totalBoxes < 0) totalBoxes = 0
+
+      lendBoxes
+    } catch {
+      case e: connectionException => {
+        logger.warn(e.getMessage)
+        throw e
+      }
+      case e: Throwable => {
+        logger.error(StackTrace.getStackTraceStr(e))
+        throw new Throwable("Error occurred during responding the request")
+      }
+    }
+  }
+
 
   def isBoxInMemPool(box: InputBox) : Boolean = {
     try {

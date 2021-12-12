@@ -2,7 +2,8 @@ package features.lend
 
 package object contracts {
   /**
-   * Funding Box
+   * Funding Box V1
+   * One Lender only
    *
    * For this script, we have to consider a few scenarios.
    * 1. Still Funding
@@ -17,11 +18,12 @@ package object contracts {
    *
    * If its still funding, it can accept more funding and have an increase in value.
    */
-  lazy val lendingBoxScript: String =
+  lazy val singleLenderLendingBoxScript: String =
     s"""{
        |  // first output is the funding box always
        |  val lendingBoxFundAccounting = SELF.R4[Coll[Long]]
        |  val lendingBoxFundDetails = SELF.R5[Coll[Coll[Byte]]]
+       |
        |  val fundingGoal = lendingBoxFundAccounting.get(0)
        |  val deadlineHeight = lendingBoxFundAccounting.get(1)
        |  val interestRate = lendingBoxFundAccounting.get(2)
@@ -169,7 +171,7 @@ package object contracts {
        |}
        |""".stripMargin
 
-  lazy val repaymentBoxScript: String =
+  lazy val singleLenderRepaymentBoxScript: String =
     s"""{
        |  // there are 2 scenarios
        |  // fund or complete

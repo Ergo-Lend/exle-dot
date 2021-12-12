@@ -6,7 +6,7 @@ import ergotools.client.Client
 import errors.{connectionException, failedTxException, paymentNotCoveredException, skipException}
 import features.lend.LendBoxExplorer
 import features.lend.dao.{CreateLendReq, CreateLendReqDAO}
-import features.lend.txs.TxFactory
+import features.lend.txs.{SingleLenderTxFactory}
 import helpers.{StackTrace, Time}
 import org.ergoplatform.appkit.{Address, CoveringBoxes}
 import play.api.Logger
@@ -76,9 +76,11 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
   def createLendTx(req: CreateLendReq): Unit = {
     client.getClient.execute(ctx => {
       try {
-        val lendInitiationTx = TxFactory.createLendInitiationTx(req)
+        val serviceBox = lendBoxExplorer.getServiceBox
+        val lendInitiationTx = SingleLenderTxFactory.createLendInitiationTx(req)
         val paymentBoxList = getPaymentBox(req)
-        val inputBoxList = List() ++ paymentBoxList.getBoxes.asScala
+        // Inputs(0) serviceBox, Inputs(1) paymentBox
+        val inputBoxList = List(serviceBox) ++ paymentBoxList.getBoxes.asScala
 
         val signedTx = lendInitiationTx.runTx(inputBoxList, ctx)
         var createTxId = ctx.sendTransaction(signedTx)

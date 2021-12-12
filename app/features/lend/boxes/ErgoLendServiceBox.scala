@@ -1,11 +1,14 @@
-package features.lend
+package features.lend.boxes
 
 import config.Configs
-import features.lend.boxes.Box
 import features.lend.contracts.lendServiceBoxScript
 import org.ergoplatform.appkit.{BlockchainContext, ConstantsBuilder, ErgoContract, OutBox}
 
-class ServiceBox extends Box {
+/**
+ * Service box
+ * Contains token
+ */
+class ErgoLendServiceBox extends Box {
   def getOutputBox(ctx: BlockchainContext): OutBox = {
     val txB = ctx.newTxBuilder()
     val serviceBoxContract = getServiceBoxContract(ctx: BlockchainContext)
@@ -19,7 +22,7 @@ class ServiceBox extends Box {
 
   def getServiceBoxContract(ctx: BlockchainContext): ErgoContract = {
     ctx.compileContract(ConstantsBuilder.create()
-    .item("fee", Configs.fee)
-    .build(), lendServiceBoxScript)
+      .item("fee", Configs.fee)
+      .build(), lendServiceBoxScript)
   }
 }

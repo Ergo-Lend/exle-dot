@@ -1,14 +1,11 @@
 package features.lend.txs
 
 import config.Configs
-import ergotools.client.Client
 import errors.proveException
-import features.lend.ServiceBox
-import features.lend.boxes.{Box, LendingBox}
-import features.lend.boxes.registers.{FundingInfoRegister, LendingProjectDetailsRegister}
+import features.lend.boxes.{Box, LendingBox, SingleLenderLendingBox}
+import features.lend.boxes.registers.{FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import features.lend.dao.CreateLendReq
-import helpers.StackTrace
-import org.ergoplatform.appkit.{Address, BlockchainContext, InputBox, SignedTransaction}
+import org.ergoplatform.appkit.{BlockchainContext, InputBox, SignedTransaction}
 
 import scala.collection.JavaConverters._
 
@@ -41,7 +38,7 @@ class LendInitiationTx(
   override def runTx(inputBoxes: Seq[InputBox], ctx: BlockchainContext): SignedTransaction = {
     val txB = ctx.newTxBuilder()
     val prover = ctx.newProverBuilder().build()
-    val outputLendingBox = lendingBox.getOutputBox(ctx)
+    val outputLendingBox = lendingBox.getInitiationOutputBox(ctx, txB)
     // @todo enable service box
 //    val outputServiceBox = serviceBox.getOutputBox(ctx)
 
@@ -66,11 +63,14 @@ class LendInitiationTx(
   }
 }
 
-object TxFactory {
+object SingleLenderTxFactory {
   def createLendInitiationTx(req: CreateLendReq): LendInitiationTx = {
     val fundingInfoRegister = new FundingInfoRegister(req.goal, req.deadlineHeight, req.interestRatePercent, req.repaymentHeight)
     val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(req.name, req.description, req.borrowerAddress)
-    val lendingBox = new LendingBox(fundingInfoRegister, lendingProjectDetailsRegister)
+    val initiationValue = 0
+    val emptyLenderRegister = SingleLenderRegister.emptyRegister
+
+    val lendingBox = new SingleLenderLendingBox(initiationValue, fundingInfoRegister, lendingProjectDetailsRegister, emptyLenderRegister)
     val lendInitiationTx = new LendInitiationTx(lendingBox)
 
     lendInitiationTx

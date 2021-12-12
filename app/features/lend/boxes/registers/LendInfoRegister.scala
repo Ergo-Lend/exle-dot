@@ -28,7 +28,7 @@ case class FundingInfoRegister(fundingGoal: Long,
     repaymentHeightLength = registerData(3))
 
   def toRegister: ErgoValue[Coll[Long]] = {
-    val register: Array[Long] = new Array[Long](5)
+    val register: Array[Long] = new Array[Long](4)
 
     register(0) = fundingGoal
     register(1) = deadlineHeight
@@ -42,23 +42,20 @@ case class FundingInfoRegister(fundingGoal: Long,
 case class LendingProjectDetailsRegister(projectName: String,
                                     description: String,
                                     borrowersPubKey: String)  extends CollByteRegister {
+
+  def this(registerData: Array[Coll[Byte]]) = this(
+    projectName = collByteToString(registerData(0)),
+    description = collByteToString(registerData(1)),
+    borrowersPubKey = collByteToString(registerData(2))
+  )
+
   def toRegister: ErgoValue[Coll[Coll[Byte]]] = {
-    val register: Array[Array[Byte]] = new Array[Array[Byte]](4)
+    val register: Array[Array[Byte]] = new Array[Array[Byte]](3)
 
     register(0) = stringToCollByte(projectName)
     register(1) = stringToCollByte(description)
     register(2) = stringToCollByte(borrowersPubKey)
 
     ergoValueOf(register)
-  }
-}
-
-object LendingProjectDetailsRegister extends CollByteRegister {
-  def apply(registerData: Array[Coll[Byte]]): LendingProjectDetailsRegister = {
-    new LendingProjectDetailsRegister(
-      projectName =  collByteToString(registerData(0)),
-      description = collByteToString(registerData(1)),
-      borrowersPubKey = collByteToString(registerData(2)),
-    )
   }
 }
