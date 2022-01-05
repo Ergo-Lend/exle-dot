@@ -72,7 +72,7 @@ object Spender {
   }
 
   def main(args: Array[String]): Unit = {
-    val txJson: String = spend("fh5jFstNDPtKMdXVbqWzR1yCow7JPbqUJi4reKeVQ7SjZL1d9S23894hwkwxXaJ9xHT5MpMd3RYnZWr7GJ4DR8TAcwpypG86pd6nxj7jQnBu6M5WjCVzeXLJdhu6RnnuqsU3pAgbrSuutqfabTC3TfRthfXbVbHSCujTSJ6ck3BKn4xHqBXhbPZ4KwnjZ2zTbVr3EULXj5ahqusv9ow7VxKcHuP3WuX5XKULFE51pkazT8nzh5VUUSaeb9H29rqUfvnBZE91YoQADjjcY9pjBbRSLnPFG2SKivgmokXSq9c4PLveX28DS9S1RAfAzd4byRza3wQsSn9ojxHc7G8297v9xLhfZmoRL5LRQbMBiUtsSsdunZucFAaeDATTAGE6x8uaPB9UDtkBaBaie76fWFy81UBAmfF4CeSdWjVts93u8YpPyMS7jKExq4DEWJGuLB1wjYYQ1AXn1mkEVWB1uJPkoUMsaVUkfNx184a", "ergo_spend.json")
+    val txJson: String = spend("", "")
     System.out.println(txJson)
   }
 }

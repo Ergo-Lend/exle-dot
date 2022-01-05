@@ -1,6 +1,6 @@
 package features.lend.boxes.registers
 
-import boxes.registers.RegisterTypes.{CollByteRegister, LongRegister}
+import boxes.registers.RegisterTypes.{CollByte, CollByteRegister, LongRegister}
 import org.ergoplatform.appkit.ErgoValue
 import special.collection.Coll
 
@@ -44,9 +44,9 @@ case class LendingProjectDetailsRegister(projectName: String,
                                     borrowersPubKey: String)  extends CollByteRegister {
 
   def this(registerData: Array[Coll[Byte]]) = this(
-    projectName = collByteToString(registerData(0)),
-    description = collByteToString(registerData(1)),
-    borrowersPubKey = collByteToString(registerData(2))
+    projectName = CollByte.collByteToString(registerData(0)),
+    description = CollByte.collByteToString(registerData(1)),
+    borrowersPubKey = CollByte.collByteToString(registerData(2))
   )
 
   def toRegister: ErgoValue[Coll[Coll[Byte]]] = {

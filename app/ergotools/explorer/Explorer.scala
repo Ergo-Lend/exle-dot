@@ -10,6 +10,8 @@ import scala.util.{Failure, Success, Try}
 import scalaj.http.{BaseHttp, HttpConstants}
 
 trait Explorer {
+  def checkTransaction(value: Any) = ???
+
   private val baseUrlV0 = s"${Configs.explorerUrl}/api/v0"
   private val baseUrlV1 = s"${Configs.explorerUrl}/api/v1"
   private val tx = s"$baseUrlV1/transactions"

@@ -1,5 +1,6 @@
 logs
 target
+ergo_config.json
 /.bsp
 /.idea
 /.idea_modules

@@ -9,7 +9,10 @@ GET     /              features.lend.LendController.test
 # Lend
 GET     /api/lend/test              features.lend.LendController.test
 GET     /api/lend/:lendId           features.lend.LendController.getLendFundById(lendId: String)
+GET     /api/lend                   features.lend.LendController.getLendFunds(offset: Int?=0, limit: Int?=100)
 POST    /api/lend/create            features.lend.LendController.createLendFund
+
+GET     /api/repayment         features.lend.LendController.getRepaymentFunds(offset: Int?=0, limit: Int?=100)
 
 # Explorer
 GET     /api/explorer/test              features.base.ExplorerController.test

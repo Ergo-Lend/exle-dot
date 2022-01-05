@@ -3,19 +3,21 @@ package features.lend.handlers
 import config.Configs
 import ergotools.TxState
 import ergotools.client.Client
+import ergotools.explorer.Explorer
 import errors.{connectionException, failedTxException, paymentNotCoveredException, skipException}
 import features.lend.LendBoxExplorer
-import features.lend.dao.{CreateLendReq, CreateLendReqDAO}
-import features.lend.txs.{SingleLenderTxFactory}
+import features.lend.dao.{CreateLendReq, CreateLendReqDAO, DAO, ProxyReq}
+import features.lend.txs.singleLender.SingleLenderTxFactory
 import helpers.{StackTrace, Time}
-import org.ergoplatform.appkit.{Address, CoveringBoxes}
+import org.ergoplatform.appkit.{Address, CoveringBoxes, InputBox}
 import play.api.Logger
 
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplorer, createLendReqDAO: CreateLendReqDAO) {
+class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplorer, createLendReqDAO: CreateLendReqDAO)
+  extends ProxyContractTxHandler(client, lendBoxExplorer, createLendReqDAO) {
   private val logger: Logger = Logger(this.getClass)
 
   def handleReqs(): Unit = {
@@ -37,6 +39,7 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
     )
   }
 
+  //@todo finish removals
   def handleRemoval(req: CreateLendReq): Unit = {
     val paymentAddress = Address.create(req.paymentAddress)
     val unSpentPaymentBoxes = client.getAllUnspentBox(paymentAddress)
@@ -76,13 +79,14 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
   def createLendTx(req: CreateLendReq): Unit = {
     client.getClient.execute(ctx => {
       try {
-        val serviceBox = lendBoxExplorer.getServiceBox
-        val lendInitiationTx = SingleLenderTxFactory.createLendInitiationTx(req)
-        val paymentBoxList = getPaymentBox(req)
-        // Inputs(0) serviceBox, Inputs(1) paymentBox
-        val inputBoxList = List(serviceBox) ++ paymentBoxList.getBoxes.asScala
+        val lendServiceBoxInputBox: InputBox = lendBoxExplorer.getServiceBox
+        val paymentBoxList = getPaymentBoxes(req).getBoxes
 
-        val signedTx = lendInitiationTx.runTx(inputBoxList, ctx)
+        val lendInitiationTx = SingleLenderTxFactory.createLendInitiationTx(lendServiceBoxInputBox, paymentBoxList.get(0))
+        // Run the tx
+        val signedTx = lendInitiationTx.runTx(ctx)
+
+        // Sign it
         var createTxId = ctx.sendTransaction(signedTx)
 
         if (createTxId == null) throw failedTxException(s"Creation tx sending failed for ${req.id}")
@@ -95,13 +99,15 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
       }
     })
   }
+}
 
-  def getPaymentBox(req: CreateLendReq): CoveringBoxes = {
+class ProxyContractTxHandler @Inject()(client: Client, explorer: Explorer, dao: DAO) {
+  def getPaymentBoxes(req: ProxyReq): CoveringBoxes = {
     val paymentAddress = Address.create(req.paymentAddress)
     val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, Configs.fee * 4)
 
     if (!paymentBoxList.isCovered)
-      throw paymentNotCoveredException(s"Creation payment for request ${req.id} not covered the fee, request state id ${req.state} and request tx is ${req.createTxId}")
+      throw paymentNotCoveredException(s"Payment for request ${req.id} not covered the fee, request state id ${req.state} and request tx is ${req.txId}")
 
     paymentBoxList
   }
@@ -112,15 +118,15 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
    * @param req
    * @return
    */
-  def isReady(req: CreateLendReq): Boolean = {
+  def isReady(req: ProxyReq): Boolean = {
     val paymentAddress = Address.create(req.paymentAddress)
     val coveringList = client.getCoveringBoxesFor(paymentAddress, 4 * Configs.fee)
     if (coveringList.isCovered) {
-      createLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
+      dao.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
     } else {
-      val numberTxInMempool = lendBoxExplorer.getNumberTxInMempoolByAddress(req.paymentAddress)
+      val numberTxInMempool = explorer.getNumberTxInMempoolByAddress(req.paymentAddress)
       if (numberTxInMempool > 0) {
-        createLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
+        dao.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
       }
     }
 
@@ -128,13 +134,12 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
     if (reqTxState == TxState.Unsuccessful) {
       if (coveringList.isCovered) return true
     } else if (reqTxState == TxState.Mined) {
-      val txState = lendBoxExplorer.checkTransaction(req.createTxId.getOrElse(""))
+      val txState = explorer.checkTransaction(req.txId.getOrElse(""))
       if (txState == TxState.Mined)
-        createLendReqDAO.updateStateById(req.id, TxState.Mempooled)
+        dao.updateStateById(req.id, TxState.Mempooled)
       else if (txState == TxState.Unsuccessful) return true
     }
 
     false
   }
 }
-

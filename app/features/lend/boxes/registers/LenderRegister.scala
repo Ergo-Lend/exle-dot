@@ -1,8 +1,6 @@
 package features.lend.boxes.registers
 
-import boxes.registers.RegisterTypes.CollByteRegister
-import org.ergoplatform.appkit.ErgoValue
-import special.collection.Coll
+import boxes.registers.RegisterTypes.{CollByte, StringRegister}
 
 trait LenderRegister
 
@@ -10,16 +8,16 @@ trait LenderRegister
  * SingleLenderRegister
  * @param lendersAddress Pubkey of Lender
  */
-class SingleLenderRegister(lendersAddress: String) extends CollByteRegister with LenderRegister {
+class SingleLenderRegister(val lendersAddress: String) extends StringRegister(lendersAddress) with LenderRegister {
   def this(registerData: Array[Byte]) = this(
-    lendersAddress = arrayByteToString(registerData)
+    lendersAddress = CollByte.arrayByteToString(registerData)
   )
+}
 
-  def toRegister: ErgoValue[Coll[Byte]] = {
-    val register = stringToCollByte(lendersAddress)
-
-    ergoValueOf(register)
-  }
+class SingleAddressRegister(val address: String) extends StringRegister(address) {
+  def this(registerData: Array[Byte]) = this(
+    address = CollByte.arrayByteToString(registerData)
+  )
 }
 
 object SingleLenderRegister {

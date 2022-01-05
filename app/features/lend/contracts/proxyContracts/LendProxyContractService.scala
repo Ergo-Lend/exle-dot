@@ -1,6 +1,7 @@
 package features.lend.contracts.proxyContracts
 
 import config.Configs
+import ergotools.LendServiceTokens
 import ergotools.client.Client
 import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId}
 
@@ -17,6 +18,9 @@ class LendProxyContractService @Inject()(client: Client) {
                                  interestRate: Long,
                                  repaymentHeightLength: Long): String = {
     client.getClient.execute((ctx: BlockchainContext) => {
+      val nftString = LendServiceTokens
+      val serviceNftToken = ErgoId.create(LendServiceTokens.nftString).getBytes
+      val boxToken = ErgoId.create(LendServiceTokens.lendTokenString).getBytes
       val createLendingBoxProxy = ctx.compileContract(ConstantsBuilder.create()
         .item("borrowerPk", Address.create(pk).getErgoAddress.script.bytes)
         .item("minFee", Configs.fee)
@@ -25,9 +29,9 @@ class LendProxyContractService @Inject()(client: Client) {
         .item("deadlineHeight", deadlineHeight)
         .item("interestRate", interestRate)
         .item("repaymentHeightLength", repaymentHeightLength)
-        .item("lendServiceNFT", ErgoId.create(Configs.token.nft).getBytes)
-        .item("lendServiceToken", ErgoId.create(Configs.token.service).getBytes)
-        .build(), createLendingBoxProxyScript)
+        .item("lendServiceNFT", serviceNftToken)
+        .item("lendServiceToken", boxToken)
+        .build(), createSingleLenderLendingBoxProxyScript)
 
       encodeAddress(createLendingBoxProxy)
     })
@@ -42,7 +46,7 @@ class LendProxyContractService @Inject()(client: Client) {
           .item("lendAmountPlusFee", lendAmountPlusFee)
           .item("minFee", Configs.fee)
           .item("deadlineHeight", deadlineHeight)
-          .build(), fundLendingBoxProxyScript)
+          .build(), fundSingleLenderLendingBoxProxyScript)
 
       encodeAddress(fundLendingBoxProxy)
     })
@@ -56,7 +60,7 @@ class LendProxyContractService @Inject()(client: Client) {
           .item("lenderAddress", Address.create(pk).getErgoAddress.script.bytes)
           .item("lendAmountPlusFee", repaymentAmount)
           .item("minFee", Configs.fee)
-          .build(), repayLoanProxyScript)
+          .build(), repaySingleLenderLoanProxyScript)
 
       encodeAddress(repaymentBoxProxy)
     })

@@ -40,7 +40,7 @@ trait CreateLendReqComponent {
 @Singleton
 class CreateLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) (implicit executionContext: ExecutionContext)
   extends CreateLendReqComponent
-    with HasDatabaseConfigProvider[JdbcProfile] {
+    with HasDatabaseConfigProvider[JdbcProfile] with DAO {
 
   import profile.api._
 
@@ -99,4 +99,9 @@ class CreateLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigP
     val updateAction = q.update(ttl)
     Await.result(db.run(updateAction), Duration.Inf)
   }
+}
+
+trait DAO {
+  def updateTTL(id: Long, ttl: Long): Int
+  def updateStateById(id: Long, state: TxState): Future[Int]
 }

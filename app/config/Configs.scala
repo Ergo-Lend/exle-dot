@@ -29,9 +29,10 @@ object Configs extends ConfigHelper {
   lazy val recaptchaKey: String = readKey("recaptcha.key", default = "not-set")
   lazy val recaptchaPubKey: String = readKey("recaptcha.pubKey", default = "not-set")
 
-  object token {
+  object lendServiceTokens {
     lazy val nft: String = readKey("lend.token.nft")
-    lazy val service: String = readKey("lend.token.service")
+    lazy val lendToken: String = readKey("lend.token.lendToken")
+    lazy val repaymentToken: String = readKey("lend.token.repaymentToken")
     lazy val oracle: String = readKey("lend.token.oracle")
   }
 }
