@@ -1,7 +1,7 @@
 package config
 
 import org.ergoplatform.ErgoAddressEncoder
-import org.ergoplatform.appkit.{Address, NetworkType}
+import org.ergoplatform.appkit.{Address, NetworkType, Parameters}
 
 object Configs extends ConfigHelper {
   lazy val nodeUrl: String = readKey("node.url").replaceAll("/$", "")
@@ -13,7 +13,7 @@ object Configs extends ConfigHelper {
   lazy val explorerUrl: String = readKey("explorer.url").replaceAll("/$", "")
   lazy val explorerFront: String = readKey("explorer.front").replaceAll("/$", "")
 
-  lazy val fee: Long = readKey("fee").toLong
+  lazy val fee: Long = Parameters.MinFee
   lazy val minBoxErg: Long = readKey("box.min").toLong
   lazy val infBoxVal: Long = readKey("box.infBoxVal").toLong
   lazy val serviceOwner: Address = Address.create(readKey("service.owner"))
@@ -33,6 +33,5 @@ object Configs extends ConfigHelper {
     lazy val nft: String = readKey("lend.token.nft")
     lazy val lendToken: String = readKey("lend.token.lendToken")
     lazy val repaymentToken: String = readKey("lend.token.repaymentToken")
-    lazy val oracle: String = readKey("lend.token.oracle")
   }
 }

@@ -7,12 +7,15 @@
 
 GET     /              features.lend.LendController.test
 # Lend
-GET     /api/lend/test              features.lend.LendController.test
-GET     /api/lend/:lendId           features.lend.LendController.getLendFundById(lendId: String)
-GET     /api/lend                   features.lend.LendController.getLendFunds(offset: Int?=0, limit: Int?=100)
-POST    /api/lend/create            features.lend.LendController.createLendFund
+GET     /api/lend/test                  features.lend.LendController.test
+GET     /api/lend/:lendId               features.lend.LendController.getLendBoxById(lendId: String)
+GET     /api/lend                       features.lend.LendController.getLendBoxes(offset: Int?=0, limit: Int?=100)
+POST    /api/lend/create                features.lend.LendController.createLendBox
+POST    /api/lend/fund                  features.lend.LendController.fundLendBox
 
-GET     /api/repayment         features.lend.LendController.getRepaymentFunds(offset: Int?=0, limit: Int?=100)
+GET     /api/repayment/:repaymentId     features.lend.LendController.getRepaymentBoxById(repaymentId: String)
+GET     /api/repayment                  features.lend.LendController.getRepaymentBoxes(offset: Int?=0, limit: Int?=100)
+POST    /api/repayment/fund             features.lend.LendController.fundRepaymentBox
 
 # Explorer
 GET     /api/explorer/test              features.base.ExplorerController.test

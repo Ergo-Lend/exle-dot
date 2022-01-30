@@ -3,9 +3,11 @@ package features.lend.boxes
 import boxes.registers.RegisterTypes.{CollByteRegister, LongRegister, NumberRegister, StringRegister}
 import config.Configs
 import ergotools.LendServiceTokens
+import features.lend.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import features.lend.contracts.singleLenderLendServiceBoxScript
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoContracts, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransaction, UnsignedTransactionBuilder}
+import special.collection.Coll
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
@@ -26,12 +28,21 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
  *
  * R4: ErgoLendPubKey
  * R5: ProfitSharing %
+ *
+ * R4: Coll[Long] -> Creation height, Version
+ * R5: Coll[Coll[Byte]] -> ErgoLend, SingleLender allows one lender to trade
+ * R6: Coll[Byte] -> SingleLenderServiceBox
+ * R7: Coll[Byte] -> OwnerAddress
+ * R8: Coll[Long] -> ProfitSharing Percentage
  */
 class LendServiceBox(val value: Long,
                      val lendTokenAmount: Long,
                      val repaymentTokenAmount: Long,
-                     val ergoLendPubKey: StringRegister,
-                     override val profitSharingPercentage: NumberRegister)
+                     val creationInfo: CreationInfoRegister,
+                     val serviceInfo: ServiceBoxInfoRegister,
+                     val boxInfo: StringRegister,
+                     val ergoLendPubKey: SingleAddressRegister,
+                     override val profitSharingPercentage: ProfitSharingRegister)
   extends ServiceBox(ergoLendPubKey, profitSharingPercentage)
 {
   override val nft: ErgoId = LendServiceTokens.nft
@@ -43,42 +54,15 @@ class LendServiceBox(val value: Long,
     value = inputBox.getValue,
     lendTokenAmount = inputBox.getTokens.get(1).getValue,
     repaymentTokenAmount = inputBox.getTokens.get(2).getValue,
-    ergoLendPubKey = new StringRegister(inputBox.getRegisters.get(0).getValue.asInstanceOf[String]),
-    profitSharingPercentage = new NumberRegister(inputBox.getRegisters.get(1).getValue.asInstanceOf[Long])
+    creationInfo = new CreationInfoRegister(inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Long]].toArray),
+    serviceInfo = new ServiceBoxInfoRegister(inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Coll[Byte]]].toArray),
+    boxInfo = new StringRegister(inputBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]]),
+    ergoLendPubKey = new SingleAddressRegister(inputBox.getRegisters.get(3).getValue.asInstanceOf[Coll[Byte]].toArray),
+    profitSharingPercentage = new ProfitSharingRegister(inputBox.getRegisters.get(4).getValue.asInstanceOf[Coll[Long]].toArray)
   )
 
-  def generateServiceBoxTx(
-                          serviceNFTBox: InputBox,
-                          tokensBox: InputBox,
-                          ctx: BlockchainContext,
-                          txB: UnsignedTransactionBuilder
-                          ): UnsignedTransaction = {
-    val serviceBox = txB.outBoxBuilder()
-      .value(value)
-      .tokens(
-        serviceNFTBox.getTokens.get(0),
-        tokensBox.getTokens.get(0))
-      .registers(
-        ergoLendPubKey.toRegister,
-        profitSharingPercentage.toRegister
-      )
-      .contract(getServiceBoxContract(ctx))
-      .build()
-
-    val boxesToSpend = Seq(serviceNFTBox, tokensBox)
-    val ergoLendAddress = Address.create(ergoLendPubKey.value)
-    val tx = txB
-      .boxesToSpend(boxesToSpend.asJava)
-      .outputs(serviceBox)
-      .fee(Parameters.MinFee)
-      .sendChangeTo(ergoLendAddress.getErgoAddress)
-      .build()
-
-    tx
-  }
-
   override def getPubKeyAddress: ErgoAddress = {
-    Address.create(ergoLendPubKey.value).getErgoAddress
+    Address.create(ergoLendPubKey.address).getErgoAddress
   }
 
   override def getOutputServiceBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
@@ -96,6 +80,9 @@ class LendServiceBox(val value: Long,
         repaymentServiceTokens
       )
       .registers(
+        creationInfo.toRegister,
+        serviceInfo.toRegister,
+        boxInfo.toRegister,
         ergoLendPubKey.toRegister,
         profitSharingPercentage.toRegister
       )
@@ -111,11 +98,13 @@ class LendServiceBox(val value: Long,
    * @param txB
    * @return
    */
-  def getOwnerProfitSharingBox(amountForProfitSplit: Long, txB: UnsignedTransactionBuilder): OutBox = {
-    val profitSharePercentage = amountForProfitSplit * (profitSharingPercentage.value / 100)
-    val ownerProfitSharingBox = new FundsToAddressBox(profitSharePercentage, serviceOwner.getErgoAddress)
+  def getOwnerProfitSharingBox(amountForProfitSplit: Long,
+                               ctx: BlockchainContext,
+                               txB: UnsignedTransactionBuilder): OutBox = {
+    val profitSharePercentage = amountForProfitSplit * (profitSharingPercentage.profitSharingPercentage / 100)
+    val ownerProfitSharingBox = new FundsToAddressBox(profitSharePercentage, ergoLendPubKey.address)
 
-    ownerProfitSharingBox.getOutputBox(txB)
+    ownerProfitSharingBox.getOutputBox(ctx, txB)
   }
 
   def negateLendToken(): LendServiceBox = {
@@ -123,6 +112,9 @@ class LendServiceBox(val value: Long,
       value = value,
       lendTokenAmount = lendTokenAmount - 1,
       repaymentTokenAmount = repaymentTokenAmount,
+      creationInfo = creationInfo,
+      serviceInfo = serviceInfo,
+      boxInfo = boxInfo,
       ergoLendPubKey = ergoLendPubKey,
       profitSharingPercentage = profitSharingPercentage)
   }
@@ -132,6 +124,9 @@ class LendServiceBox(val value: Long,
       value = value,
       lendTokenAmount = lendTokenAmount + 1,
       repaymentTokenAmount = repaymentTokenAmount,
+      creationInfo = creationInfo,
+      serviceInfo = serviceInfo,
+      boxInfo = boxInfo,
       ergoLendPubKey = ergoLendPubKey,
       profitSharingPercentage = profitSharingPercentage)
   }
@@ -141,6 +136,9 @@ class LendServiceBox(val value: Long,
       value = value,
       lendTokenAmount = lendTokenAmount,
       repaymentTokenAmount = repaymentTokenAmount - 1,
+      creationInfo = creationInfo,
+      serviceInfo = serviceInfo,
+      boxInfo = boxInfo,
       ergoLendPubKey = ergoLendPubKey,
       profitSharingPercentage = profitSharingPercentage)
   }
@@ -150,6 +148,9 @@ class LendServiceBox(val value: Long,
       value = value,
       lendTokenAmount = lendTokenAmount,
       repaymentTokenAmount = repaymentTokenAmount + 1,
+      creationInfo = creationInfo,
+      serviceInfo = serviceInfo,
+      boxInfo = boxInfo,
       ergoLendPubKey = ergoLendPubKey,
       profitSharingPercentage = profitSharingPercentage)
   }
@@ -159,6 +160,9 @@ class LendServiceBox(val value: Long,
       value = value,
       lendTokenAmount = lendTokenAmount + 1,
       repaymentTokenAmount = repaymentTokenAmount - 1,
+      creationInfo = creationInfo,
+      serviceInfo = serviceInfo,
+      boxInfo = boxInfo,
       ergoLendPubKey = ergoLendPubKey,
       profitSharingPercentage = profitSharingPercentage)
   }
@@ -172,27 +176,27 @@ class LendServiceBox(val value: Long,
    */
   def consumeRepaymentBox(repaymentBox: RepaymentBox, ctx: BlockchainContext, txB: UnsignedTransactionBuilder): List[OutBox] = {
     val incrementedServiceBox = this.incrementRepaymentToken().getOutputServiceBox(ctx, txB)
-    val profitSharingBox = this.getOwnerProfitSharingBox(repaymentBox.getRepaymentInterest, txB)
+    val profitSharingBox = this.getOwnerProfitSharingBox(repaymentBox.getRepaymentInterest, ctx, txB)
 
     val outputBoxList = List(incrementedServiceBox, profitSharingBox)
 
     outputBoxList
   }
 
-  def fundedLend(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
-    val exchangedServiceBox = this.exchangeLendRepaymentToken().getOutputServiceBox(ctx, txB)
+  def fundedLend(): LendServiceBox = {
+    val exchangedServiceBox = this.exchangeLendRepaymentToken()
 
     exchangedServiceBox
   }
 
-  def createLend(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
-    val decrementedLendServiceBox = this.negateLendToken().getOutputServiceBox(ctx, txB)
+  def createLend(): LendServiceBox = {
+    val decrementedLendServiceBox = this.negateLendToken()
 
     decrementedLendServiceBox
   }
 
-  def refundLend(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
-    val incrementedLendServiceBox = this.incrementLendToken().getOutputServiceBox(ctx, txB)
+  def refundLend(): LendServiceBox = {
+    val incrementedLendServiceBox = this.incrementLendToken()
 
     incrementedLendServiceBox
   }
@@ -200,8 +204,9 @@ class LendServiceBox(val value: Long,
   override def getServiceBoxContract(ctx: BlockchainContext): ErgoContract = {
     ctx.compileContract(ConstantsBuilder.create()
       .item("ownerPk", serviceOwner.getPublicKey)
-      .item("serviceNFT", nft)
-      .item("serviceToken", lendToken)
+      .item("serviceNFT", LendServiceTokens.nft.getBytes)
+      .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
+      .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
       .build(), singleLenderLendServiceBoxScript)
   }
 }

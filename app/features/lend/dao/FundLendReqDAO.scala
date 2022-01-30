@@ -16,8 +16,8 @@ trait FundLendReqComponent {
 
   class FundLendReqTable(tag: Tag) extends Table[FundLendReq](tag, "FUND_LEND_REQUESTS") {
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
+    def lendBoxId = column[String]("LEND_BOX_ID")
     def ergAmount = column[Long]("ERG_AMOUNT")
-    def lendDeadline = column[Long]("LEND_DEADLINE")
 
     def state = column[Int]("TX_STATE")
     def paymentAddress = column[String]("PAYMENT_ADDRESS")
@@ -29,8 +29,17 @@ trait FundLendReqComponent {
     def ttl = column[Long]("TTL")
     def deleted = column[Boolean]("DELETED")
 
-    def * = (id, ergAmount, lendDeadline, state, paymentAddress, lendToken, lendTxID.?, lenderAddress,
-      timeStamp, ttl, deleted) <> (FundLendReq.tupled, FundLendReq.unapply)
+    def * =
+      ( id,
+        lendBoxId,
+        ergAmount,
+        state,
+        paymentAddress,
+        lendTxID.?,
+        lenderAddress,
+        timeStamp,
+        ttl,
+        deleted) <> (FundLendReq.tupled, FundLendReq.unapply)
   }
 }
 
@@ -46,14 +55,19 @@ class FundLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPro
   /**
    *
    */
-  def insert(ergAmount: Long, lendDeadline: Long, state: TxState, paymentAddress: String, lendToken: String, lendTxID: Option[String],
-             walletAddress: String, timeStamp: String, ttl: Long): Future[Unit] = {
+  def insert(lendBoxId: String,
+             fundingErgAmount: Long,
+             state: TxState,
+             paymentAddress: String,
+             lendTxID: Option[String],
+             walletAddress: String,
+             timeStamp: String,
+             ttl: Long): Future[Unit] = {
     val action = requests += FundLendReq(
       id = 1,
-      ergAmount = ergAmount,
-      lendDeadline = lendDeadline,
+      lendBoxId = lendBoxId,
+      ergAmount = fundingErgAmount,
       state = state.id,
-      lendToken = lendToken,
       lenderAddress = walletAddress,
       paymentAddress = paymentAddress,
       lendTxID = lendTxID,

@@ -3,7 +3,9 @@ package features.lend.contracts.proxyContracts
 import config.Configs
 import ergotools.LendServiceTokens
 import ergotools.client.Client
-import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, Parameters}
+import play.api.libs.json.JsResult.Exception
+import special.collection.Coll
 
 import javax.inject.Inject
 
@@ -17,49 +19,58 @@ class LendProxyContractService @Inject()(client: Client) {
                                  goal: Long,
                                  interestRate: Long,
                                  repaymentHeightLength: Long): String = {
-    client.getClient.execute((ctx: BlockchainContext) => {
-      val nftString = LendServiceTokens
-      val serviceNftToken = ErgoId.create(LendServiceTokens.nftString).getBytes
-      val boxToken = ErgoId.create(LendServiceTokens.lendTokenString).getBytes
-      val createLendingBoxProxy = ctx.compileContract(ConstantsBuilder.create()
-        .item("borrowerPk", Address.create(pk).getErgoAddress.script.bytes)
-        .item("minFee", Configs.fee)
-        .item("refundHeightThreshold", ctx.getHeight + ((Configs.creationDelay / 60 / 2) + 1).toLong)
-        .item("goal", goal)
-        .item("deadlineHeight", deadlineHeight)
-        .item("interestRate", interestRate)
-        .item("repaymentHeightLength", repaymentHeightLength)
-        .item("lendServiceNFT", serviceNftToken)
-        .item("lendServiceToken", boxToken)
-        .build(), createSingleLenderLendingBoxProxyScript)
+    try {
+      client.getClient.execute((ctx: BlockchainContext) => {
+        val serviceNftToken = ErgoId.create(LendServiceTokens.nftString).getBytes
+        val lendToken = ErgoId.create(LendServiceTokens.lendTokenString).getBytes
+        val borrowerPk = Address.create(pk).getErgoAddress.script.bytes
 
-      encodeAddress(createLendingBoxProxy)
-    })
-  }
-
-  def getFundLendingBoxProxyContract(lendId: String, pk: String, lendAmountPlusFee: Long, deadlineHeight: Long): String = {
-    client.getClient.execute((ctx: BlockchainContext) => {
-      val fundLendingBoxProxy = ctx.compileContract(
-        ConstantsBuilder.create()
-          .item("tokenId", ErgoId.create(lendId).getBytes)
-          .item("lenderAddress", Address.create(pk).getErgoAddress.script.bytes)
-          .item("lendAmountPlusFee", lendAmountPlusFee)
-          .item("minFee", Configs.fee)
+        val createLendingBoxProxy = ctx.compileContract(ConstantsBuilder.create()
+          .item("borrowerPk", borrowerPk)
+          .item("minFee", Parameters.MinFee)
+          .item("refundHeightThreshold", ctx.getHeight + ((Configs.creationDelay / 60 / 2) + 1).toLong)
+          .item("goal", goal)
           .item("deadlineHeight", deadlineHeight)
-          .build(), fundSingleLenderLendingBoxProxyScript)
+          .item("interestRate", interestRate)
+          .item("repaymentHeightLength", repaymentHeightLength)
+          .item("serviceNFT", serviceNftToken)
+          .item("lendToken", lendToken)
+          .build(), createSingleLenderLendBoxProxyScript)
 
-      encodeAddress(fundLendingBoxProxy)
+        encodeAddress(createLendingBoxProxy)
+      })
+    } catch {
+      case e: Exception => {
+        System.out.println(e)
+        return e.toString
+      }
+    }
+  }
+
+  def getFundLendBoxProxyContract(lendId: String,
+                                  lenderAddress: String): String = {
+    client.getClient.execute((ctx: BlockchainContext) => {
+      val fundLendBoxProxy = ctx.compileContract(
+        ConstantsBuilder.create()
+          .item("boxIdToFund", ErgoId.create(lendId).getBytes)
+          .item("lenderPk", Address.create(lenderAddress).getErgoAddress.script.bytes)
+          .item("minFee", Parameters.MinFee)
+          .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
+          .build(), fundSingleLenderLendBoxProxyScript)
+
+      encodeAddress(fundLendBoxProxy)
     })
   }
 
-  def getRepaymentLoanProxyContract(repaymentBoxId: String, pk: String, repaymentAmount: Long): String = {
+  def getFundRepaymentBoxProxyContract(repaymentBoxId: String,
+                                      funderPk: String): String = {
     client.getClient.execute((ctx: BlockchainContext) => {
       val repaymentBoxProxy = ctx.compileContract(
         ConstantsBuilder.create()
-          .item("tokenId", ErgoId.create(repaymentBoxId).getBytes)
-          .item("lenderAddress", Address.create(pk).getErgoAddress.script.bytes)
-          .item("lendAmountPlusFee", repaymentAmount)
-          .item("minFee", Configs.fee)
+          .item("boxIdToFund", ErgoId.create(repaymentBoxId).getBytes)
+          .item("funderPk", Address.create(funderPk).getErgoAddress.script.bytes)
+          .item("minFee", Parameters.MinFee)
+          .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
           .build(), repaySingleLenderLoanProxyScript)
 
       encodeAddress(repaymentBoxProxy)

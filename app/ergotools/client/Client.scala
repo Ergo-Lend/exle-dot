@@ -14,10 +14,11 @@ class Client {
   private var client: ErgoClient = _
 
   def setClient(): Long = {
-    print("ni hao")
+    println("Ergo Client Starting up...")
     try {
       client = RestApiErgoClient.create(Configs.nodeUrl, Configs.networkType, "", Configs.explorerUrl)
       client.execute(ctx => {
+        System.out.println(s"Client Instantiated, Current Height: ${ctx.getHeight}")
         ctx.getHeight
       })
     } catch {

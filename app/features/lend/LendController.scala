@@ -2,10 +2,11 @@ package features.lend
 
 import config.Configs
 import ergotools.client.Client
-import features.lend.boxes.LendProxyAddress
+import features.lend.boxes.{LendProxyAddress, SingleLenderLendBox}
 import features.{getRequestBodyAsLong, getRequestBodyAsString}
 import helpers.{ErgoValidator, ExceptionThrowable}
 import io.circe.Json
+import org.ergoplatform.appkit.Parameters
 import play.api.Logger
 import play.api.mvc._
 import play.api.libs.circe.Circe
@@ -24,7 +25,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       Ok("cool").as("application/json")
   }
 
-  def getLendFunds(offset: Int, limit: Int): Action[AnyContent] = Action { implicit request: Request[AnyContent] => {
+  def getLendBoxes(offset: Int, limit: Int): Action[AnyContent] = Action { implicit request: Request[AnyContent] => {
     logger.info("Getting Lending funds")
     try {
       val lendBoxes = explorer.getLendBoxes(offset, limit)
@@ -32,6 +33,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       for (lendBox <- lendBoxes) {
         val lendingProjectDetailsRegister = lendBox.lendingProjectDetailsRegister
         val fundingInfoRegister = lendBox.fundingInfoRegister
+        val borrowerRegister = lendBox.borrowerRegister
 
         lendBoxesJson += Json.fromFields(List(
           ("id", Json.fromString(lendBox.id.toString)),
@@ -39,7 +41,8 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           ("description", Json.fromString(lendingProjectDetailsRegister.description)),
           ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
           ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
-          ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent))
+          ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
+          ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress))
         ))
       }
 
@@ -52,7 +55,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     }
   }}
 
-  def getRepaymentFunds(offset: Int, limit: Int): Action[AnyContent] = Action { implicit request: Request[AnyContent] => {
+  def getRepaymentBoxes(offset: Int, limit: Int): Action[AnyContent] = Action { implicit request: Request[AnyContent] => {
     logger.info("Getting Repayment funds")
 
     try {
@@ -62,6 +65,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       for (repaymentBox <- repaymentBoxes) {
         val lendingProjectDetailsRegister = repaymentBox.lendingProjectDetailsRegister
         val fundingInfoRegister = repaymentBox.fundingInfoRegister
+        val borrowerRegister = repaymentBox.borrowerRegister
         val repaymentDetailsRegister = repaymentBox.repaymentDetailsRegister
 
         repaymentDetailsJson += Json.fromFields(List(
@@ -70,11 +74,11 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           ("description", Json.fromString(lendingProjectDetailsRegister.description)),
           ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
           ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
+          ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
           ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
           ("repaymentAmount", Json.fromLong(repaymentDetailsRegister.repaymentAmount)),
           ("repaymentHeightGoal", Json.fromLong(repaymentDetailsRegister.repaymentHeightGoal)),
           ("fundedHeight", Json.fromLong(repaymentDetailsRegister.fundedHeight)),
-          ("totalInterestAmount", Json.fromLong(repaymentDetailsRegister.totalInterestAmount))
         ))
       }
 
@@ -87,11 +91,22 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     }
   }}
 
-  def getLendFundById(lendId: String): Action[AnyContent] = Action {
+  def getLendBoxById(lendId: String): Action[AnyContent] = Action {
     implicit request:  Request[AnyContent] =>
       try {
         logger.info("Get Lend Funds by id: " + lendId)
         val result = explorer.getLendBox(lendId)
+        Ok("cool").as("application/json")
+      } catch {
+        case e: Throwable => exception(e, logger)
+      }
+  }
+
+  def getRepaymentBoxById(lendId: String): Action[AnyContent] = Action {
+    implicit request:  Request[AnyContent] =>
+      try {
+        logger.info("Get Lend Funds by id: " + lendId)
+        val result = explorer.getRepaymentBox(lendId)
         Ok("cool").as("application/json")
       } catch {
         case e: Throwable => exception(e, logger)
@@ -110,7 +125,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
    * }
    * @return
    */
-  def createLendFund(): Action[Json] = Action(circe.json) {
+  def createLendBox(): Action[Json] = Action(circe.json) {
     implicit request =>
       try {
         logger.info("lend fund creation")
@@ -130,9 +145,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         if (name.length > 250) throw new Throwable("Name size limit is 250 char")
         if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
         ErgoValidator.validateErgValue(goal)
-        println(Configs.networkType)
         ErgoValidator.validateAddress(walletAddress)
-        println("hey")
         ErgoValidator.validateDeadline(deadlineHeight)
 
         // we don't need to validate charity percent
@@ -145,13 +158,13 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           interestRate = interestRate,
           repaymentHeightLength = repaymentHeightLength
         )
-        val amount = Configs.fee * 4
+        val paymentAmount = SingleLenderLendBox.getLendBoxInitiationPayment()
         val delay = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("fee", Json.fromLong(amount))
+          ("paymentTotal", Json.fromLong(paymentAmount))
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -165,42 +178,26 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         logger.info("lend fund creation")
 
         // account details
-        val name: String = getRequestBodyAsString(request, "name")
-        val description: String = getRequestBodyAsString(request, "description")
+        val lendBoxId: String = getRequestBodyAsString(request, "lendBoxId")
         val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
 
-        // accounting
-        val goal: Long = getRequestBodyAsLong(request, "goal")
-        val deadlineHeight: Long = getRequestBodyAsLong(request, "deadlineHeight")
-        val interestRate: Long = getRequestBodyAsLong(request, "interestRate")
-        val repaymentHeightLength: Long = getRequestBodyAsLong(request, "repaymentHeightLength")
-
-        // validation
-        if (name.length > 250) throw new Throwable("Name size limit is 250 char")
-        if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
-        ErgoValidator.validateErgValue(goal)
-        println(Configs.networkType)
         ErgoValidator.validateAddress(walletAddress)
-        println("hey")
-        ErgoValidator.validateDeadline(deadlineHeight)
+        val lendBox = explorer.getLendBox(lendBoxId)
+        val wrappedLendBox = new SingleLenderLendBox(lendBox)
+        val amount = wrappedLendBox.getFundingTotalErgs()
 
-        // we don't need to validate charity percent
-        val paymentAddress = lendProxyAddress.getLendCreateProxyAddress(
-          pk = walletAddress,
-          name = name,
-          description = description,
-          deadlineHeight = deadlineHeight + client.getHeight,
-          goal = goal,
-          interestRate = interestRate,
-          repaymentHeightLength = repaymentHeightLength
+        val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
+          lendBoxId = lendBoxId,
+          lenderPk = walletAddress,
+          fundAmount = amount
         )
-        val amount = Configs.fee * 4
+
         val delay = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("fee", Json.fromLong(amount))
+          ("paymentTotal", Json.fromLong(amount))
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -211,45 +208,31 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
   def fundRepaymentBox(): Action[Json] = Action(circe.json) {
     implicit request =>
       try {
-        logger.info("lend fund creation")
+        logger.info("repayment funding")
 
         // account details
-        val name: String = getRequestBodyAsString(request, "name")
-        val description: String = getRequestBodyAsString(request, "description")
+        val repaymentBoxId: String = getRequestBodyAsString(request, "lendBoxId")
         val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
 
         // accounting
-        val goal: Long = getRequestBodyAsLong(request, "goal")
-        val deadlineHeight: Long = getRequestBodyAsLong(request, "deadlineHeight")
-        val interestRate: Long = getRequestBodyAsLong(request, "interestRate")
-        val repaymentHeightLength: Long = getRequestBodyAsLong(request, "repaymentHeightLength")
+        val fundAmount: Long = getRequestBodyAsLong(request, "fundAmount")
 
-        // validation
-        if (name.length > 250) throw new Throwable("Name size limit is 250 char")
-        if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
-        ErgoValidator.validateErgValue(goal)
         println(Configs.networkType)
         ErgoValidator.validateAddress(walletAddress)
-        println("hey")
-        ErgoValidator.validateDeadline(deadlineHeight)
 
-        // we don't need to validate charity percent
-        val paymentAddress = lendProxyAddress.getLendCreateProxyAddress(
-          pk = walletAddress,
-          name = name,
-          description = description,
-          deadlineHeight = deadlineHeight + client.getHeight,
-          goal = goal,
-          interestRate = interestRate,
-          repaymentHeightLength = repaymentHeightLength
+        val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
+          repaymentBoxId = repaymentBoxId,
+          funderPk = walletAddress,
+          fundAmount = fundAmount
         )
-        val amount = Configs.fee * 4
+
+        val amount = fundAmount + Configs.fee * 4
         val delay = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("fee", Json.fromLong(amount))
+          ("paymentTotal", Json.fromLong(amount))
         ))
         Ok(result.toString()).as("application/json")
       } catch {

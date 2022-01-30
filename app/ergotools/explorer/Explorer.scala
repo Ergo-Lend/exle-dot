@@ -17,7 +17,7 @@ trait Explorer {
   private val tx = s"$baseUrlV1/transactions"
   private val unconfirmedTx = s"$baseUrlV0/transactions/unconfirmed"
   private val unspentBoxesByTokenId = s"$baseUrlV1/boxes/unspent/byTokenId"
-  private val boxesP1 = s"$tx/boxes"
+  private val boxesP1 = s"$baseUrlV1/boxes"
   private val mempoolTransactions = s"$baseUrlV1/mempool/transactions/byAddress"
 
   def getTxsInMempoolByAddress(address: String): Json = try {

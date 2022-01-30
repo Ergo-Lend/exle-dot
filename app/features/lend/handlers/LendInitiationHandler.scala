@@ -82,7 +82,7 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
         val lendServiceBoxInputBox: InputBox = lendBoxExplorer.getServiceBox
         val paymentBoxList = getPaymentBoxes(req).getBoxes
 
-        val lendInitiationTx = SingleLenderTxFactory.createLendInitiationTx(lendServiceBoxInputBox, paymentBoxList.get(0))
+        val lendInitiationTx = SingleLenderTxFactory.createLendInitiationTx(lendServiceBoxInputBox, paymentBoxList.get(0), req)
         // Run the tx
         val signedTx = lendInitiationTx.runTx(ctx)
 

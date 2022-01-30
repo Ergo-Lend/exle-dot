@@ -1,12 +1,13 @@
 package features.lend.boxes
 
 import config.Configs
-import ergotools.LendServiceTokens
+import ergotools.{Addresses, LendServiceTokens}
 import errors.failedTxException
-import features.lend.boxes.registers.{FundingInfoRegister, LenderRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LenderRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
 import features.lend.contracts.singleLenderRepaymentBoxScript
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
+import scorex.crypto.hash.Digest32
 import special.collection.Coll
 
 /**
@@ -29,17 +30,21 @@ class SingleLenderRepaymentBox(
                               val value: Long = 0,
                               fundingInfoRegister: FundingInfoRegister,
                               lendingProjectDetailsRegister: LendingProjectDetailsRegister,
+                              borrowerRegister: BorrowerRegister,
                               val singleLenderRegister: SingleLenderRegister,
                               repaymentDetailsRegister: RepaymentDetailsRegister,
                               val repaymentToken: ErgoToken = new ErgoToken(LendServiceTokens.repaymentToken, 1),
                               val id: ErgoId = ErgoId.create("")
-                              ) extends RepaymentBox(fundingInfoRegister, lendingProjectDetailsRegister, singleLenderRegister, repaymentDetailsRegister) {
+                              ) extends RepaymentBox(fundingInfoRegister, lendingProjectDetailsRegister, borrowerRegister, singleLenderRegister, repaymentDetailsRegister) {
+
   val repaymentBoxToken = new ErgoToken(LendServiceTokens.repaymentToken, 1)
+
   def this(inputBox: InputBox) = this (
     value = inputBox.getValue,
     fundingInfoRegister = new FundingInfoRegister(inputBox.getRegisters.get(0).getValue.asInstanceOf[Array[Long]]),
     lendingProjectDetailsRegister = new LendingProjectDetailsRegister(inputBox.getRegisters.get(1).getValue.asInstanceOf[Array[Coll[Byte]]]),
-    singleLenderRegister = new SingleLenderRegister(inputBox.getRegisters.get(2).getValue.asInstanceOf[Array[Byte]]),
+    borrowerRegister = new BorrowerRegister(inputBox.getRegisters.get(2).getValue.asInstanceOf[Array[Byte]]),
+    singleLenderRegister = new SingleLenderRegister(inputBox.getRegisters.get(3).getValue.asInstanceOf[Array[Byte]]),
     repaymentDetailsRegister = new RepaymentDetailsRegister(
       inputBox.getRegisters.get(3).getValue.asInstanceOf[Array[Long]]),
     repaymentToken = inputBox.getTokens.get(0),
@@ -63,11 +68,11 @@ class SingleLenderRepaymentBox(
   override def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     var boxValue = value
     if (boxValue == 0L) {
-      boxValue = Configs.fee * 2
+      boxValue = Configs.minBoxErg
     }
 
     //@todo add tokens
-    val repaymentBoxContract = getRepaymentContract(ctx)
+    val repaymentBoxContract = SingleLenderRepaymentBoxContract.getContract(ctx)
     val repaymentBox = txB.outBoxBuilder()
       .value(boxValue)
       .contract(repaymentBoxContract)
@@ -77,6 +82,7 @@ class SingleLenderRepaymentBox(
       .registers(
         fundingInfoRegister.toRegister,
         lendingProjectDetailsRegister.toRegister,
+        borrowerRegister.toRegister,
         singleLenderRegister.toRegister,
         repaymentDetailsRegister.toRegister)
       .build()
@@ -94,6 +100,7 @@ class SingleLenderRepaymentBox(
       value = value + fundingAmount,
       fundingInfoRegister = fundingInfoRegister,
       lendingProjectDetailsRegister = lendingProjectDetailsRegister,
+      borrowerRegister = borrowerRegister,
       singleLenderRegister = singleLenderRegister,
       repaymentDetailsRegister = repaymentDetailsRegister,
       repaymentToken = repaymentToken,
@@ -105,6 +112,7 @@ class SingleLenderRepaymentBox(
       value = repaymentDetailsRegister.repaymentAmount - Parameters.MinFee,
       fundingInfoRegister = fundingInfoRegister,
       lendingProjectDetailsRegister = lendingProjectDetailsRegister,
+      borrowerRegister = borrowerRegister,
       singleLenderRegister = singleLenderRegister,
       repaymentDetailsRegister = repaymentDetailsRegister,
       repaymentToken = repaymentToken
@@ -114,36 +122,58 @@ class SingleLenderRepaymentBox(
   def repaidLendersPaymentBox(ergoLendInterest: Long): FundsToAddressBox = {
     val isFunded = value >= repaymentDetailsRegister.repaymentAmount
     if (isFunded) {
-      new FundsToAddressBox(value - ergoLendInterest - Parameters.MinFee, singleLenderRegister.lendersAddress)
+      new FundsToAddressBox(
+        value - ergoLendInterest - Parameters.MinFee,
+        singleLenderRegister.lendersAddress)
     } else {
       // @todo Better failure
       throw failedTxException(s"repayment not fully repaid")
     }
   }
 
+  def getFullFundAmount: Long = {
+    val fullFundAmount = repaymentDetailsRegister.repaymentAmount
+    val proxyMergeTxAmount = Parameters.MinFee
+    val totalAmount = fullFundAmount + proxyMergeTxAmount
+    return totalAmount
+  }
+
   override def getLendersAddress: ErgoAddress = {
-    Address.create(singleLenderRegister.toString).getErgoAddress
+    Address.create(singleLenderRegister.lendersAddress).getErgoAddress
   }
 
   override def getRepaymentInterest: Long = {
     repaymentDetailsRegister.totalInterestAmount
   }
+}
 
-  def getRepaymentContract(ctx: BlockchainContext): ErgoContract = {
+object SingleLenderRepaymentBoxContract extends Contract {
+  def getContract(ctx: BlockchainContext): ErgoContract = {
     ctx.compileContract(ConstantsBuilder.create()
-    .item("fee", Configs.fee)
-    .build(), singleLenderRepaymentBoxScript)
+      .item("minFee", Parameters.MinFee)
+      .item("serviceBoxNFT", LendServiceTokens.nft.getBytes)
+      .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
+      .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
+      .build(), singleLenderRepaymentBoxScript)
+  }
+}
+
+abstract class Contract {
+  def getContract(ctx: BlockchainContext): ErgoContract
+  def getContractScriptHash(ctx: BlockchainContext): Digest32 = {
+    Addresses.getContractScriptHash(getContract(ctx))
   }
 }
 
 abstract class RepaymentBox(
                     val fundingInfoRegister: FundingInfoRegister,
                     val lendingProjectDetailsRegister: LendingProjectDetailsRegister,
+                    val borrowerRegister: BorrowerRegister,
                     val lenderRegister: LenderRegister,
                     val repaymentDetailsRegister: RepaymentDetailsRegister
                   ) extends Box {
-  def getLendersAddress: ErgoAddress
 
+  def getLendersAddress: ErgoAddress
   def fundBox(fundingAmount: Long): RepaymentBox
   def fundedBox(): RepaymentBox
   def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox

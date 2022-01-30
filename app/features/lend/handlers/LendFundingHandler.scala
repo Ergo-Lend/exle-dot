@@ -5,6 +5,7 @@ import ergotools.TxState
 import ergotools.client.Client
 import errors.failedTxException
 import features.lend.LendBoxExplorer
+import features.lend.boxes.{SingleLenderLendBox}
 import features.lend.dao.{FundLendReq, FundLendReqDAO}
 import features.lend.txs.singleLender.SingleLenderTxFactory
 import helpers.{StackTrace, Time}
@@ -22,13 +23,12 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     logger.info("Handling Funding requests...")
 
     fundLendReqDAO.all.onComplete((requests => {
-      var lendBoxMap: Map[String, InputBox] = Map()
       requests.get.map(req => {
         try {
           if (req.ttl <= Time.currentTime || req.state == 2) {
             handleRemoval(req)
           } else {
-            handleReq(req, lendBoxMap)
+            handleReq(req)
           }
         } catch {
           case e: Throwable => logger.error(StackTrace.getStackTraceStr(e))
@@ -54,28 +54,26 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     }
   }
 
-  def handleReq(req: FundLendReq, lendBoxMap: Map[String, InputBox]): Map[String, InputBox] = {
+  def handleReq(req: FundLendReq): Unit = {
     try {
-      var outputMap = lendBoxMap
+      val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
+      val wrappedLendBox = new SingleLenderLendBox(lendBox)
+
       if (isReady(req)) {
-        if (client.getHeight >= req.lendDeadline) {
+        val deadlinePassed = client.getHeight >= wrappedLendBox.fundingInfoRegister.deadlineHeight
+        if (deadlinePassed) {
           refundBox(req)
         } else {
-          if (!outputMap.contains(req.lendToken)) outputMap += (req.lendToken -> lendBoxExplorer.getLendBox(req.lendToken))
           try {
-            outputMap += (req.lendToken -> fundLendTx(req, outputMap(req.lendToken)))
-            return outputMap
+            fundLendTx(req, lendBox)
           } catch {
-            case e: Throwable => logger.info(s"funding failed for request ${req.id}")
+            case e: Throwable => logger.info(s"funding failed for request ${req.lendBoxId}")
           }
         }
       }
-
-       lendBoxMap
     } catch {
       case _: Throwable =>
         logger.error(s"Error")
-        lendBoxMap
     }
   }
 
@@ -84,7 +82,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
       try {
         val paymentBoxList = getPaymentBoxes(req).getBoxes
 
-        val fundLendTx = SingleLenderTxFactory.createFundingLendingBoxTx(lendingBox, paymentBoxList.get(0))
+        val fundLendTx = SingleLenderTxFactory.createFundingLendBoxTx(lendingBox, paymentBoxList.get(0), req)
         val signedTx = fundLendTx.runTx(ctx)
 
         var fundTxId = ctx.sendTransaction(signedTx)
@@ -104,7 +102,25 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
   }
 
   def refundBox(req: FundLendReq): Unit = {
+    client.getClient.execute(ctx => {
+      try {
+        val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
+        val serviceBox = lendBoxExplorer.getServiceBox
 
+        val refundLendBoxTx = SingleLenderTxFactory.createRefundLendBoxTx(serviceBox, lendBox)
+
+        val signedTx = refundLendBoxTx.runTx(ctx)
+
+        var refundTxId = ctx.sendTransaction(signedTx)
+
+        if (refundTxId == null) throw failedTxException(s"refund lend tx sending failed for ${req.id}")
+        else refundTxId = refundTxId.replaceAll("\"", "")
+
+        fundLendReqDAO.deleteById(req.id)
+      } catch {
+        case _: Throwable => logger.error("Fund Failed")
+      }
+    })
   }
 
   def isReady(req: FundLendReq): Boolean = {

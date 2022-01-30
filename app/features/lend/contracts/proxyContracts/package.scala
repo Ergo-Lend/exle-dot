@@ -26,40 +26,36 @@ package object proxyContracts {
    * Input Variables:
    * - refundHeightThreshold
    * - serviceNFT,
-   * - serviceLendToken
+   * - lendToken
    * - goal
    * - deadlineHeight
    * - interestRate
    * - repaymentHeightLength
    * - borrowerPk
+   * - minFee
    */
-  lazy val createSingleLenderLendingBoxProxyScript: String =
+  lazy val createSingleLenderLendBoxProxyScript: String =
     s"""{
        | // the amount of boxes as outputs, else return
-       | if (OUTPUTS.size > 1) {
-       |  val createLendConditions = {
-       |    allOf(Coll(
-       |      OUTPUTS(0).tokens(0)._1 == serviceNFT,
-       |      OUTPUTS(1).tokens(0)._1 == serviceLendToken,
-       |      OUTPUTS(1).R4[Coll[Long]].get(0) == goal,
-       |      OUTPUTS(1).R4[Coll[Long]].get(1) == deadlineHeight,
-       |      OUTPUTS(1).R4[Coll[Long]].get(2) == interestRate,
-       |      OUTPUTS(1).R4[Coll[Long]].get(3) == repaymentHeightLength,
-       |      OUTPUTS(1).R5[Coll[Coll[Byte]]].get(2) == borrowerPk
-       |    ))
-       |  }
-       |
-       |  sigmaProp(createLendConditions)
+       | if (OUTPUTS.size != 2) {
+       |    val isLenderPkDefined = OUTPUTS(1).R7[GroupElement].isDefined
+       |    sigmaProp(
+       |      OUTPUTS(0).tokens(0)._1 == serviceNFT &&
+       |      OUTPUTS(1).tokens(0)._1 == lendToken &&
+       |      OUTPUTS(1).R4[Coll[Long]].get(0) == goal &&
+       |      OUTPUTS(1).R4[Coll[Long]].get(1) == deadlineHeight &&
+       |      OUTPUTS(1).R4[Coll[Long]].get(2) == interestRate &&
+       |      OUTPUTS(1).R4[Coll[Long]].get(3) == repaymentHeightLength &&
+       |      OUTPUTS(1).R6[Coll[Byte]].get == borrowerPk &&
+       |      !isLenderPkDefined
+       |    )
        | } else {
-       |  val returnCreateLendFee = {
-       |    allOf(Coll(
-       |      OUTPUTS(0).value >= (INPUTS(0).value - minFee),
-       |      OUTPUTS(0).propositionBytes == borrowerPk,
-       |      HEIGHT > refundHeightThreshold,
-       |    ))
-       |  }
-       |
-       |  sigmaProp(returnCreateLendFee)
+       |    // ##Refund##
+       |    sigmaProp(
+       |      allOf(Coll(
+       |        OUTPUTS(0).value >= (INPUTS(0).value - minFee),
+       |        OUTPUTS(0).propositionBytes == borrowerPk
+       |    )))
        | }
        |}
        |""".stripMargin
@@ -74,65 +70,64 @@ package object proxyContracts {
    * - Lendbox via token
    *
    * Input Variables:
-   * - minFee
-   * - serviceLendToken
    * - boxIdToFund
    * - lenderPk
+   * - minFee
+   * - serviceLendToken
    */
-  lazy val fundSingleLenderLendingBoxProxyScript: String =
-    s"""{
-       |  // ** Variable Declaration **
-       |  val inputLendBox = INPUTS(0)
-       |  val inputPaymentBox = INPUTS(1)
-       |  val outputLendBox = OUTPUTS(0)
-       |
-       |  val deadlineHeight = inputLendBox.R4[Coll[Long]].get(1)
-       |  val fundingGoal = inputLendBox.R4[Coll[Long]].get(0)
-       |  val lendBoxId = inputLendBox.id
-       |
-       |
-       |  // ** Fund **
-       |  val deadlineReached = deadlineHeight < HEIGHT
-       |  val boxIdCheck = boxIdToFund == lendBoxId
-       |  if (boxIdCheck && !deadlineReached) {
-       |
-       |    val fundingValue = SELF.value
-       |    val newFundedValue = inputLendBox.value + fundingValue - minFee
-       |
-       |    val outputLendBoxLenderPk = outputLendBox.R6[Coll[Byte]]
-       |    val inputPaymentBoxLenderPk = inputPaymentBox.R4[Coll[Byte]]
-       |
-       |    // -- Single Lender --
-       |    //
-       |    // Funds only happens once. Therefore must hit funding goal
-       |
-       |    val fundLendBox = {
-       |      allOf(Coll(
-       |        outputLendBox.value == newFundedValue,
-       |        outputLendBox.value >= fundingGoal,
-       |        outputLendBoxLenderPk == lenderPk,
-       |        outputLendBoxLenderPk == inputPaymentBoxLenderPk,
-       |        inputLendBox.tokens(0)._1 == serviceLendToken,
-       |        boxIdToFund == lendBoxId
-       |      ))
-       |    }
-       |
-       |    sigmaProp(fundLendBox)
-       |
-       |  } else {
-       |
+  lazy val fundSingleLenderLendBoxProxyScript: String =
+    s"""
+       |{
+       |  // Refund
+       |  if (INPUTS.size == 1) {
        |    // ** REFUND **
-       |
-       |    val fundingGoalReached = INPUTS(0).value >= fundingGoal
        |    val returnFunding = {
        |      allOf(Coll(
        |        OUTPUTS(0).value <= (INPUTS(0).value - minFee),
-       |        OUTPUTS(0).propositionBytes == lenderPk,
-       |        (fundingGoalReached || deadlineReached)
+       |        OUTPUTS(0).propositionBytes == lenderPk
        |      ))
        |    }
        |
        |    sigmaProp(returnFunding)
+       |  } else {
+       |    // ** Variable Declaration **
+       |    val inputLendBox = INPUTS(0)
+       |    val inputPaymentBox = SELF
+       |    val outputLendBox = OUTPUTS(0)
+       |
+       |    val deadlineHeight = inputLendBox.R4[Coll[Long]].get(1)
+       |    val fundingGoal = inputLendBox.R4[Coll[Long]].get(0)
+       |    val lendBoxId = inputLendBox.id
+       |
+       |
+       |    // ** Fund **
+       |    val deadlineReached = deadlineHeight < HEIGHT
+       |    val boxIdCheck = boxIdToFund == lendBoxId
+       |    val fundable = boxIdCheck && !deadlineReached
+       |    if (fundable) {
+       |
+       |      val fundingValue = SELF.value
+       |      val newFundedValue = inputLendBox.value + fundingValue - minFee
+       |
+       |      val outputLendBoxLenderPk = outputLendBox.R7[Coll[Byte]]
+       |
+       |      // -- Single Lender --
+       |      //
+       |      // Funds only happens once. Therefore must hit funding goal
+       |
+       |      val fundLendBox = {
+       |        allOf(Coll(
+       |          outputLendBox.value == newFundedValue,
+       |          outputLendBox.value >= fundingGoal,
+       |          outputLendBoxLenderPk.get == lenderPk,
+       |          inputLendBox.tokens(0)._1 == serviceLendToken,
+       |        ))
+       |      }
+       |
+       |      sigmaProp(fundLendBox)
+       |    } else {
+       |      sigmaProp(false)
+       |    }
        |  }
        |}
        |""".stripMargin
@@ -157,47 +152,15 @@ package object proxyContracts {
    * 2 -> outputRepaymentBox.value = inputRepaymentBox.value + proxyContract.value - minFee
    *
    * InputVariables:
-   * - minFee
    * - boxIdToFund
+   * - minFee
    * - userAddress
    * - serviceRepaymentToken
    */
   lazy val repaySingleLenderLoanProxyScript: String =
     s"""
        |{
-       |  // ** Variable Declaration **
-       |  val inputRepaymentBox = INPUTS(0)
-       |  val outputRepaymentBox = OUTPUTS(0)
-       |  val repaymentBoxRepaymentDetails = inputRepaymentBox.R7[Coll[Long]]
-       |  val repaymentBoxInfo = inputRepaymentBox.R5[Coll[Coll[Byte]]]
-       |
-       |  val repaymentGoal = repaymentBoxRepaymentDetails.get(1)
-       |  val repaymentBoxId = inputRepaymentBox.id
-       |
-       |  val amountToRepay = SELF.value - minFee
-       |  val amountRepaid = inputRepaymentBox.value
-       |
-       |  val amountRepaidOutput = amountToRepay + amountRepaid
-       |
-       |
-       |  // ** Fund **
-       |  val boxIdCheck = boxIdToFund == repaymentBoxId
-       |  val repaymentGoalReached = repaymentGoal <= amountRepaid
-       |  if (boxIdCheck && !repaymentGoalReached) {
-       |
-       |    // we check the id and if the value is correct.
-       |    val repaymentCheck = {
-       |      allOf(Coll(
-       |        boxIdToFund == repaymentBoxId,
-       |        inputRepaymentBox.tokens(0)._1 == serviceRepaymentToken,
-       |        outputRepaymentBox.value == amountRepaidOutput
-       |      ))
-       |    }
-       |
-       |    sigmaProp(repaymentCheck)
-       |
-       |  } else {
-       |
+       |  if (INPUTS.size == 1) {
        |    // ** REFUND **
        |    //
        |    // else refund the amount repaid (this refund will not be transacted alongside an input of repayment box)
@@ -205,12 +168,46 @@ package object proxyContracts {
        |    val returnRepayment = {
        |      allOf(Coll(
        |        OUTPUTS(0).value <= (INPUTS(0).value - minFee),
-       |        OUTPUTS(0).propositionBytes == userAddress, // user must receive the transaction back to his account
-       |        (repaymentGoalReached)
+       |        OUTPUTS(0).propositionBytes == funderPk, // user must receive the transaction back to his account
        |      ))
        |    }
        |
        |    sigmaProp(returnRepayment)
+       |  } else {
+       |
+       |    // ** Variable Declaration **
+       |    val inputRepaymentBox = INPUTS(0)
+       |    val outputRepaymentBox = OUTPUTS(0)
+       |    val repaymentBoxRepaymentDetails = inputRepaymentBox.R7[Coll[Long]]
+       |    val repaymentBoxInfo = inputRepaymentBox.R5[Coll[Coll[Byte]]]
+       |
+       |    val repaymentGoal = repaymentBoxRepaymentDetails.get(1)
+       |    val repaymentBoxId = inputRepaymentBox.id
+       |
+       |    val amountToRepay = SELF.value - minFee
+       |    val amountRepaid = inputRepaymentBox.value
+       |
+       |    val amountRepaidOutput = amountToRepay + amountRepaid
+       |
+       |
+       |    // ** Fund **
+       |    val boxIdCheck = boxIdToFund == repaymentBoxId
+       |    val repaymentGoalReached = repaymentGoal <= amountRepaid
+       |    val fundable = boxIdCheck && !repaymentGoalReached
+       |    if (fundable) {
+       |
+       |      // we check the id and if the value is correct.
+       |      val repaymentCheck = {
+       |        allOf(Coll(
+       |          inputRepaymentBox.tokens(0)._1 == serviceRepaymentToken,
+       |          outputRepaymentBox.value == amountRepaidOutput
+       |        ))
+       |      }
+       |
+       |      sigmaProp(repaymentCheck)
+       |    } else {
+       |      sigmaProp(false)
+       |    }
        |  }
        |}
        |""".stripMargin

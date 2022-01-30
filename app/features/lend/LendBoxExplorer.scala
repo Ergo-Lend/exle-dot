@@ -6,8 +6,8 @@ import ergotools.TxState.TxState
 import ergotools.client.Client
 import ergotools.explorer.Explorer
 import errors.{connectionException, explorerException, parseException}
-import features.lend.boxes.{SingleLenderLendingBox, SingleLenderRepaymentBox}
-import features.lend.boxes.registers.{FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import features.lend.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
+import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
 import helpers.StackTrace
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{BlockchainContext, ErgoClientException, ErgoId, ErgoValue, InputBox}
@@ -57,23 +57,9 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     }
   }
 
-  def getLendBox(tokenId: String): InputBox = {
+  def getLendBox(lendBoxId: String): InputBox = {
     try {
       client.getClient.execute((ctx: BlockchainContext) => {
-        var lendBoxId: String = ""
-        var C: Int = 0
-        while (lendBoxId == "") {
-          Try {
-            val lendBoxciJson = getUnspentTokenBoxes(LendServiceTokens.lendTokenString, C, 100)
-            lendBoxId = lendBoxciJson.hcursor.downField("items").as[List[ciJson]].getOrElse(null)
-              .filter(_.hcursor.downField("assets").as[Seq[ciJson]].getOrElse(null).size > 1)
-              .filter(_.hcursor.downField("assets").as[Seq[ciJson]].getOrElse(null)(1)
-                .hcursor.downField("tokenId").as[String].getOrElse("") == tokenId).head
-              .hcursor.downField("boxId").as[String].getOrElse("")
-          }
-          C += 100
-        }
-
         var lendBox = ctx.getBoxesById(lendBoxId).head
         val lendBoxAddress = Configs.addressEncoder.fromProposition(lendBox.getErgoTree).get.toString
         try {
@@ -95,10 +81,34 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     }
   }
 
-  def getLendBoxes(offset: Int, limit: Int): ListBuffer[SingleLenderLendingBox] = {
+  def getRepaymentBox(repaymentBoxId: String): InputBox = {
+    try {
+      client.getClient.execute((ctx: BlockchainContext) => {
+        var lendBox = ctx.getBoxesById(repaymentBoxId).head
+        val lendBoxAddress = Configs.addressEncoder.fromProposition(lendBox.getErgoTree).get.toString
+        try {
+          lendBox = findMempoolBox(lendBoxAddress, lendBox, ctx)
+        } catch {
+          case e: Throwable =>
+            logger.error("Mempool failed")
+        }
+        lendBox
+      })
+    } catch {
+      case e: ErgoClientException =>
+        logger.warn(e.getMessage)
+        throw connectionException()
+      case _: connectionException => throw connectionException()
+      case e: Throwable =>
+        logger.error(StackTrace.getStackTraceStr(e))
+        throw new Throwable("Something is wrong")
+    }
+  }
+
+  def getLendBoxes(offset: Int, limit: Int): ListBuffer[SingleLenderLendBox] = {
     try {
       var lendBoxCount = 0
-      var lendBoxes: ListBuffer[SingleLenderLendingBox] = ListBuffer()
+      var lendBoxes: ListBuffer[SingleLenderLendBox] = ListBuffer()
       var explorerOffset: Int = 0
       var boxes = getUnspentTokenBoxes(LendServiceTokens.lendTokenString, 0, 100)
       val total = boxes.hcursor.downField("total").as[Int].getOrElse(0)
@@ -131,15 +141,20 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
               val r6: Array[Byte] = ErgoValue.fromHex(registers.hcursor.downField("R6").as[ciJson].getOrElse(null)
                 .hcursor.downField("serializedValue").as[String].getOrElse(""))
                 .getValue.asInstanceOf[Coll[Byte]].toArray
+              val r7: Array[Byte] = ErgoValue.fromHex(registers.hcursor.downField("R7").as[ciJson].getOrElse(null)
+                .hcursor.downField("serializedValue").as[String].getOrElse(""))
+                .getValue.asInstanceOf[Coll[Byte]].toArray
 
               val fundingInfoRegister = new FundingInfoRegister(r4)
               val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(r5)
-              val lenderRegister = new SingleLenderRegister(r6)
+              val borrowerRegister = new BorrowerRegister(r6)
+              val lenderRegister = new SingleLenderRegister(r7)
 
-              val lendBox = new SingleLenderLendingBox(
+              val lendBox = new SingleLenderLendBox(
                 value,
                 fundingInfoRegister,
                 lendingProjectDetailsRegister,
+                borrowerRegister,
                 lenderRegister,
                 id = ErgoId.create(id))
 
@@ -206,19 +221,24 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
               val r6: Array[Byte] = ErgoValue.fromHex(registers.hcursor.downField("R6").as[ciJson].getOrElse(null)
                 .hcursor.downField("serializedValue").as[String].getOrElse(""))
                 .getValue.asInstanceOf[Coll[Byte]].toArray
-              val r7: Array[Long] = ErgoValue.fromHex(registers.hcursor.downField("R6").as[ciJson].getOrElse(null)
+              val r7: Array[Byte] = ErgoValue.fromHex(registers.hcursor.downField("R6").as[ciJson].getOrElse(null)
+                .hcursor.downField("serializedValue").as[String].getOrElse(""))
+                .getValue.asInstanceOf[Coll[Byte]].toArray
+              val r8: Array[Long] = ErgoValue.fromHex(registers.hcursor.downField("R6").as[ciJson].getOrElse(null)
                 .hcursor.downField("serializedValue").as[String].getOrElse(""))
                 .getValue.asInstanceOf[Coll[Long]].toArray
 
               val fundingInfoRegister = new FundingInfoRegister(r4)
               val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(r5)
-              val lenderRegister = new SingleLenderRegister(r6)
-              val repaymentDetailsRegister = new RepaymentDetailsRegister(r7)
+              val borrowerRegister = new BorrowerRegister(r6)
+              val lenderRegister = new SingleLenderRegister(r7)
+              val repaymentDetailsRegister = new RepaymentDetailsRegister(r8)
 
               val repaymentBox = new SingleLenderRepaymentBox(
                 value,
                 fundingInfoRegister,
                 lendingProjectDetailsRegister,
+                borrowerRegister,
                 lenderRegister,
                 repaymentDetailsRegister,
                 id = ErgoId.create(id))

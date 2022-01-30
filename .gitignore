@@ -1,6 +1,10 @@
 logs
 target
 ergo_config.json
+CreateLendReqInfo.txt
+FundLendReq.txt
+LendInitiation.txt
+LendInitiationRefund.txt
 /.bsp
 /.idea
 /.idea_modules

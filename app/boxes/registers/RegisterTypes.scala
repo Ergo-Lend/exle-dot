@@ -1,6 +1,9 @@
 package boxes.registers
 
-import org.ergoplatform.appkit.{ErgoType, ErgoValue, JavaHelpers}
+import config.Configs
+import org.ergoplatform.ErgoAddress
+import org.ergoplatform.appkit.{Address, ErgoType, ErgoValue, JavaHelpers}
+import sigmastate.serialization.ErgoTreeSerializer
 import special.collection.Coll
 
 import java.nio.charset.StandardCharsets
@@ -54,8 +57,27 @@ object RegisterTypes {
   }
 
   class StringRegister(val value: String) extends CollByteRegister {
+    def this(collByte: Coll[Byte]) = this(
+      new String(collByte.toArray, StandardCharsets.UTF_8)
+    )
+
     def toRegister: ErgoValue[Coll[Byte]] = {
       ergoValueOf(value.getBytes("utf-8"))
+    }
+  }
+
+  class AddressRegister(val address: String) extends CollByteRegister {
+    def toRegister: ErgoValue[Coll[Byte]] = {
+      val borrowerPk = Address.create(address).getErgoAddress.script.bytes
+
+      ergoValueOf(borrowerPk)
+    }
+  }
+
+  object AddressRegister {
+    def getAddress(addressBytes: Array[Byte]): ErgoAddress = {
+      val ergoTree = ErgoTreeSerializer.DefaultSerializer.deserializeErgoTree(addressBytes)
+      Configs.addressEncoder.fromProposition(ergoTree).get
     }
   }
 

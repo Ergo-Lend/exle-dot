@@ -11,7 +11,7 @@ package object contracts {
    * 3. Not Funded passed deadline
    *
    * We will first split the problem out into 2, funded or not funded.
-   * When a lending box is funded, it doesnt matter if it passed the deadline,
+   * When a lending box is funded, it doesn't matter if it passed the deadline,
    * it should move to the next phase.
    *
    * If its not funded passed deadline, no funds can be added. Only refunded to lenders
@@ -21,7 +21,7 @@ package object contracts {
    *
    * Scenario 1: Lend Initiated
    *
-   * Funds from proxy contracts are collected and lendbox is initiated
+   * Funds from proxy contracts are collected and lend box is initiated
    * Checks:
    * - LendBox containing LendToken
    * - Funding details are correct
@@ -37,7 +37,7 @@ package object contracts {
    * Scenario 2: Lend Funding
    *
    * Funds from proxy contracts for funding are collected and merged with
-   * lendbox. In a singleLender lendBox, the funds have to be equal to the funding goal
+   * lend box. In a singleLender lendBox, the funds have to be equal to the funding goal
    *
    * Checks:
    * - Funds equal to funding goal
@@ -83,179 +83,159 @@ package object contracts {
    * - Refund to Borrower
    *
    *
+   * # Note: We are not checking lender Pk when it is funding.
+   *
    * Variables:
-   * - fundedHeight
-   * - repaymentFundingValue
    * - minFee
    * - repaymentBoxMinAmount
+   * - serviceNFT
    * - serviceLendToken
+   * - serviceRepaymentToken
    */
-  lazy val singleLenderLendingBoxScript: String =
+  lazy val singleLenderLendBoxScript: String =
     s"""{
-       |  // first output is the funding box always
-       |  val lendingBoxFundAccounting = SELF.R4[Coll[Long]]
-       |  val lendingBoxFundDetails = SELF.R5[Coll[Coll[Byte]]]
-       |  val lendingBoxLenderDetails = SELF.R6[Coll[Byte]]
+       |  val lendBoxFundingInfo = SELF.R4[Coll[Long]]
+       |  val lendBoxProjectDetails = SELF.R5[Coll[Coll[Byte]]]
+       |  val lendBoxBorrowerPk = SELF.R6[Coll[Byte]]
        |
-       |  val fundingGoal = lendingBoxFundAccounting.get(0)
-       |  val deadlineHeight = lendingBoxFundAccounting.get(1)
-       |  val interestRate = lendingBoxFundAccounting.get(2)
-       |  val repaymentHeightLength = lendingBoxFundAccounting.get(3)
+       |  val fundingGoal = lendBoxFundingInfo.get(0)
+       |  val deadlineHeight = lendBoxFundingInfo.get(1)
+       |  val interestRate = lendBoxFundingInfo.get(2)
+       |  val repaymentHeightLength = lendBoxFundingInfo.get(3)
        |
        |  val selfValue = SELF.value
-       |  val borrowerPk = SELF.R5[Coll[Coll[Byte]]].get(2)
        |
-       |  val outputSize = OUTPUTS.size
-       |  val inputSize = INPUTS.size
+       |  val lendBoxVerification = allOf(Coll(
+       |    SELF.tokens(0)._1 == serviceLendToken,
+       |    SELF.tokens(0)._2 == 1))
        |
-       |  val lendBoxVerification = SELF.tokens(0)._1 == serviceLendToken
        |
-       |  // if the lending box is FUNDED.
-       |  // Then it should be able to be spent by the borrower and the borrower only. However,
-       |  // it needs to be able to output funds to borrower, service fee to lend-team
-       |  // and most importantly a repayment box with the right data.
-       |  // NOTE: if the borrower does not spend it after a certain amount of time,
-       |  //        it goes back to the lenders
+       |  val lendBoxSuccessfullyFunded = selfValue >= fundingGoal
+       |  if (lendBoxSuccessfullyFunded) {
        |
-       |  if (selfValue >= fundingGoal) {
+       |    val serviceBoxCheck = INPUTS(0).tokens(0)._1 == serviceNFT
        |
        |    // Scenario 3: ** FUNDED **
-       |    //
-       |    // if it is funded, the borrower can spend it
-       |    // The repayment box have to have the same details as lendBox
-       |    //
        |    // Checks:
        |    // - RepaymentBox having the same details as LendBox
        |    // - RepaymentBox has new detail about repayment info.
        |    // - BorrowerFund: Gets full value from funds
        |
+       |    val lendBoxLenderPk = SELF.R7[Coll[Byte]]
+       |
        |    val repaymentBox = OUTPUTS(1)
-       |    val repaymentBoxFundAccounting = repaymentBox.R4[Coll[Long]]
-       |    val repaymentBoxFundDetails = repaymentBox.R5[Coll[Coll[Byte]]]
-       |    val repaymentBoxLenderDetails = repaymentBox.R6[Coll[Byte]]
-       |
-       |    // 1. funded height, repaymentFundedValue
-       |    val repaymentDetails = repaymentBox.R7[Coll[Long]]
-       |    val repaymentBoxFundedHeight = repaymentDetails.get(0)
-       |    val repaymentBoxFundingValue = repaymentDetails.get(1)
-       |    val repaymentBoxFunded
-       |
+       |    val repaymentBoxToken = repaymentBox.tokens(0)._1
+       |    val repaymentBoxTokenCount = repaymentBox.tokens(0)._2
+       |    val repaymentBoxFundingInfo = repaymentBox.R4[Coll[Long]]
+       |    val repaymentBoxProjectDetails = repaymentBox.R5[Coll[Coll[Byte]]]
+       |    val repaymentBoxBorrowerPk = repaymentBox.R6[Coll[Byte]]
+       |    val repaymentBoxLenderPk = repaymentBox.R7[Coll[Byte]]
        |
        |    // compare fund details
        |    val fundDetailReplication = allOf(Coll(
-       |      repaymentBoxFundDetails.get == lendingBoxFundDetails.get,
-       |      repaymentBoxFundAccounting.get == lendingBoxFundAccounting.get,
-       |      repaymentBoxLenderDetails.get == lendingBoxLenderDetails.get
+       |      repaymentBoxToken == serviceRepaymentToken,
+       |      repaymentBoxTokenCount == 1,
+       |      repaymentBoxFundingInfo.get == lendBoxFundingInfo.get,
+       |      repaymentBoxProjectDetails.get == lendBoxProjectDetails.get,
+       |      repaymentBoxBorrowerPk.get == lendBoxBorrowerPk.get,
+       |      repaymentBoxLenderPk.get == lendBoxLenderPk.get
        |    ))
        |
-       |    val repaymentBoxDetailsInstantiated = {
-       |      allOf(Coll(
-       |        // funded Height is a variable
-       |        repaymentBoxFundedHeight == fundedHeight,
-       |        repaymentBoxFundingValue == repaymentFundingValue,
-       |      ))
-       |    }
        |
-       |    // the last box should be the borrowers address. That's where the fund will go
-       |    val borrowersFunded = OUTPUTS(outputSize - 1)
-       |    val borrowerFundedAmount = selfValue - minFee - repaymentBoxMinAmount
+       |    // 1. funded height, repaymentFundedValue
+       |    val repaymentDetails = repaymentBox.R8[Coll[Long]]
+       |    val repaymentBoxRepaymentAmount = repaymentDetails.get(1)
+       |    val repaymentBoxInterestRate = repaymentDetails.get(2)
        |
-       |    val borrowerBoxFunded = {
-       |      allOf(Coll(
+       |    val totalInterestAmount = (fundingGoal * interestRate/100)
+       |
+       |    val repaymentDetailsCheck = allOf(Coll(
+       |      repaymentBoxInterestRate == totalInterestAmount,
+       |      repaymentBoxRepaymentAmount == (fundingGoal + totalInterestAmount)
+       |    ))
+       |
+       |
+       |    // the 3rd should be the borrowers address. That's where the fund will go
+       |    val borrowerFundedBox = OUTPUTS(2)
+       |    val borrowerFundedAmount = fundingGoal
+       |
+       |    val borrowerBoxFunded = allOf(Coll(
        |        // ensure that this is the borrowers wallet
-       |        borrowersFunded.propositionBytes == borrowerPk,
-       |        borrowersFunded.value == borrowerFundedAmount,
+       |        borrowerFundedBox.propositionBytes == lendBoxBorrowerPk.get,
+       |        borrowerFundedBox.value == borrowerFundedAmount
        |      ))
-       |    }
        |
        |    sigmaProp(
+       |      serviceBoxCheck &&
        |      lendBoxVerification &&
        |      fundDetailReplication &&
        |      borrowerBoxFunded &&
-       |      repaymentBoxDetailsInstantiated)
+       |      repaymentDetailsCheck)
        |
-       |    // ** Funding done **
+       |    // ** Funded done **
        |
        |  } else {
        |
        |    // ** NOT FUNDED **
        |    // we first check if it passed the deadline
-       |    if (HEIGHT >= deadlineHeight) {
+       |    if (HEIGHT > deadlineHeight) {
+       |      val serviceBoxCheck = INPUTS(0).tokens(0)._1 == serviceNFT
        |
        |      // Scenario 4: ** DEADLINE PASSED: REFUND **
-       |      // No lending is accepted after this
-       |      // we refund the funds to the lenders
-       |
-       |      // A singleLenderLendingBox only allows one lender
-       |      // Therefore it's either funded, or not. There's
-       |      // no in between. Therefore, refunds should return
-       |      // tokens to serviceBox, and extra ergs back to
-       |      // borrower
-       |      //
-       |      // Inputs: ServiceBox, LendingBox
+       |      // Inputs: ServiceBox, LendBox
        |      // Outputs: ServiceBox, Boxes[Borrowers address]
        |      //
        |      // Checks:
        |      // - Refunded box to borrower
-       |      // - Refunded box value == LendingBox value - MinFee
+       |      // - Refunded box value == LendBox value - MinFee
        |      // - ServiceBox has its own checks. Therefore not needed here
        |
-       |      val inputLendingBox = INPUTS(1)
+       |      val inputLendBox = INPUTS(1)
        |      val refundToBorrowerBox = OUTPUTS(1)
        |
        |      val boxValueToLender = allOf(Coll(
-       |        refundToBorrowerBox.propositionBytes == borrowerPk,
-       |        refundToBorrowerBox.value == inputLendingBox.value - minFee
+       |        refundToBorrowerBox.propositionBytes == lendBoxBorrowerPk.get,
+       |        refundToBorrowerBox.value == SELF.value - minFee
        |      ))
        |
-       |      sigmaProp(allOf(Coll(boxValueToLender, lendBoxVerification)))
+       |      sigmaProp(allOf(Coll(boxValueToLender, lendBoxVerification, serviceBoxCheck)))
        |
        |    } else {
        |
        |      // Scenario 2: ** LENDING ACTIVE: LEND **
-       |      // the fund is still active, and lenders can fund it
-       |      // In this part, there are 2 inputs. Lending Box, and Lend Proxy Contract
        |
-       |      val inputLendingBox = INPUTS(0)
-       |      val outputLendingBox = OUTPUTS(0)
+       |      val outputLendBox = OUTPUTS(0)
        |      val lendProxyContract = INPUTS(1)
        |
-       |      // Ensure details are replicated to the new funding box
-       |      val inputLendingBoxAccounting = inputLendingBox.R4[Coll[Long]]
-       |      val inputLendingBoxDetails = inputLendingBox.R5[Coll[Coll[Byte]]]
-       |      val lenderPk = lendProxyContract.R4[Coll[Byte]]
+       |      val outputLendBoxFundingInfo = outputLendBox.R4[Coll[Long]]
+       |      val outputLendBoxProjectDetails = outputLendBox.R5[Coll[Coll[Byte]]]
+       |      val outputLendBoxBorrowerPk = outputLendBox.R6[Coll[Byte]]
        |
-       |      val outputLendingBoxAccounting = outputLendingBox.R4[Coll[Long]]
-       |      val outputLendingBoxDetails = outputLendingBox.R5[Coll[Coll[Byte]]]
-       |      val outputLendingBoxLenderPk = outputLendingBox.R6[Coll[Byte]]
-       |
-       |      val lendingBoxDetailReplicationAndInstantiation = allOf(Coll(
-       |        inputLendingBoxAccount == outputLendingBoxAccounting,
-       |        inputLendingBoxDetails == outputLendingBoxDetails,
-       |        outputLendingBoxLenderPk == lenderPk
+       |      val lendBoxDetailReplicationAndInstantiation = allOf(Coll(
+       |        lendBoxFundingInfo == outputLendBoxFundingInfo,
+       |        lendBoxProjectDetails == outputLendBoxProjectDetails,
+       |        lendBoxBorrowerPk == outputLendBoxBorrowerPk
        |      ))
        |
-       |      // Note: In a single lender lending box, only one lender can lend
+       |      // Check lenderRegister is defined
+       |      val outputBoxLenderRegister = outputLendBox.R7[Coll[Byte]]
+       |      val lenderRegisterDefined = outputBoxLenderRegister.isDefined
+       |
+       |      // Note: In a single lender lend box, only one lender can lend
        |      //      therefore if the lender funds the box, they have to fund
        |      //      the full amount
-       |      val newFundedValue = fundingGoal + minFee + repaymentBoxMinAmount
+       |      val newFundedValue = fundingGoal + (minFee * 2) + minBoxAmount - SELF.value
        |
        |      val valueTransferred = allOf(Coll(
-       |        newFundedValue == outputLendingBox.value
-       |      ))
-       |
-       |      // Boxes inputs and outputs
-       |      val inputOutputBoxCount = allOf(Coll(
-       |        INPUTS.size == 2,
-       |        OUTPUTS.size == 1
+       |        newFundedValue == outputLendBox.value
        |      ))
        |
        |      sigmaProp(
        |        allOf(Coll(
        |          lendBoxVerification,
-       |          lendingBoxDetailReplicationAndInstantiation,
+       |          lendBoxDetailReplicationAndInstantiation,
        |          valueTransferred,
-       |          inputOutputBoxCount,
+       |          lenderRegisterDefined
        |        ))
        |      )
        |
@@ -280,26 +260,23 @@ package object contracts {
    *
    *
    * Input Variables:
-   * - serviceRepaymentToken
    * - minFee
-   * - fundedHeight
-   * - repaymentAmount
+   * - serviceRepaymentToken
+   * - serviceLendToken
+   * - serviceBoxNFT
    */
   lazy val singleLenderRepaymentBoxScript: String =
     s"""{
-       |  // @function
-       |  // the function of the repayment box should solely
-       |  // be to ensure payment gets accumulated, and that it
-       |  // is returned to lender
-       |
-       |  // if output size == 1, it means its adding funds
        |  val repaymentBoxVerification = SELF.tokens(0)._1 == serviceRepaymentToken
+       |  val serviceBox = INPUTS(0)
+       |  val serviceBoxVerification = INPUTS(0).tokens(0)._1 == serviceBoxNFT
        |
        |  if (OUTPUTS.size == 1) {
        |    // *** ADDING FUNDS ***
+       |    // RepaymentBox, ProxyContract -> OutRepaymentBox
        |    // @variables minFee
        |
-       |    val repaymentBoxInput = INPUTS(0)
+       |    val repaymentBoxInput = SELF
        |    val repaymentBoxOutput = OUTPUTS(0)
        |    val proxyBox = INPUTS(1)
        |
@@ -309,25 +286,28 @@ package object contracts {
        |
        |    val inputRepaymentBoxAccounting = repaymentBoxInput.R4[Coll[Long]]
        |    val inputRepaymentBoxDetails = repaymentBoxInput.R5[Coll[Coll[Byte]]]
-       |    val inputRepaymentBoxLender = repaymentBoxInput.R6[Coll[Byte]]
-       |    val inputRepaymentBoxRepaymentDetails = repaymentBoxInput.R7[Coll[Long]]
+       |    val inputRepaymentBoxBorrower = repaymentBoxInput.R6[Coll[Byte]]
+       |    val inputRepaymentBoxLender = repaymentBoxInput.R7[Coll[Byte]]
+       |    val inputRepaymentBoxRepaymentDetails = repaymentBoxInput.R8[Coll[Long]]
        |
        |    val outputRepaymentBoxAccounting = repaymentBoxOutput.R4[Coll[Long]]
        |    val outputRepaymentBoxDetails = repaymentBoxOutput.R5[Coll[Coll[Byte]]]
-       |    val outputRepaymentBoxLender = repaymentBoxOutput.R6[Coll[Byte]]
-       |    val outputRepaymentBoxRepaymentDetails = repaymentBoxOutput.R7[Coll[Long]]
+       |    val outputRepaymentBoxBorrower = repaymentBoxOutput.R6[Coll[Byte]]
+       |    val outputRepaymentBoxLender = repaymentBoxOutput.R7[Coll[Byte]]
+       |    val outputRepaymentBoxRepaymentDetails = repaymentBoxOutput.R8[Coll[Long]]
        |
        |    val repaymentBoxDetailCheck = {
        |      allOf(Coll(
        |        repaymentBoxVerification,
        |        outputRepaymentBoxAccounting == inputRepaymentBoxAccounting,
        |        outputRepaymentBoxDetails == inputRepaymentBoxDetails,
+       |        outputRepaymentBoxBorrower == inputRepaymentBoxBorrower,
        |        outputRepaymentBoxLender == inputRepaymentBoxLender,
        |        outputRepaymentBoxRepaymentDetails == inputRepaymentBoxRepaymentDetails
        |      ))
        |    }
        |
-       |    val repaymentNotFullyFunded = repaymentBoxInput.value >= SELF.R7[Coll[Long]].get(1)
+       |    val repaymentNotFullyFunded = repaymentBoxInput.value >= SELF.R8[Coll[Long]].get(1)
        |
        |    val repaymentFundingFulfilled = {
        |      allOf(Coll(
@@ -342,76 +322,77 @@ package object contracts {
        |  } else {
        |
        |    // Scenario 3: Fully funded
+       |    // Spend to return to lender
+       |    // ServiceBox, RepaymentBox -> ServiceBox, LenderFundedBox
        |    // *** REPAYMENT FULFILLED ***
-       |    // takes in a service box and repayment box
-       |    // outputs 2 boxes, 1 to lender, 1 service box
-       |    //
-       |    // The conditions that must be true in here is
-       |    // service box has the same token + 1
-       |    // lenderbox has value, and is the same pk as lender stored
-       |    // All the lenderBox care about is whether it refunded the lender.
-       |    // let the service box handle itself.
        |
        |    val selfRepaymentBox = SELF
        |    val selfFundingDetails = SELF.R4[Coll[Long]]
        |    val selfLendDetails = SELF.R5[Coll[Coll[Byte]]]
-       |    val selfLenderPk = SELF.R6[Coll[Byte]]
-       |    val selfRepaymentDetails = SELF.R7[Coll[Long]]
+       |    val selfBorrowerPk = SELF.R6[Coll[Byte]]
+       |    val selfLenderPk = SELF.R7[Coll[Byte]]
+       |    val selfRepaymentDetails = SELF.R8[Coll[Long]]
        |
        |    val fundingSuccessful = selfRepaymentBox.value >= selfRepaymentDetails.get(1)
        |    if (fundingSuccessful) {
        |
-       |      val inputRepaymentBox = INPUTS(1)
+       |      val inputRepaymentBox = SELF
        |      val lenderRepaidBox = OUTPUTS(OUTPUTS.size - 1)
        |
        |      // compare lender's box and value
        |      val inputRepaymentAcc = inputRepaymentBox.R4[Coll[Long]]
        |      val fundingGoal = inputRepaymentAcc.get(0)
-       |      val repaymentDetails = inputRepaymentBox.R7[Coll[Long]]
+       |      val repaymentDetails = inputRepaymentBox.R8[Coll[Long]]
        |      val repaymentGoal = repaymentDetails.get(1)
-       |      val lenderPk = inputRepaymentBox.R6[Coll[Byte]]
+       |      val lenderPk = inputRepaymentBox.R7[Coll[Byte]]
        |
-       |      val lendBoxFunded = {
+       |      val lenderRepaidBoxFunded = {
        |        allOf(Coll(
        |          // ensure that this is the borrowers wallet
-       |          outputLenderBox.propositionBytes == lenderPk,
-       |          outputLenderBox.value >= repaymentGoal,
+       |          lenderRepaidBox.propositionBytes == lenderPk.get,
+       |          lenderRepaidBox.value >= fundingGoal
        |        ))
        |      }
        |
-       |      sigmaProps(lendBoxFunded && repaymentBoxVerification)
+       |      sigmaProp(lenderRepaidBoxFunded && repaymentBoxVerification && serviceBoxVerification)
        |
        |    } else {
        |
        |      // Scenario 1: Creation
-       |      //
-       |      // Checks:
-       |      // - Tokens
-       |      // - LendboxDetails Replicated
+       |      // ServiceBox, LendBox -> ServiceBox, RepaymentBox
        |
+       |      val lendBoxVerification = INPUTS(1).tokens(0)._1 == serviceLendToken
        |      val lendBox = INPUTS(1)
        |      val lendBoxFundingDetails = lendBox.R4[Coll[Long]]
        |      val lendBoxLendDetails = lendBox.R5[Coll[Coll[Byte]]]
-       |      val lendBoxLenderPk = lendBox.R6[Coll[Byte]]
+       |      val lendBoxBorrowerPk = lendBox.R6[Coll[Byte]]
+       |      val lendBoxLenderPk = lendBox.R7[Coll[Byte]]
+       |
+       |      val fundingGoal = lendBoxFundingDetails.get(0)
+       |      val interestRate = lendBoxFundingDetails.get(2)
        |
        |      val lendBoxDetailsReplicatedCheck = allOf(Coll(
-       |        repaymentBoxVerification,
+       |        lendBoxVerification,
        |        lendBoxFundingDetails == selfFundingDetails,
        |        lendBoxLendDetails == selfLendDetails,
+       |        lendBoxBorrowerPk == selfBorrowerPk,
        |        lendBoxLenderPk == selfLenderPk
        |      ))
        |
+       |      val totalInterestAmount = (fundingGoal * (interestRate/100))
+       |      val calculatedRepaymentAmount = fundingGoal + totalInterestAmount
+       |
        |      val repaymentDetailsInfoCheck = allOf(Coll(
-       |        selfRepaymentDetails.get(0) == fundedHeight,
-       |        selfRepaymentDetails.get(1) == repaymentAmount
+       |        selfRepaymentDetails.get(1) >= calculatedRepaymentAmount
        |      ))
        |
-       |      sigmaProps(allOf(Coll(
+       |      sigmaProp(allOf(Coll(
        |        repaymentBoxVerification,
        |        lendBoxDetailsReplicatedCheck,
        |        repaymentDetailsInfoCheck
        |      )))
        |    }
+       |  }
        |}
        |""".stripMargin
 
@@ -424,262 +405,132 @@ package object contracts {
    *
    * Scenario 2 -> Lend Initiation
    * Service Box provides a token to create a lendingBox
+   * Checks:
+   * Service Check
+   * Lend token == 1 in lend box
+   * Service Box lend token == -1 of total
    *
    * Scenario 3 -> Lend Funded
    * Service box switches LendToken to RepaymentToken
    * Box to Lender
+   *    // Checks:
+   *    // - Service box: Lend token + 1
+   *    // - Service box: Repayment token - 1
+   *    // - LendBox: Value >= funding goal
+   *    // - LendBox: Lend Token == 1 (was 1 before tx)
+   *    // - RepaymentBox: Repayment token == 1
+   *    //
+   *    //    Borrower Box
+   *    // - Value: >= lendingFund
+   *    // - PropositionBytes == Borrowers
    *
    * Scenario 4 -> Repayment Consumption
    * Service Box receives token from Repayment Box
    * Service Box uses PubKey and ProfitSharingPercentage to create
    * ProfitSharingBox to ErgoLend
+   *    // Checks:
+   *    // Total Output Box: 3 (ServiceBox, ProfitSharingBox, Lender's Box)
+   *    // Service box: Lend Token == same
+   *    // Service box: Repayment Token + 1
+   *    // Profit Sharing Box: PropositionBytes == profitSharingBoxOwnerPubKey
+   *    // RepaymentBox: Value >= repaymentValue
    *
    * Scenario 5 -> Refunds
-   * Refunds only happen when lendbox is not successful
+   * Refunds only happen when lend box is not successful
    * In the refunds, the lendToken is return to the serviceBox
    *
    * Input variables:
    * - serviceNFT
    * - serviceLendToken
    * - serviceRepaymentToken
+   * - ownerPk
    */
   lazy val singleLenderLendServiceBoxScript: String =
     s"""{
+       |  // Service Checks
+       |  // - OwnerPub key, ProfitSharingPercentage
+       |  // - propositionBytes, lendToken id, nft id, repaymentToken id, value
        |
-       |  val spendingServiceBox = SELF
-       |  val outputServiceBox = OUTPUTS(0)
+       |  val serviceCheck = allOf(Coll(
+       |      OUTPUTS(0).propositionBytes == SELF.propositionBytes,
+       |      OUTPUTS(0).tokens(0)._1 == SELF.tokens(0)._1,
+       |      OUTPUTS(0).tokens(1)._1 == SELF.tokens(1)._1,
+       |      OUTPUTS(0).tokens(2)._1 == SELF.tokens(2)._1,
+       |      OUTPUTS(0).value == SELF.value
+       |    ))
        |
-       |  val spendingServiceBoxOwnerPubKey = spendingServiceBox.R4[Coll[Byte]].get
-       |  val spendingServiceBoxProfitSharingPercentage = spendingServiceBox.R5[Long].get
-       |  val spendingServiceBoxNFT = spendingServiceBox.tokens(0)._1
-       |  val spendingServiceBoxLendToken = spendingServiceBox.tokens(1)._1
-       |  val spendingServiceBoxLendTokenCount = spendingServiceBox.tokens(1)._2
-       |  val spendingServiceBoxRepaymentToken = spendingServiceBox.tokens(2)._1
-       |  val spendingServiceBoxRepaymentTokenCount = spendingServiceBox.tokens(2)._2
-       |  val spendingServiceBoxValue = spendingServiceBox.value
-       |
-       |
-       |  val outputServiceBoxOwnerPubKey = outputServiceBox.R4[Coll[Byte]].get
-       |  val outputServiceBoxProfitSharingPercentage = outputServiceBox.R5[Long].get
-       |  val outputServiceBoxNFT = outputServiceBox.tokens(0)._1
-       |  val outputServiceBoxLendToken = outputServiceBox.tokens(1)._1
-       |  val outputServiceBoxLendTokenCount = outputServiceBox.tokens(1)._2
-       |  val outputServiceBoxRepaymentToken = outputServiceBox.tokens(2)._1
-       |  val outputServiceBoxRepaymentTokenCount = outputServiceBox.tokens(2)._2
-       |  val outputServiceBoxValue = outputServiceBox.value
-       |
-       |
-       |  // Scenario 1: Mutation
-       |  //
-       |  // Owner can mutate the box, but the amount of boxToken
-       |  // have to always be the same.
-       |
-       |  val isMutable = spendingServiceBoxLendTokenCount == outputServiceBoxLendTokenCount
-       |  if (isMutable) {
-       |    ownerPK
+       |  // isMutable
+       |  if (OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 &&
+       |    OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2) {
+       |      ownerPk
        |  } else {
+       |    val spendingServiceBoxCreationInfo = SELF.R4[Coll[Long]].get
+       |    val spendingServiceBoxServiceInfo = SELF.R5[Coll[Coll[Byte]]]
+       |    val spendingServiceBoxBoxInfo = SELF.R6[Coll[Byte]]
+       |    val spendingServiceBoxOwnerPubKey = SELF.R7[Coll[Byte]]
+       |    val spendingServiceBoxProfitSharingPercentage = SELF.R8[Coll[Long]]
        |
-       |      // Service Checks
-       |      //
-       |      // ServiceBox: (not altered)
-       |      // - OwnerPubkey: not altered
-       |      // - ProfitSharingPercentage: not altered
-       |      // - propositionBytes: not altered
-       |      // - lendToken id: correct and not altered
-       |      // - nft id: correct and not altered
-       |      // - repaymentToken id: correct and not altered
-       |      // - value: not altered
+       |    val outputServiceBoxCreationInfo = OUTPUTS(0).R4[Coll[Long]].get
+       |    val outputServiceBoxServiceInfo = OUTPUTS(0).R5[Coll[Coll[Byte]]]
+       |    val outputServiceBoxBoxInfo = OUTPUTS(0).R6[Coll[Byte]]
+       |    val outputServiceBoxOwnerPubKey = OUTPUTS(0).R7[Coll[Byte]]
+       |    val outputServiceBoxProfitSharingPercentage = OUTPUTS(0).R8[Coll[Long]]
        |
-       |      val serviceCheck = {
-       |        allOf(Coll(
-       |          spendingServiceBoxOwnerPubKey == outputServiceBoxOwnerPubKey,
-       |          spendingServiceBoxProfitSharingPercentage == outputServiceBoxProfitSharingPercentage,
-       |          spendingServiceBox.propositionBytes == outputServiceBox.propositionBytes,
-       |          spendingServiceBoxNFT == serviceNFT,
-       |          spendingServiceBoxLendToken == serviceLendToken,
-       |          spendingServiceBoxRepaymentToken == serviceRepaymentToken,
-       |          spendingServiceBoxNFT == outputServiceBoxNFT,
-       |          spendingServiceBoxLendToken == outputServiceBoxLendToken,
-       |          spendingServiceBoxRepaymentToken == outputServiceBoxRepaymentToken,
-       |          spendingServiceBoxValue == outputServiceBoxValue
-       |        ))
-       |      }
+       |    val serviceRegisterCheck = allOf(Coll(
+       |      spendingServiceBoxCreationInfo == outputServiceBoxCreationInfo,
+       |      spendingServiceBoxServiceInfo == outputServiceBoxServiceInfo,
+       |      spendingServiceBoxBoxInfo == outputServiceBoxBoxInfo,
+       |      spendingServiceBoxOwnerPubKey == outputServiceBoxOwnerPubKey,
+       |      spendingServiceBoxProfitSharingPercentage == outputServiceBoxProfitSharingPercentage,
+       |    ))
        |
-       |    // Scenario 2: Lend Initiation
-       |    //
-       |    // spendingBox have one extra token as compared to outputBox
-       |    // Repayment token is the same
-       |    //
-       |    // Checks:
-       |    // - Service Check
-       |    // - Lend token == 1 in lend box
-       |    // - Service Box lend token == -1 of total
+       |    val serviceFullCheck = allOf(Coll(
+       |      serviceCheck,
+       |      serviceRegisterCheck
+       |    ))
        |
-       |    val isLendInitiation =
-       |      (spendingServiceBoxLendTokenCount == outputServiceBoxLendTokenCount - 1) &&
-       |      (spendingServiceBoxRepaymentTokenCount == outputServiceBoxRepaymentTokenCount)
-       |
-       |    if (isLendInitiation) {
-       |      val tokenizedBox = OUTPUTS(1)
-       |      val tokenizedBoxLendToken = tokenizedBox.tokens(0)._1
-       |      val tokenizedBoxLendTokenCount = tokenizedBox.tokens(0)._2
-       |
+       |    // Lend Initiation
+       |    if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 - 1) &&
+       |      OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2) {
        |      val isLendInitiationServiceCheck = {
        |        allOf(Coll(
-       |          serviceCheck,
-       |          tokenizedBoxLendToken == spendingServiceBoxLendToken,
-       |          tokenizedBoxLendTokenCount == 1
+       |          serviceFullCheck,
        |       ))
        |      }
-       |      sigmaProps(isLendInitiationCheck)
-       |    }
        |
+       |      sigmaProp(isLendInitiationServiceCheck)
+       |    } else {
+       |      // Lend Success
+       |      if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 + 1) &&
+       |      OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2 - 1) {
        |
-       |    // Scenario 3: Lend Funding Success
-       |    //
-       |    // Lend funding success, replace lend token with repayment token
-       |    //
-       |    // Checks:
-       |    // - Service box: Lend token + 1
-       |    // - Service box: Repayment token - 1
-       |    // - LendBox: Value >= funding goal
-       |    // - LendBox: Lend Token == 1 (was 1 before tx)
-       |    // - RepaymentBox: Repayment token == 1
-       |    //
-       |    //    Borrower Box
-       |    // - Value: >= lendingFund
-       |    // - PropositionBytes == Borrowers
+       |        sigmaProp(allOf(Coll(
+       |          serviceFullCheck
+       |        )))
+       |      } else {
+       |        if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2) &&
+       |          OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2 + 1) {
+       |          // Profit Sharing
+       |          val profitSharingBox = OUTPUTS(1)
        |
-       |    val isLendFundingSuccess =
-       |      (spendingServiceBoxLendTokenCount == outputServiceBoxLendTokenCount + 1) &&
-       |      (spendingServiceBoxRepaymentTokenCount == outputServiceBoxRepaymentTokenCount - 1)
+       |          val profitSharingBoxOwnerValidation =
+       |            profitSharingBox.propositionBytes == spendingServiceBoxOwnerPubKey.get
        |
-       |    if (isLendFundingSuccess) {
-       |      val lendingBox = INPUTS(1)
-       |      val repaymentBox = OUTPUTS(1)
-       |
-       |      val tokenizedBoxLendToken = lendingBox.tokens(0)._1
-       |      val tokenizedBoxLendTokenCount = lendingBox.tokens(0)._2
-       |      val lendingValue = lendingBox.R4[Coll[Long]].get(0)
-       |      val lendingBoxValue = lendingBox.value
-       |
-       |      val tokenizedBoxRepaymentToken = repaymentBox.tokens(0)._1
-       |      val tokenizedBoxRepaymentTokenCount = repaymentBox.tokens(0)._2
-       |
-       |      val isLendFundingServiceCheck = {
-       |        allOf(Coll(
-       |          serviceCheck,
-       |          tokenizedBoxLendToken == spendingServiceBoxLendToken,
-       |          tokenizedBoxLendTokenCount == 1,
-       |          tokenizedBoxRepaymentToken = spendingServiceBoxRepaymentToken,
-       |          tokenizedBoxRepaymentTokenCount = 1,
-       |          lendingBoxValue >= lendingValue
-       |        ))
+       |          sigmaProp(allOf(Coll(
+       |            serviceFullCheck,
+       |            profitSharingBoxOwnerValidation
+       |          )))
+       |        } else {
+       |          if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 + 1) &&
+       |           OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2) {
+       |            sigmaProp(serviceFullCheck)
+       |          } else {
+       |            sigmaProp(false)
+       |          }
+       |        }
        |      }
-       |
-       |      // Check send to
-       |      // borrower
-       |      //
-       |      // Validate that the funds box goes to
-       |      // borrower
-       |
-       |      val borrowerBox = OUTPUTS(2)
-       |      val borrowerPubKey = lendingBox.R6[Coll[Byte]].get
-       |      val borrowerBoxValue = borrowerBox.value
-       |
-       |      val borrowerBoxValidation =
-       |        allOf(Coll(
-       |          borrowerBox.propositionBytes == borrowerPubKey,
-       |          borrowerBoxValue >= lendingValue
-       |        ))
-       |
-       |      sigmaProps(allOf(Coll(
-       |        isLendFundingServiceCheck,
-       |        borrowerBoxValidation
-       |      )))
        |    }
-       |
-       |
-       |    // Scenario 4: Repayment Consumption
-       |    //
-       |    // outputBox will receive one token from lendBox
-       |    // generates profitSharingBox to owner
-       |    // Checks:
-       |    // Total Output Box: 3 (ServiceBox, ProfitSharingBox, Lender's Box)
-       |    // Service box: Lend Token == same
-       |    // Service box: Repayment Token + 1
-       |    // Profit Sharing Box: PropositionBytes == profitSharingBoxOwnerPubKey
-       |    // RepaymentBox: Value >= repaymentValue
-       |
-       |    val isRepaymentConsumption =
-       |      (spendingServiceBoxLendTokenCount == outputServiceBoxLendTokenCount) &&
-       |      (spendingServiceBoxRepaymentTokenCount == outputServiceBoxRepaymentTokenCount + 1)
-       |
-       |
-       |    // Verify repayment token and repayment box
-       |    if (isRepaymentConsumption) {
-       |      // @todo verify repayment value
-       |      val tokenizedBox = INPUTS(1)
-       |      val tokenizedBoxLendToken = tokenizedBox.tokens(0)._1
-       |      val tokenizedBoxLendTokenCount = tokenizedBox.tokens(0)._2
-       |      val repaymentValue = tokenizedBox.R7[Coll[Long]].get(2)
-       |      val repaymentBoxValue = tokenizedBox.value
-       |
-       |      val isRepaymentConsumptionServiceCheck = {
-       |        allOf(Coll(
-       |          serviceCheck,
-       |          tokenizedBoxRepaymentToken == spendingServiceBoxRepaymentToken,
-       |          tokenizedBoxRepaymentTokenCount == 1,
-       |          repaymentBoxValue >= repaymentValue
-       |        ))
-       |      }
-       |
-       |
-       |      // Profit Sharing
-       |      //
-       |      // Validate that the profit sharing box goes to
-       |      // owner
-       |
-       |      val profitSharingBox = OUTPUTS(1)
-       |
-       |      val profitSharingBoxOwnerValidation =
-       |        profitSharingBox.propositionBytes == spendingServiceBoxOwnerPubKey
-       |
-       |      sigmaProps(allOf(Coll(
-       |        isRepaymentConsumptionServiceCheck,
-       |        profitSharingBoxOwnerValidation
-       |      )))
-       |    }
-       |
-       |
-       |    // Scenario 5: Refunds
-       |    //
-       |    // if we don't go through any of the above scenario, most
-       |    // likely we're going through a refund. Refund only requires
-       |    // lendBox
-       |    //
-       |    // Checks:
-       |    // - LendToken return to ServiceBox
-       |
-       |    val lendingBox = INPUTS(1)
-       |    val lendBoxDeadline = lendingBox.R4[Coll[Long]].get(1)
-       |
-       |    val pastLendDeadline = HEIGHT > lendBoxDeadline
-       |    val isLendRefund =
-       |      (spendingServiceBoxLendTokenCount == outputServiceBoxLendTokenCount + 1) &&
-       |      (spendingServiceBoxRepaymentTokenCount == outputServiceBoxRepaymentTokenCount)
-       |
-       |    if (pastLendDeadline && isLendRefund) {
-       |      val lendingBoxToken = lendingBox.tokens(0)._1
-       |
-       |      val refundCheck = allOf(Coll(
-       |        lendingBoxToken == serviceLendToken,
-       |        spendingServiceBoxLendTokenCount == outputServiceBoxLendTokenCount + 1
-       |      ))
-       |    }
-       |
-       |    // Scenario: Fail
-       |    sigmaProps(false)
+       |  }
        |}
        |""".stripMargin
 }

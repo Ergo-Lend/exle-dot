@@ -40,21 +40,66 @@ case class FundingInfoRegister(fundingGoal: Long,
 }
 
 case class LendingProjectDetailsRegister(projectName: String,
-                                    description: String,
-                                    borrowersPubKey: String)  extends CollByteRegister {
+                                    description: String)  extends CollByteRegister {
 
   def this(registerData: Array[Coll[Byte]]) = this(
     projectName = CollByte.collByteToString(registerData(0)),
     description = CollByte.collByteToString(registerData(1)),
-    borrowersPubKey = CollByte.collByteToString(registerData(2))
   )
 
   def toRegister: ErgoValue[Coll[Coll[Byte]]] = {
-    val register: Array[Array[Byte]] = new Array[Array[Byte]](3)
+    val register: Array[Array[Byte]] = new Array[Array[Byte]](2)
 
     register(0) = stringToCollByte(projectName)
     register(1) = stringToCollByte(description)
-    register(2) = stringToCollByte(borrowersPubKey)
+
+    ergoValueOf(register)
+  }
+}
+
+case class CreationInfoRegister(creationHeight: Long,
+                                version: Long = 1) extends LongRegister {
+
+  def this(registerData: Array[Long]) = this(
+    creationHeight = registerData(0),
+    version = registerData(1))
+
+  def toRegister: ErgoValue[Coll[Long]] = {
+    val register: Array[Long] = new Array[Long](2)
+
+    register(0) = creationHeight
+    register(1) = version
+
+    ergoValueOf(register)
+  }
+}
+
+case class ServiceBoxInfoRegister(name: String,
+                                  description: String) extends CollByteRegister {
+
+  def this(registerData: Array[Coll[Byte]]) = this(
+    name = CollByte.collByteToString(registerData(0)),
+    description = CollByte.collByteToString(registerData(1)),
+  )
+
+  def toRegister: ErgoValue[Coll[Coll[Byte]]] = {
+    val register: Array[Array[Byte]] = new Array[Array[Byte]](2)
+
+    register(0) = stringToCollByte(name)
+    register(1) = stringToCollByte(description)
+
+    ergoValueOf(register)
+  }
+}
+
+case class ProfitSharingRegister(profitSharingPercentage: Long) extends LongRegister {
+  def this(registerData: Array[Long]) = this(
+    profitSharingPercentage = registerData(0))
+
+  def toRegister: ErgoValue[Coll[Long]] = {
+    val register: Array[Long] = new Array[Long](1)
+
+    register(0) = profitSharingPercentage
 
     ergoValueOf(register)
   }

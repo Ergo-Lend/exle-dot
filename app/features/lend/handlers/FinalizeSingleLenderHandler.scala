@@ -4,12 +4,11 @@ import config.Configs
 import ergotools.client.Client
 import errors.{connectionException, failedTxException}
 import features.lend.LendBoxExplorer
-import features.lend.boxes.{LendServiceBox, SingleLenderLendingBox, SingleLenderRepaymentBox}
+import features.lend.boxes.{SingleLenderLendBox, SingleLenderLendBoxContract, SingleLenderRepaymentBox, SingleLenderRepaymentBoxContract}
 import features.lend.txs.singleLender.{SingleLenderTxFactory, SingleRepaymentTxFactory}
 import helpers.StackTrace
 import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoClientException, InputBox}
 import play.api.Logger
-import special.collection.Coll
 
 import javax.inject.Inject
 
@@ -48,9 +47,12 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
    */
   def processFundedLendBoxes(ctx: BlockchainContext): Unit = {
     try {
-      client.getAllUnspentBox(Address.create(Configs.addressEncoder.fromProposition()))
+      val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx).getErgoTree
+      val encodedAddress = Configs.addressEncoder.fromProposition(lendBoxContract).get.toString
+
+      client.getAllUnspentBox(Address.create(encodedAddress))
         .filter(box => {
-          val wrappedBox = new SingleLenderLendingBox(box)
+          val wrappedBox = new SingleLenderLendBox(box)
           val isFunded = box.getValue >= wrappedBox.fundingInfoRegister.fundingGoal
 
           isFunded
@@ -65,12 +67,12 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
 
   def processFundedLendBox(ctx: BlockchainContext, lendBox: InputBox): InputBox = {
     try {
-      val wrappedLendBox = new SingleLenderLendingBox(lendBox)
+      val wrappedLendBox = new SingleLenderLendBox(lendBox)
 
       val fundingSuccess = wrappedLendBox.value >= wrappedLendBox.fundingInfoRegister.fundingGoal
       if (fundingSuccess) {
         val serviceBox = explorer.getServiceBox
-        val fundedLendTx = SingleLenderTxFactory.createFundedLendingBoxTx(serviceBox, lendBox)
+        val fundedLendTx = SingleLenderTxFactory.createFundedLendBoxTx(serviceBox, lendBox)
         val signedTx = fundedLendTx.runTx(ctx)
 
         val fundedTxId = ctx.sendTransaction(signedTx)
@@ -103,7 +105,10 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
    */
   def processFundedRepaymentBoxes(ctx: BlockchainContext): Unit = {
     try {
-      client.getAllUnspentBox(Address.create(Configs.addressEncoder.fromProposition()))
+      val repaymentBoxContract = SingleLenderRepaymentBoxContract.getContract(ctx).getErgoTree
+      val encodedAddress = Configs.addressEncoder.fromProposition(repaymentBoxContract).get.toString
+
+      client.getAllUnspentBox(Address.create(encodedAddress))
         .filter(box => {
           val wrappedBox = new SingleLenderRepaymentBox(box)
           val isRepaid = box.getValue >= wrappedBox.repaymentDetailsRegister.repaymentAmount
@@ -149,18 +154,23 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
    * @param ctx
    */
   def processRefundLendBoxes(ctx: BlockchainContext): Unit = {
-    try client.getAllUnspentBox(Address.create(Configs.addressEncoder.fromProposition()))
-      .filter(p = box => {
-        val wrappedBox = new SingleLenderLendingBox(box)
-        val isFunded = wrappedBox.value < wrappedBox.fundingInfoRegister.fundingGoal
-        val isPastDeadline = client.getHeight > wrappedBox.fundingInfoRegister.deadlineHeight
+    try {
+      val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx).getErgoTree
+      val encodedAddress = Configs.addressEncoder.fromProposition(lendBoxContract).get.toString
 
-        val shouldRefund = !isFunded && isPastDeadline
+      client.getAllUnspentBox(Address.create(encodedAddress))
+        .filter(box => {
+          val wrappedBox = new SingleLenderLendBox(box)
+          val isFunded = wrappedBox.value < wrappedBox.fundingInfoRegister.fundingGoal
+          val isPastDeadline = client.getHeight > wrappedBox.fundingInfoRegister.deadlineHeight
 
-        shouldRefund
-      }).foreach(lendBox => {
-      if (!explorer.isBoxInMemPool(lendBox)) processRefundLendBox(ctx, lendBox)
-    }) catch {
+          val shouldRefund = !isFunded && isPastDeadline
+
+          shouldRefund
+        }).foreach(lendBox => {
+          if (!explorer.isBoxInMemPool(lendBox)) processRefundLendBox(ctx, lendBox)
+        })
+    } catch {
       case e: connectionException => logger.warn(e.getMessage)
       case e: Throwable => logger.error(StackTrace.getStackTraceStr(e))
     }

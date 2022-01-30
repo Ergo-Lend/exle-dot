@@ -25,7 +25,7 @@ class RepaymentDetailsRegister(val fundedHeight: Long,
                                val repaymentHeightGoal: Long) extends CollByteRegister with RepaymentRegister {
 
   def toRegister: ErgoValue[Coll[Long]] = {
-    val register: Array[Long] = new Array[Long](3)
+    val register: Array[Long] = new Array[Long](4)
 
     register(0) = fundedHeight
     register(1) = repaymentAmount

@@ -17,6 +17,7 @@ resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repos
 libraryDependencies ++= Seq(
   jdbc,
   "org.postgresql" % "postgresql" % "42.2.24",
+  "org.ergoplatform" %% "ergo-playground-env" % "0.0.0-86-400c8c4b-SNAPSHOT",
   "com.h2database" % "h2" % "1.4.200",
   "org.playframework.anorm" %% "anorm" % "2.6.10",
   "org.ergoplatform" %% "ergo-appkit" % "develop-dd40e4e5-SNAPSHOT",

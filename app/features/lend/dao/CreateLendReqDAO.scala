@@ -49,9 +49,18 @@ class CreateLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigP
   /**
    *
    */
-  def insert(name: String, description: String, goal: Long, deadlineHeight: Long, repaymentHeight: Long, interestRatePercent: Long,
-             state: TxState, walletAddress: String, paymentAddress: String, createTxId: Option[String],
-             timeStamp: String, ttl: Long): Future[Unit] = {
+  def insert(name: String,
+             description: String,
+             goal: Long,
+             deadlineHeight: Long,
+             repaymentHeight: Long,
+             interestRatePercent: Long,
+             state: TxState,
+             walletAddress: String,
+             paymentAddress: String,
+             createTxId: Option[String],
+             timeStamp: String,
+             ttl: Long): Future[Unit] = {
     val action = requests += CreateLendReq(
       id = 1,
       name = name,
