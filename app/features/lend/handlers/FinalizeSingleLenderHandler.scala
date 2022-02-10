@@ -192,6 +192,8 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
       val signedTxId = ctx.sendTransaction(signedTx)
 
       if (!isTxPassed(signedTxId)) throw failedTxException(s"refund Transaction failed for ${lendBox.getId}")
+    } catch {
+      case e: Throwable => throw e
     }
   }
 

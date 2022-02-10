@@ -1,7 +1,5 @@
 package features.lend.runners
 
-import config.Configs
-import ergotools.LendServiceTokens
 import ergotools.client.Client
 import features.lend.LendBoxExplorer
 

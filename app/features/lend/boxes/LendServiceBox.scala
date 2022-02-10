@@ -2,11 +2,12 @@ package features.lend.boxes
 
 import boxes.registers.RegisterTypes.{CollByteRegister, LongRegister, NumberRegister, StringRegister}
 import config.Configs
-import ergotools.LendServiceTokens
+import ergotools.{ContractUtils, LendServiceTokens}
+import features.lend.boxes.SingleLenderServiceBoxContract.getServiceBoxContract
 import features.lend.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import features.lend.contracts.singleLenderLendServiceBoxScript
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoContracts, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, UnsignedTransactionBuilder}
 import special.collection.Coll
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
@@ -48,7 +49,6 @@ class LendServiceBox(val value: Long,
   override val nft: ErgoId = LendServiceTokens.nft
   val lendToken: ErgoId = LendServiceTokens.lendToken
   val repaymentToken: ErgoId = LendServiceTokens.repaymentToken
-  override val serviceOwner: Address = Configs.serviceOwner
 
   def this(inputBox: InputBox) = this(
     value = inputBox.getValue,
@@ -101,7 +101,7 @@ class LendServiceBox(val value: Long,
   def getOwnerProfitSharingBox(amountForProfitSplit: Long,
                                ctx: BlockchainContext,
                                txB: UnsignedTransactionBuilder): OutBox = {
-    val profitSharePercentage = amountForProfitSplit * (profitSharingPercentage.profitSharingPercentage / 100)
+    val profitSharePercentage = profitSharingPercentage.profitSharingPercentage * amountForProfitSplit / 100
     val ownerProfitSharingBox = new FundsToAddressBox(profitSharePercentage, ergoLendPubKey.address)
 
     ownerProfitSharingBox.getOutputBox(ctx, txB)
@@ -200,13 +200,20 @@ class LendServiceBox(val value: Long,
 
     incrementedLendServiceBox
   }
+}
 
-  override def getServiceBoxContract(ctx: BlockchainContext): ErgoContract = {
+object SingleLenderServiceBoxContract {
+  val serviceOwner: Address = Configs.serviceOwner
+  def getServiceBoxContract(ctx: BlockchainContext): ErgoContract = {
+    val lendBoxHash = ContractUtils.getContractScriptHash(SingleLenderLendBoxContract.getContract(ctx))
+    val repaymentBoxHash = ContractUtils.getContractScriptHash(SingleLenderRepaymentBoxContract.getContract(ctx))
     ctx.compileContract(ConstantsBuilder.create()
       .item("ownerPk", serviceOwner.getPublicKey)
       .item("serviceNFT", LendServiceTokens.nft.getBytes)
       .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
       .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
+      .item("lendBoxHash", lendBoxHash)
+      .item("repaymentBoxHash", repaymentBoxHash)
       .build(), singleLenderLendServiceBoxScript)
   }
 }
@@ -220,9 +227,7 @@ abstract class ServiceBox(val pubKey: CollByteRegister,
                            val profitSharingPercentage: LongRegister
                          ) extends Box {
   val nft: ErgoId
-  val serviceOwner: Address
 
   def getOutputServiceBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
   def getPubKeyAddress: ErgoAddress
-  def getServiceBoxContract(ctx: BlockchainContext): ErgoContract
 }

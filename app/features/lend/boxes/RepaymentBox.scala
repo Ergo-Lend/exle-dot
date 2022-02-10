@@ -41,12 +41,12 @@ class SingleLenderRepaymentBox(
 
   def this(inputBox: InputBox) = this (
     value = inputBox.getValue,
-    fundingInfoRegister = new FundingInfoRegister(inputBox.getRegisters.get(0).getValue.asInstanceOf[Array[Long]]),
-    lendingProjectDetailsRegister = new LendingProjectDetailsRegister(inputBox.getRegisters.get(1).getValue.asInstanceOf[Array[Coll[Byte]]]),
-    borrowerRegister = new BorrowerRegister(inputBox.getRegisters.get(2).getValue.asInstanceOf[Array[Byte]]),
-    singleLenderRegister = new SingleLenderRegister(inputBox.getRegisters.get(3).getValue.asInstanceOf[Array[Byte]]),
+    fundingInfoRegister = new FundingInfoRegister(inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Long]].toArray),
+    lendingProjectDetailsRegister = new LendingProjectDetailsRegister(inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Coll[Byte]]].toArray),
+    borrowerRegister = new BorrowerRegister(inputBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray),
+    singleLenderRegister = new SingleLenderRegister(inputBox.getRegisters.get(3).getValue.asInstanceOf[Coll[Byte]].toArray),
     repaymentDetailsRegister = new RepaymentDetailsRegister(
-      inputBox.getRegisters.get(3).getValue.asInstanceOf[Array[Long]]),
+      inputBox.getRegisters.get(4).getValue.asInstanceOf[Coll[Long]].toArray),
     repaymentToken = inputBox.getTokens.get(0),
     id = inputBox.getId
   )
@@ -109,7 +109,7 @@ class SingleLenderRepaymentBox(
 
   override def fundedBox(): SingleLenderRepaymentBox = {
     new SingleLenderRepaymentBox(
-      value = repaymentDetailsRegister.repaymentAmount - Parameters.MinFee,
+      value = repaymentDetailsRegister.repaymentAmount + Parameters.MinFee,
       fundingInfoRegister = fundingInfoRegister,
       lendingProjectDetailsRegister = lendingProjectDetailsRegister,
       borrowerRegister = borrowerRegister,
@@ -131,11 +131,24 @@ class SingleLenderRepaymentBox(
     }
   }
 
+  /**
+   * RepaymentBox -> Repayment Value
+   * Repayment Value -  ProxyMergeTx - Repayment Box Completion
+   * @return
+   */
   def getFullFundAmount: Long = {
     val fullFundAmount = repaymentDetailsRegister.repaymentAmount
-    val proxyMergeTxAmount = Parameters.MinFee
-    val totalAmount = fullFundAmount + proxyMergeTxAmount
+    val proxyMergeTxAndCompletionAmount = Parameters.MinFee * 2
+    val totalAmount = fullFundAmount + proxyMergeTxAndCompletionAmount - value
     return totalAmount
+  }
+
+  def getFundAmount(amount: Long = 0): Long = {
+    if (amount == 0) getFullFundAmount
+    else {
+      val proxyMergeTxAndCompletionAmount = Parameters.MinFee * 2
+      return amount + proxyMergeTxAndCompletionAmount
+    }
   }
 
   override def getLendersAddress: ErgoAddress = {

@@ -1,7 +1,7 @@
 package ergotools.client
 
 import config.Configs
-import org.ergoplatform.appkit.{Address, CoveringBoxes, ErgoClient, InputBox, RestApiErgoClient}
+import org.ergoplatform.appkit.{Address, CoveringBoxes, ErgoClient, ErgoToken, InputBox, RestApiErgoClient}
 import play.api.Logger
 import errors.connectionException
 
@@ -56,17 +56,7 @@ class Client {
   def getAllUnspentBox(address: Address): List[InputBox] = {
     client.execute(ctx =>
       try {
-        ctx.getCoveringBoxesFor(address, (1e9 * 1e8).toLong).getBoxes.asScala.toList
-      } catch {
-        case _: Throwable => throw connectionException()
-      }
-    )
-  }
-
-  def getUnspentBox2(address: Address, amount: Long): CoveringBoxes = {
-    client.execute(ctx =>
-      try {
-        ctx.getCoveringBoxesFor(address, amount)
+        ctx.getCoveringBoxesFor(address, (1e9 * 1e8).toLong, null).getBoxes.asScala.toList
       } catch {
         case _: Throwable => throw connectionException()
       }
@@ -76,7 +66,7 @@ class Client {
   def getCoveringBoxesFor(address: Address, amount: Long): CoveringBoxes = {
     client.execute(ctx =>
       try {
-        ctx.getCoveringBoxesFor(address, amount)
+        ctx.getCoveringBoxesFor(address, amount, null)
       } catch {
         case _: Throwable => throw connectionException()
       }

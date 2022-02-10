@@ -45,14 +45,14 @@ object ServiceBoxCreator {
       val serviceNftBox: OutBox = txB.outBoxBuilder()
         .value(amountToSend)
         .mintToken(serviceNft, serviceNFTTokenName, serviceNFTDescription, 0)
-        .contract(ErgoContracts.sendToPK(ctx, prover.getAddress))
+        .contract(ContractUtils.sendToPK(ctx, prover.getAddress))
         .build()
 
       val token = new ErgoToken(boxesToSpend.get(1).getId, 1000000000)
       val tokensBox: OutBox = txB.outBoxBuilder()
         .value(amountToSend)
         .mintToken(token, tokenName, tokenDescription, 0)
-        .contract(ErgoContracts.sendToPK(ctx, prover.getAddress))
+        .contract(ContractUtils.sendToPK(ctx, prover.getAddress))
         .build()
 
       val tx = txB
@@ -124,7 +124,7 @@ object ServiceBoxMerger {
       val serviceNft = new ErgoToken(boxesToSpend.get(0).getId, 1)
       val serviceBox: OutBox = txB.outBoxBuilder()
         .value(amountToSend)
-        .contract(ErgoContracts.sendToPK(ctx, prover.getAddress))
+        .contract(ContractUtils.sendToPK(ctx, prover.getAddress))
         .build()
 
       val tx = txB

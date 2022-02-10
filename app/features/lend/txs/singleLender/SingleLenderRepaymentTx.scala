@@ -36,27 +36,21 @@ class SingleLenderFundRepaymentTx(var repaymentBox: InputBox,
     val wrappedPaymentBox = paymentBox.get
     val wrappedInputRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
 
-    val totalFundedValue = wrappedInputRepaymentBox.value + wrappedPaymentBox.value
-    val isFunded = totalFundedValue >= wrappedInputRepaymentBox.repaymentDetailsRegister.repaymentAmount + Parameters.MinFee
-
     // if funded then return fundedBox, else return repaymentBox with valid fund
-    val outputRepaymentBox = if (isFunded) wrappedInputRepaymentBox.fundedBox().getOutputBox(ctx, txB)
-      else wrappedInputRepaymentBox.fundBox(singleLenderFundRepaymentPaymentBox.getValue - Parameters.MinFee)
-      .getOutputBox(ctx, txB)
+    val outputRepaymentBox = wrappedInputRepaymentBox.fundBox(singleLenderFundRepaymentPaymentBox.getValue - Parameters.MinFee).getOutputBox(ctx, txB)
 
-    val lendInitiationTx = txB.boxesToSpend(getInputBoxes.asJava)
+    val fundRepaymentTx = txB.boxesToSpend(getInputBoxes.asJava)
       .fee(Configs.fee)
       .outputs(outputRepaymentBox)
       .sendChangeTo(Address.create(wrappedPaymentBox.singleAddressRegister.address).getErgoAddress)
       .build()
 
     try {
-      val signedTx = prover.sign(lendInitiationTx)
+      val signedTx = prover.sign(fundRepaymentTx)
       signedTx
     } catch {
-      case e: Throwable => {
-        throw proveException()
-      }
+      case e: Throwable =>
+        throw e
     }
   }
 
@@ -114,7 +108,7 @@ class SingleLenderRepaymentFundedTx(val serviceBox: InputBox, val repaymentBox: 
     val wrappedInputServiceBox = new LendServiceBox(serviceBox)
 
     val outputServiceBox = wrappedInputServiceBox.consumeRepaymentBox(wrappedRepaymentBox, ctx, txB).asJava
-    val ergoLendInterest = wrappedInputServiceBox.profitSharingPercentage.profitSharingPercentage * wrappedRepaymentBox.repaymentDetailsRegister.totalInterestAmount
+    val ergoLendInterest = wrappedInputServiceBox.profitSharingPercentage.profitSharingPercentage * wrappedRepaymentBox.repaymentDetailsRegister.totalInterestAmount / 100
     val outputLendersPaymentBox = wrappedRepaymentBox.
       repaidLendersPaymentBox(ergoLendInterest).
       getOutputBox(ctx, txB)
@@ -131,7 +125,8 @@ class SingleLenderRepaymentFundedTx(val serviceBox: InputBox, val repaymentBox: 
       signedTx
     } catch {
       case e: Throwable => {
-        throw proveException()
+        e.printStackTrace()
+        throw e
       }
     }
   }

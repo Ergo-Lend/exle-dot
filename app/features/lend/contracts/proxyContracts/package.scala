@@ -117,6 +117,7 @@ package object proxyContracts {
        |
        |      val fundLendBox = {
        |        allOf(Coll(
+       |          fundable,
        |          outputLendBox.value == newFundedValue,
        |          outputLendBox.value >= fundingGoal,
        |          outputLendBoxLenderPk.get == lenderPk,
@@ -178,8 +179,7 @@ package object proxyContracts {
        |    // ** Variable Declaration **
        |    val inputRepaymentBox = INPUTS(0)
        |    val outputRepaymentBox = OUTPUTS(0)
-       |    val repaymentBoxRepaymentDetails = inputRepaymentBox.R7[Coll[Long]]
-       |    val repaymentBoxInfo = inputRepaymentBox.R5[Coll[Coll[Byte]]]
+       |    val repaymentBoxRepaymentDetails = inputRepaymentBox.R8[Coll[Long]]
        |
        |    val repaymentGoal = repaymentBoxRepaymentDetails.get(1)
        |    val repaymentBoxId = inputRepaymentBox.id
@@ -199,6 +199,7 @@ package object proxyContracts {
        |      // we check the id and if the value is correct.
        |      val repaymentCheck = {
        |        allOf(Coll(
+       |          fundable,
        |          inputRepaymentBox.tokens(0)._1 == serviceRepaymentToken,
        |          outputRepaymentBox.value == amountRepaidOutput
        |        ))

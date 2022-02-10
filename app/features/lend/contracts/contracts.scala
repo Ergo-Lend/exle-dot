@@ -271,7 +271,7 @@ package object contracts {
        |  val serviceBox = INPUTS(0)
        |  val serviceBoxVerification = INPUTS(0).tokens(0)._1 == serviceBoxNFT
        |
-       |  if (OUTPUTS.size == 1) {
+       |  if (OUTPUTS.size == 2) {
        |    // *** ADDING FUNDS ***
        |    // RepaymentBox, ProxyContract -> OutRepaymentBox
        |    // @variables minFee
@@ -307,7 +307,7 @@ package object contracts {
        |      ))
        |    }
        |
-       |    val repaymentNotFullyFunded = repaymentBoxInput.value >= SELF.R8[Coll[Long]].get(1)
+       |    val repaymentNotFullyFunded = repaymentBoxInput.value < SELF.R8[Coll[Long]].get(1)
        |
        |    val repaymentFundingFulfilled = {
        |      allOf(Coll(
@@ -337,7 +337,7 @@ package object contracts {
        |    if (fundingSuccessful) {
        |
        |      val inputRepaymentBox = SELF
-       |      val lenderRepaidBox = OUTPUTS(OUTPUTS.size - 1)
+       |      val lenderRepaidBox = OUTPUTS(2)
        |
        |      // compare lender's box and value
        |      val inputRepaymentAcc = inputRepaymentBox.R4[Coll[Long]]
@@ -357,40 +357,7 @@ package object contracts {
        |      sigmaProp(lenderRepaidBoxFunded && repaymentBoxVerification && serviceBoxVerification)
        |
        |    } else {
-       |
-       |      // Scenario 1: Creation
-       |      // ServiceBox, LendBox -> ServiceBox, RepaymentBox
-       |
-       |      val lendBoxVerification = INPUTS(1).tokens(0)._1 == serviceLendToken
-       |      val lendBox = INPUTS(1)
-       |      val lendBoxFundingDetails = lendBox.R4[Coll[Long]]
-       |      val lendBoxLendDetails = lendBox.R5[Coll[Coll[Byte]]]
-       |      val lendBoxBorrowerPk = lendBox.R6[Coll[Byte]]
-       |      val lendBoxLenderPk = lendBox.R7[Coll[Byte]]
-       |
-       |      val fundingGoal = lendBoxFundingDetails.get(0)
-       |      val interestRate = lendBoxFundingDetails.get(2)
-       |
-       |      val lendBoxDetailsReplicatedCheck = allOf(Coll(
-       |        lendBoxVerification,
-       |        lendBoxFundingDetails == selfFundingDetails,
-       |        lendBoxLendDetails == selfLendDetails,
-       |        lendBoxBorrowerPk == selfBorrowerPk,
-       |        lendBoxLenderPk == selfLenderPk
-       |      ))
-       |
-       |      val totalInterestAmount = (fundingGoal * (interestRate/100))
-       |      val calculatedRepaymentAmount = fundingGoal + totalInterestAmount
-       |
-       |      val repaymentDetailsInfoCheck = allOf(Coll(
-       |        selfRepaymentDetails.get(1) >= calculatedRepaymentAmount
-       |      ))
-       |
-       |      sigmaProp(allOf(Coll(
-       |        repaymentBoxVerification,
-       |        lendBoxDetailsReplicatedCheck,
-       |        repaymentDetailsInfoCheck
-       |      )))
+       |      sigmaProp(false)
        |    }
        |  }
        |}
@@ -444,6 +411,8 @@ package object contracts {
    * - serviceLendToken
    * - serviceRepaymentToken
    * - ownerPk
+   * - lendBoxHash
+   * - repaymentBoxHash
    */
   lazy val singleLenderLendServiceBoxScript: String =
     s"""{
@@ -490,10 +459,12 @@ package object contracts {
        |    ))
        |
        |    // Lend Initiation
+       |    // Service, Proxy -> Service, LendBox
        |    if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 - 1) &&
        |      OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2) {
        |      val isLendInitiationServiceCheck = {
        |        allOf(Coll(
+       |          blake2b256(OUTPUTS(1).propositionBytes) == lendBoxHash,
        |          serviceFullCheck,
        |       ))
        |      }
@@ -501,13 +472,17 @@ package object contracts {
        |      sigmaProp(isLendInitiationServiceCheck)
        |    } else {
        |      // Lend Success
+       |      // Service, LendBox -> Service, RepaymentBox, BorrowerLoanedFunds
        |      if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 + 1) &&
        |      OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2 - 1) {
        |
        |        sigmaProp(allOf(Coll(
+       |          blake2b256(OUTPUTS(1).propositionBytes) == repaymentBoxHash,
        |          serviceFullCheck
        |        )))
        |      } else {
+       |        // Repayment Success
+       |        // Service, Repayment -> Service, ProfitSharing, LenderRepaidFunds
        |        if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2) &&
        |          OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2 + 1) {
        |          // Profit Sharing

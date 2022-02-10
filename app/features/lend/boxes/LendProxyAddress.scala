@@ -24,7 +24,7 @@ class LendProxyAddress @Inject()(lendProxyContractService: LendProxyContractServ
                                 interestRate: Long,
                                 repaymentHeightLength: Long): String = {
     try {
-      val paymentAddress = lendProxyContractService.getLendCreateProxyContract(
+      val paymentAddress = lendProxyContractService.getLendCreateProxyContractString(
         pk,
         deadlineHeight,
         goal,
@@ -54,7 +54,7 @@ class LendProxyAddress @Inject()(lendProxyContractService: LendProxyContractServ
 
   def getFundLendBoxProxyAddress(lendBoxId: String, lenderPk: String, fundAmount: Long): String= {
     try {
-      val paymentAddress = lendProxyContractService.getFundLendBoxProxyContract(lendBoxId, lenderPk)
+      val paymentAddress = lendProxyContractService.getFundLendBoxProxyContractString(lendBoxId, lenderPk)
       fundLendReqDAO.insert(
         lendBoxId = lendBoxId,
         fundingErgAmount = fundAmount,
@@ -75,7 +75,7 @@ class LendProxyAddress @Inject()(lendProxyContractService: LendProxyContractServ
 
   def getFundRepaymentBoxProxyAddress(repaymentBoxId: String, funderPk: String, fundAmount: Long): String= {
     try {
-      val paymentAddress = lendProxyContractService.getFundRepaymentBoxProxyContract(repaymentBoxId, funderPk)
+      val paymentAddress = lendProxyContractService.getFundRepaymentBoxProxyContractString(repaymentBoxId, funderPk)
       fundRepaymentReqDAO.insert(
         repaymentBoxId = repaymentBoxId,
         fundingErgAmount = fundAmount,

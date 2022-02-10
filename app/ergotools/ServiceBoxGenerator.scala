@@ -1,6 +1,6 @@
 package ergotools
 
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContracts, ErgoToken, InputBox, Parameters, UnsignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoToken, InputBox, Parameters, UnsignedTransaction, UnsignedTransactionBuilder}
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
@@ -25,7 +25,7 @@ class ServiceNFTBox(
     val serviceNFTBox = txB.outBoxBuilder()
       .value(2)
       .mintToken(token, tokenName, tokenDesc, 0)
-      .contract(ErgoContracts.sendToPK(ctx, address))
+      .contract(ContractUtils.sendToPK(ctx, address))
       .build()
 
     val boxesToSpend = Seq(inputBox)
@@ -57,7 +57,7 @@ class ServiceTokensBox(
     val serviceNFTBox = txB.outBoxBuilder()
       .value(2)
       .mintToken(token, tokenName, tokenDesc, 0)
-      .contract(ErgoContracts.sendToPK(ctx, address))
+      .contract(ContractUtils.sendToPK(ctx, address))
       .build()
 
     val boxesToSpend = Seq(inputBox)

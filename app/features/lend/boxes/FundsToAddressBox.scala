@@ -1,8 +1,8 @@
 package features.lend.boxes
 
+import ergotools.ContractUtils
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.impl.ErgoTreeContract
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContracts, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{Address, BlockchainContext, OutBox, UnsignedTransactionBuilder}
 
 /**
  * Funds to Address
@@ -18,7 +18,7 @@ case class FundsToAddressBox(val value: Long, val address: Address) {
   def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     val outputBox = txB.outBoxBuilder()
       .value(value)
-      .contract(ErgoContracts.sendToPK(ctx, address))
+      .contract(ContractUtils.sendToPK(ctx, address))
       .build()
 
     outputBox

@@ -7,13 +7,90 @@ import features.lend.boxes.SingleLenderLendBox
 import features.lend.boxes.registers.SingleLenderRegister
 import features.lend.contracts.proxyContracts.LendProxyContractService
 import features.lend.runners.ExplorerRunner.{walletAddress, writeToFile}
+import features.lend.runners.FundLendRunner.lendBoxId
 import features.lend.txs.singleLender.{ProxyContractTx, SingleLenderTxFactory}
-import org.ergoplatform.appkit.{Address, Parameters}
+import org.ergoplatform.appkit.{Address, ErgoContract, Parameters, SignedTransaction}
+
+case class FundLendRunner(lendBoxId: String, lenderAddress: String, explorer: LendBoxExplorer) {
+  var paymentAddress: Address = Address.create("25JQJ8QcBRwjjm1C46MPfEoA9LuMDJwFGtFenRAG1rdaANCRqA1B7yKtwg3Q2GaTQKTRgfm7aArC2keXCuzsyZADJPZ3GqDm5owPPFWGmMzy1RkEetAShmuqere3qzEDvVWn6SHgER3toQyMkf1kP1ocEBr3V6nENh9YaWJE1nZj48E5qZvgsawAfKFbfY7a3YJMpNWcjSiZsiZVX94woNvkU2QxGuwMx8hDxMKFLrmK7WeNiirmHkkpjEbaxnTFnRE12Gmn3Y5aWfrMv5Kq7GLhCoakuKufxPStnZ3RNBZ7H7nVaMG2n4zaFBF6iX5ksERReq6nkiTGLjYQVfAH5UwNaYEH2BSCQvjcRSHKeyAhtznJErFdRuutEDeSGf3U8WJgofRwhxg89tcHFnaVZ7TZnT7LnHYdQStTfGcdS8HPtnx5Vv6ndU5bD")
+  def proxyContract(client: Client, sendFunds: (ErgoContract, Long) => SignedTransaction): SignedTransaction = {
+    val lendBox = explorer.getLendBox(lendBoxId)
+    val wrappedLendBox = new SingleLenderLendBox(lendBox)
+
+    val lendProxyContractService = new LendProxyContractService(client)
+    val paymentAddressContract = lendProxyContractService.getFundLendBoxProxyContract(
+      lendId = lendBoxId,
+      lenderAddress = lenderAddress
+    )
+
+    val paymentAddressString = lendProxyContractService.getFundLendBoxProxyContractString(
+      lendId = lendBoxId,
+      lenderAddress = lenderAddress
+    )
+
+    paymentAddress = Address.create(paymentAddressString)
+    val totalAmountToFund = wrappedLendBox.getFundingTotalErgs()
+
+    val stringBuilder = new StringBuilder()
+    stringBuilder.append(s"pk: ${walletAddress}\n")
+    stringBuilder.append(s"boxId: ${lendBoxId}\n")
+    stringBuilder.append(s"\n")
+    stringBuilder.append(s"paymentAddress: ${paymentAddress}\n")
+    stringBuilder.append(s"paymentValue: ${totalAmountToFund/Parameters.OneErg} Ergs\n")
+    writeToFile("FundLendReq.txt", stringBuilder.toString())
+
+    sendFunds(paymentAddressContract, wrappedLendBox.getFundingTotalErgs())
+  }
+
+  def handleProxyMerge(client: Client, explorer: LendBoxExplorer): Unit = {
+    val lendBox = explorer.getLendBox(lendBoxId)
+    val wrappedLendBox = new SingleLenderLendBox(lendBox)
+    System.out.println(s"Getting boxes for ${paymentAddress.toString}")
+
+    val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, wrappedLendBox.getFundingTotalErgs()).getBoxes
+
+    System.out.println(s"${unspentPaymentBoxes.size()} box found...")
+
+    val singleLenderRegister = new SingleLenderRegister(walletAddress)
+    val fundLendTx = SingleLenderTxFactory.createFundingLendBoxTx(
+      lendBox,
+      unspentPaymentBoxes.get(0),
+      singleLenderRegister)
+
+    client.getClient.execute(ctx => {
+      val signedTransaction = fundLendTx.runTx(ctx)
+      val fundTxId = ctx.sendTransaction(signedTransaction)
+
+      System.out.println(signedTransaction.toJson(true))
+      if (fundTxId == null) throw failedTxException(s"FundLend failed for ${paymentAddress.toString}")
+    })
+  }
+
+  def handleSuccess(client: Client, explorer: LendBoxExplorer): Unit = {
+    val serviceBox = explorer.getServiceBox
+    val lendingBox = explorer.getLendBox(lendBoxId)
+
+    val fundSuccessTx = SingleLenderTxFactory.createFundedLendBoxTx(serviceBox, lendingBox)
+
+    client.getClient.execute(ctx => {
+      val signedTransaction = fundSuccessTx.runTx(ctx)
+
+      val fundSuccessTxId = ctx.sendTransaction(signedTransaction)
+
+      if (fundSuccessTxId == null) throw failedTxException(s"lendFund Success failed for ${lendBoxId}")
+      System.out.println(s"Lend Fund Success Tx ID: ${fundSuccessTxId}")
+      System.out.println()
+      System.out.println(signedTransaction)
+      System.out.println()
+      System.out.println(s"Repayment Box Id: ${signedTransaction.getOutputsToSpend.get(1).getId}")
+    })
+  }
+}
 
 object FundLendRunner {
-  val lendBoxId = "10a52f0f7ead2ca2e48e59ef505577079d62ea4b0675d261a3155213f49bf5e6"
-  val paymentAddressString = "VLzgw4C2SAnzZqoEz3yoYM8GuiHp1UZ6HGejTEdHAE8nS1Xy1AXvUz6BVCpZhszLz14jxTb2bWquoGmiKnqokciRsyjKjamc3LVUjcKyVphN46CSsMtJbMKGZHtDsHQkm8L4sXHMgEFMjDmTpbAVopXGqsm3U4J4APCUf1ERVJqJRcZsNBcGnPdcwQwP4KofLf4EgAmin6HPgdAJBCgaxTb4QwdHgYrWXjXHKXaRLTprSJZit8qj9QC78DTJYTbPxA7m33Jb3h17DHvVnXNT3XTeo95zVSg87gMMfh1tEWGZnTuVCo631jcxgA9CJsyzZp1TsN3gyt8siUkit2THwbPPNzroVGJ6mq2MpQEE6v5Urbrc8vdmPN82bUZgNHU3Rbtpwp6hTJCo2tMDnnNypz2GozpUFMKJrPCAEJhvXWypyRqj"
-  val lenderPk = "9f83nJY4x9QkHmeek6PJMcTrf2xcaHAT3j5HD5sANXibXjMUixn"
+  val lendBoxId: String = "41b38d7879f2d016aa74b5250545e2a6ab1f0d8513b92a551d59edeaac1d0089"
+  val paymentAddressString: String = "S4zcopbihvfXvFPWQHBz5jxeRVosPDtPtP6W7xptmX2C9u4QxkdKTv2Uv9NrKHQeeevBBrDPSi2GQMhgxALRc2hy98CJxS8MrniJPrn3BnvnJhQg2pNQWYwfCVeybdWXWLY7D9UR6bkwDoLBTCWjhQgo3uCs9AXTCThzf8CS4i3M2CNSsxDfA7UzFVzTCEvSa8UAyCRiuVRFQGQ5Dv437YU1UUdh1xXfFnaMwHGyDxzcFr66gZHqBcKfVjBPNDP3XJ1yNffGMQE1kRmBJ4bS2NCyPJtaviyxcnZciUigpMaFoQvnYmscmZvPX4kzcJ7wexnath99JjWvmYtAhPrLjqYK5JF9qFG3gm1pwwzEEupsKMQEqHLr5Cqa1s6axiZ6RRkW84JHgRGXcUFSdQgxmipftXYgMusrCs5CRVXqWeX8ZTc6urrr3BVWb6xtCMHuAoqsbAWwKLrvQy92Y1zPm3fBD"
+  val lenderPk: String = "9f83nJY4x9QkHmeek6PJMcTrf2xcaHAT3j5HD5sANXibXjMUixn"
   val lendBoxFundPayment: Long = 12 * 1000 * 1000
 
   def createFundLendProxyContract(client: Client, explorer: LendBoxExplorer): String = {
@@ -22,7 +99,7 @@ object FundLendRunner {
       val wrappedLendBox = new SingleLenderLendBox(lendBox)
       val lendProxyContractService = new LendProxyContractService(client)
 
-      val paymentAddress = lendProxyContractService.getFundLendBoxProxyContract(
+      val paymentAddress = lendProxyContractService.getFundLendBoxProxyContractString(
         lendBoxId,
         lenderPk)
 
@@ -125,7 +202,7 @@ object FundLendRunner {
     } catch {
       case e: Exception => {
         System.out.println(e)
-        return e.toString
+        throw e
       }
     }
   }

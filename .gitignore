@@ -5,6 +5,7 @@ CreateLendReqInfo.txt
 FundLendReq.txt
 LendInitiation.txt
 LendInitiationRefund.txt
+RepaymentProxyRefund.txt
 /.bsp
 /.idea
 /.idea_modules
