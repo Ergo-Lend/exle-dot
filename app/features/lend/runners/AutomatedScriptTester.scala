@@ -5,7 +5,7 @@ import ergotools.TxState.TxState
 import ergotools.client.Client
 import features.lend.LendBoxExplorer
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoProver, Parameters, SecretString, SignedTransaction}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoProver, ErgoToken, Parameters, SecretString, SignedTransaction}
 
 import java.util.stream.Collectors
 import scala.collection.JavaConverters.seqAsJavaListConverter
@@ -22,12 +22,16 @@ object AutomatedScriptTester {
     setOwnerAddress(Configs.config, Configs.nodeConfig)
 
     val lendInitiationDetails = new LendInitiationDetails(
-      deadlineHeight = 691809,
-      repaymentHeight = 701809,
-      walletAddress = ownerAddress.toString
+      name = "Fund Farmers in Nigeria",
+      description = "We are looking to buy more cows",
+      deadlineHeight = 694140,
+      repaymentHeight = 704140,
+      interestRate = 10,
+      goal = 1000000,
+      walletAddress = "9gMg8KEYHV3oCkSeoLC42ktrWwzqaEjhvu38Yc4aBgQP9gNbJ27"
     )
 
-    val lendBoxId = "14644cdc40cf3c6df54f9c33c229cb070151c18232aca7012d2f41f2a184de53"
+    val lendBoxId = "28ecd124dcfa7f4f5d13fbe69a290464ffc22557269c79acb54966598f5975be"
     val repaymentBoxId = "bf140cc7d6fa3ae697b9f026ee2cc52bce3b7ea7337fabe2d89c103a0784f667"
 
     val lendInitiationRunner = new LendInitiationRunner(lendInitiationDetails)
@@ -60,7 +64,7 @@ object AutomatedScriptTester {
 //      fundLendRunner.handleProxyMerge(client, explorer)
       // Check Mined
       // Run: SuccessHandler
-//      fundLendRunner.handleSuccess(client, explorer)
+      fundLendRunner.handleSuccess(client, explorer)
       // Check Mined -> return repayment box
     }
 
@@ -73,7 +77,7 @@ object AutomatedScriptTester {
 //      fundRepaymentRunner.handleProxyMerge(client, explorer)
       // Check Mined
       // Run: SuccessHandler
-      fundRepaymentRunner.handleSuccess(client, explorer)
+//      fundRepaymentRunner.handleSuccess(client, explorer)
       // Check Mined -> return repayment box
     }
 
@@ -109,7 +113,8 @@ object AutomatedScriptTester {
       val txB = ctx.newTxBuilder()
 
       val totalValue = amount + Parameters.MinFee
-      val coveringBoxes = ctx.getCoveringBoxesFor(ownerAddress, totalValue, null).getBoxes
+      val nullToken: java.util.List[ErgoToken] = List.empty[ErgoToken].asJava
+      val coveringBoxes = ctx.getCoveringBoxesFor(ownerAddress, totalValue, nullToken).getBoxes
 
       val outBox = txB.outBoxBuilder()
         .value(amount)

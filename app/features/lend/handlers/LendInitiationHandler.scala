@@ -124,9 +124,9 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
 }
 
 class ProxyContractTxHandler @Inject()(client: Client, explorer: Explorer, dao: DAO) {
-  def getPaymentBoxes(req: ProxyReq): CoveringBoxes = {
+  def getPaymentBoxes(req: ProxyReq, amount: Long = (Parameters.MinFee * 2)): CoveringBoxes = {
     val paymentAddress = Address.create(req.paymentAddress)
-    val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, Parameters.MinFee * 2)
+    val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, amount)
 
     if (!paymentBoxList.isCovered)
       throw paymentNotCoveredException(s"Payment for request ${req.id} not covered the fee, request state id ${req.state} and request tx is ${req.txId}")

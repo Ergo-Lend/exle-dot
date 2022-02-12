@@ -55,9 +55,11 @@ class Client {
   def getAllUnspentBox(address: Address): List[InputBox] = {
     client.execute(ctx =>
       try {
-        ctx.getCoveringBoxesFor(address, (1e9 * 1e8).toLong, null).getBoxes.asScala.toList
+        val nullToken: java.util.List[ErgoToken] = List.empty[ErgoToken].asJava
+        ctx.getCoveringBoxesFor(address, (1e9 * 1e8).toLong, nullToken).getBoxes.asScala.toList
       } catch {
-        case e: Throwable => throw connectionException(e.getMessage)
+        case e: Throwable =>
+          throw connectionException(e.getMessage)
       }
     )
   }
@@ -65,7 +67,8 @@ class Client {
   def getCoveringBoxesFor(address: Address, amount: Long): CoveringBoxes = {
     client.execute(ctx =>
       try {
-        ctx.getCoveringBoxesFor(address, amount, null)
+        val nullToken: java.util.List[ErgoToken] = List.empty[ErgoToken].asJava
+        ctx.getCoveringBoxesFor(address, amount, nullToken)
       } catch {
         case _: Throwable => throw connectionException()
       }

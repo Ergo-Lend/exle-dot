@@ -63,6 +63,9 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
         case _: Throwable =>
           logger.error(s"Checking creation request ${req.id} failed")
       }
+    } else {
+      logger.info(s"will remove fund Lend request: ${req.id} with state: ${req.state}")
+      fundLendReqDAO.deleteById(req.id)
     }
   }
 

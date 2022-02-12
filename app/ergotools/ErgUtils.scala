@@ -4,7 +4,7 @@ import org.ergoplatform.appkit.Parameters
 
 object ErgUtils {
   def nanoErgsToErgs(nanoErgAmount: Long): Double = {
-    val ergsValue = nanoErgAmount/Parameters.OneErg.toFloat
+    val ergsValue = nanoErgAmount.toDouble/Parameters.OneErg
 
     ergsValue
   }

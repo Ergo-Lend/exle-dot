@@ -93,15 +93,23 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     val lendingProjectDetailsRegister = wrappedLendBox.lendingProjectDetailsRegister
     val fundingInfoRegister = wrappedLendBox.fundingInfoRegister
     val borrowerRegister = wrappedLendBox.borrowerRegister
+    val lenderRegister = wrappedLendBox.singleLenderRegister
+
+    val fundingGoalInErgs = ErgUtils.nanoErgsToErgs(fundingInfoRegister.fundingGoal)
+    val fullyFunded: Boolean = wrappedLendBox.value >= fundingInfoRegister.fundingGoal
 
     Json.fromFields(List(
       ("id", Json.fromString(wrappedLendBox.id.toString)),
       ("name", Json.fromString(lendingProjectDetailsRegister.projectName)),
       ("description", Json.fromString(lendingProjectDetailsRegister.description)),
+      ("value", Json.fromLong(wrappedLendBox.value)),
       ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
       ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
+      ("fundingGoalInErgs", Json.fromDoubleOrString(fundingGoalInErgs)),
+      ("funded", Json.fromBoolean(fullyFunded)),
       ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
-      ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress))
+      ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
+      ("lenderPk", Json.fromString(lenderRegister.lendersAddress)),
     ))
   }
 
@@ -109,17 +117,27 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     val lendingProjectDetailsRegister = wrappedRepaymentBox.lendingProjectDetailsRegister
     val fundingInfoRegister = wrappedRepaymentBox.fundingInfoRegister
     val borrowerRegister = wrappedRepaymentBox.borrowerRegister
+    val lenderRegister = wrappedRepaymentBox.singleLenderRegister
     val repaymentDetailsRegister = wrappedRepaymentBox.repaymentDetailsRegister
+
+    val fundingGoalInErgs = ErgUtils.nanoErgsToErgs(fundingInfoRegister.fundingGoal)
+    val repaymentAmountInErgs = ErgUtils.nanoErgsToErgs(repaymentDetailsRegister.repaymentAmount)
+    val fullyFunded = wrappedRepaymentBox.value >= repaymentDetailsRegister.repaymentAmount
 
     Json.fromFields(List(
       ("id", Json.fromString(wrappedRepaymentBox.id.toString)),
       ("name", Json.fromString(lendingProjectDetailsRegister.projectName)),
       ("description", Json.fromString(lendingProjectDetailsRegister.description)),
+      ("value", Json.fromLong(wrappedRepaymentBox.value)),
       ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
-      ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
+      ("fundingGoalInNanoErgs", Json.fromLong(fundingInfoRegister.fundingGoal)),
+      ("fundingGoalInErgs", Json.fromDoubleOrString(fundingGoalInErgs)),
       ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
+      ("lenderPk", Json.fromString(lenderRegister.lendersAddress)),
       ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
-      ("repaymentAmount", Json.fromLong(repaymentDetailsRegister.repaymentAmount)),
+      ("repaymentAmountInNanoErgs", Json.fromLong(repaymentDetailsRegister.repaymentAmount)),
+      ("repaymentAmountInErgs", Json.fromDoubleOrString(repaymentAmountInErgs)),
+      ("repaymentFunded", Json.fromBoolean(fullyFunded)),
       ("repaymentHeightGoal", Json.fromLong(repaymentDetailsRegister.repaymentHeightGoal)),
       ("fundedHeight", Json.fromLong(repaymentDetailsRegister.fundedHeight)),
     ))
@@ -199,13 +217,14 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         logger.info("lend fund creation")
 
         // account details
-        val lendBoxId: String = getRequestBodyAsString(request, "lendBoxId")
+        val lendBoxId: String = getRequestBodyAsString(request, "boxId")
         val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
 
         ErgoValidator.validateAddress(walletAddress)
         val lendBox = explorer.getLendBox(lendBoxId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
         val amount = wrappedLendBox.getFundingTotalErgs()
+        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
           lendBoxId = lendBoxId,
@@ -218,7 +237,8 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotal", Json.fromLong(amount))
+          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
+          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs))
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -232,7 +252,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         logger.info("repayment funding")
 
         // account details
-        val repaymentBoxId: String = getRequestBodyAsString(request, "lendBoxId")
+        val repaymentBoxId: String = getRequestBodyAsString(request, "boxId")
         val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
 
         // accounting
@@ -242,6 +262,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
         val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
         val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
+        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
           repaymentBoxId = repaymentBoxId,
@@ -254,7 +275,8 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotal", Json.fromLong(amount))
+          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
+          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -268,7 +290,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         logger.info("repayment funding")
 
         // account details
-        val repaymentBoxId: String = getRequestBodyAsString(request, "lendBoxId")
+        val repaymentBoxId: String = getRequestBodyAsString(request, "boxId")
         val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
 
         println(Configs.networkType)

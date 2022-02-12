@@ -65,7 +65,7 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
     }
   }
 
-  def processFundedLendBox(ctx: BlockchainContext, lendBox: InputBox): InputBox = {
+  def processFundedLendBox(ctx: BlockchainContext, lendBox: InputBox): Unit = {
     try {
       val wrappedLendBox = new SingleLenderLendBox(lendBox)
 
@@ -78,16 +78,11 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
         val fundedTxId = ctx.sendTransaction(signedTx)
 
         if (fundedTxId == null) throw failedTxException(s"funded lendbox sending failed for ${wrappedLendBox.id.toString}")
-
-        // get repayment box
-        val repaymentBox = signedTx.getOutputsToSpend.get(1)
-        repaymentBox
-      } else {
-        lendBox
       }
     } catch {
-      case _: Throwable => logger.error("funded failed")
-        lendBox
+      case e: Throwable =>
+        logger.error("LendBox Funded Failed")
+        throw e
     }
   }
 
@@ -125,19 +120,22 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
   }
 
   def processFundedRepaymentBox(ctx: BlockchainContext, repaymentBox: InputBox): Unit = {
-    // Double check if repayment is paid
+    try {
+      val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+      val isFunded = wrappedRepaymentBox.value >= wrappedRepaymentBox.repaymentDetailsRegister.repaymentAmount
 
-    val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
-    val isFunded = wrappedRepaymentBox.value >= wrappedRepaymentBox.repaymentDetailsRegister.repaymentAmount
+      if (isFunded) {
+        val serviceBox = explorer.getServiceBox
+        val repaymentFundedTx = SingleRepaymentTxFactory.createSingleLenderRepaymentFundedTx(serviceBox, repaymentBox)
 
-    if (isFunded) {
-      val serviceBox = explorer.getServiceBox
-      val repaymentFundedTx = SingleRepaymentTxFactory.createSingleLenderRepaymentFundedTx(serviceBox, repaymentBox)
+        val signedTx = repaymentFundedTx.runTx(ctx)
+        val repaymentFundedTxId = ctx.sendTransaction(signedTx)
 
-      val signedTx = repaymentFundedTx.runTx(ctx)
-      val repaymentFundedTxId = ctx.sendTransaction(signedTx)
-
-      if (repaymentFundedTxId == null) throw failedTxException(s"Repayment funded failed for ${wrappedRepaymentBox.id.toString}")
+        if (repaymentFundedTxId == null) throw failedTxException(s"Repayment funded failed for ${wrappedRepaymentBox.id.toString}")
+      }
+    } catch {
+      case e: Throwable =>
+        logger.error(StackTrace.getStackTraceStr(e))
     }
   }
 

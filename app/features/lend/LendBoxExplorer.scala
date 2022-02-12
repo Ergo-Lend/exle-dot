@@ -166,14 +166,19 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     val r6: Array[Byte] = ErgoValue.fromHex(registers.hcursor.downField("R6").as[ciJson].getOrElse(null)
       .hcursor.downField("serializedValue").as[String].getOrElse(""))
       .getValue.asInstanceOf[Coll[Byte]].toArray
-    val r7: Array[Byte] = ErgoValue.fromHex(registers.hcursor.downField("R7").as[ciJson].getOrElse(null)
-      .hcursor.downField("serializedValue").as[String].getOrElse(""))
-      .getValue.asInstanceOf[Coll[Byte]].toArray
+    val r7: Option[ciJson] = Option(registers.hcursor.downField("R7").as[ciJson].getOrElse(null))
+
+    var r7Value: Array[Byte] = Array.emptyByteArray
+    if (!r7.isEmpty) {
+      r7Value = ErgoValue.fromHex(r7.get
+        .hcursor.downField("serializedValue").as[String].getOrElse(""))
+        .getValue.asInstanceOf[Coll[Byte]].toArray
+    }
 
     val fundingInfoRegister = new FundingInfoRegister(r4)
     val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(r5)
     val borrowerRegister = new BorrowerRegister(r6)
-    val lenderRegister = new SingleLenderRegister(r7)
+    val lenderRegister = if (!r7Value.isEmpty) new SingleLenderRegister(r7Value) else SingleLenderRegister.emptyRegister
 
     val lendBox = new SingleLenderLendBox(
       value,
