@@ -14,7 +14,7 @@ trait CreateLendReqComponent {
 
   import profile.api._
 
-  class CreateLendReqTable(tag: Tag) extends Table[CreateLendReq](tag, "CREATE_REQUESTS") {
+  class CreateLendReqTable(tag: Tag) extends Table[CreateLendReq](tag, "create_requests") {
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
     def name = column[String]("NAME")
     def description = column[String]("DESCRIPTION")

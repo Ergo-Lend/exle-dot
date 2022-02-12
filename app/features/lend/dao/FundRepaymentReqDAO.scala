@@ -14,7 +14,7 @@ trait RepaymentReqComponent {
 
   import profile.api._
 
-  class RepaymentReqTable(tag: Tag) extends Table[FundRepaymentReq](tag, "REPAYMENT_REQUESTS") {
+  class RepaymentReqTable(tag: Tag) extends Table[FundRepaymentReq](tag, "repayment_requests") {
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
     def repaymentBoxId = column[String]("REPAYMENT_BOX_ID")
     def ergAmount = column[Long]("ERG_AMOUNT")

@@ -14,7 +14,7 @@ trait FundLendReqComponent {
 
   import profile.api._
 
-  class FundLendReqTable(tag: Tag) extends Table[FundLendReq](tag, "FUND_LEND_REQUESTS") {
+  class FundLendReqTable(tag: Tag) extends Table[FundLendReq](tag, "fund_lend_requests") {
     def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
     def lendBoxId = column[String]("LEND_BOX_ID")
     def ergAmount = column[Long]("ERG_AMOUNT")
