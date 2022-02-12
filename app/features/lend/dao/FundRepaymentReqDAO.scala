@@ -15,18 +15,18 @@ trait RepaymentReqComponent {
   import profile.api._
 
   class RepaymentReqTable(tag: Tag) extends Table[FundRepaymentReq](tag, "repayment_requests") {
-    def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
-    def repaymentBoxId = column[String]("REPAYMENT_BOX_ID")
-    def ergAmount = column[Long]("ERG_AMOUNT")
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def repaymentBoxId = column[String]("repayment_box_id")
+    def ergAmount = column[Long]("erg_amount")
 
-    def state = column[Int]("TX_STATE")
-    def paymentAddress = column[String]("PAYMENT_ADDRESS")
-    def repaymentTxID = column[String]("REPAYMENT_TX_ID")
-    def userAddress = column[String]("USER_ADDRESS")
+    def state = column[Int]("tx_state")
+    def paymentAddress = column[String]("payment_address")
+    def repaymentTxID = column[String]("repayment_tx_id")
+    def userAddress = column[String]("user_address")
 
-    def timeStamp = column[String]("TIME_STAMP")
-    def ttl = column[Long]("TTL")
-    def deleted = column[Boolean]("DELETED")
+    def timeStamp = column[String]("time_stamp")
+    def ttl = column[Long]("ttl")
+    def deleted = column[Boolean]("deleted")
 
     def * =
       ( id,

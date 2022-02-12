@@ -15,22 +15,22 @@ trait CreateLendReqComponent {
   import profile.api._
 
   class CreateLendReqTable(tag: Tag) extends Table[CreateLendReq](tag, "create_requests") {
-    def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
-    def name = column[String]("NAME")
-    def description = column[String]("DESCRIPTION")
-    def goal = column[Long]("GOAL")
-    def deadlineHeight = column[Long]("DEADLINE_HEIGHT")
-    def repaymentHeight = column[Long]("REPAYMENT_HEIGHT")
-    def interestRate = column[Long]("INTEREST_RATE")
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def name = column[String]("name")
+    def description = column[String]("description")
+    def goal = column[Long]("goal")
+    def deadlineHeight = column[Long]("deadline_height")
+    def repaymentHeight = column[Long]("repayment_height")
+    def interestRate = column[Long]("interest_rate")
 
-    def state = column[Int]("TX_STATE")
-    def borrowerAddress = column[String]("BORROWER_ADDRESS")
-    def paymentAddress = column[String]("PAYMENT_ADDRESS")
-    def createTxId = column[String]("CREATE_TX_ID")
+    def state = column[Int]("tx_state")
+    def borrowerAddress = column[String]("borrower_address")
+    def paymentAddress = column[String]("payment_address")
+    def createTxId = column[String]("create_tx_id")
 
-    def timeStamp = column[String]("TIME_STAMP")
-    def ttl = column[Long]("TTL")
-    def deleted = column[Boolean]("DELETED")
+    def timeStamp = column[String]("time_stamp")
+    def ttl = column[Long]("ttl")
+    def deleted = column[Boolean]("deleted")
 
     def * = (id, name, description, goal, deadlineHeight, repaymentHeight, interestRate, state, borrowerAddress, paymentAddress,
       createTxId.?, timeStamp, ttl, deleted) <> (CreateLendReq.tupled, CreateLendReq.unapply)

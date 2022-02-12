@@ -15,19 +15,19 @@ trait FundLendReqComponent {
   import profile.api._
 
   class FundLendReqTable(tag: Tag) extends Table[FundLendReq](tag, "fund_lend_requests") {
-    def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
-    def lendBoxId = column[String]("LEND_BOX_ID")
-    def ergAmount = column[Long]("ERG_AMOUNT")
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def lendBoxId = column[String]("lend_box_id")
+    def ergAmount = column[Long]("erg_amount")
 
-    def state = column[Int]("TX_STATE")
-    def paymentAddress = column[String]("PAYMENT_ADDRESS")
-    def lendToken = column[String]("LEND_TOKEN")
-    def lendTxID = column[String]("LEND_TX_ID")
-    def lenderAddress = column[String]("LENDER_ADDRESS")
+    def state = column[Int]("tx_state")
+    def paymentAddress = column[String]("payment_address")
+    def lendToken = column[String]("lend_token")
+    def lendTxID = column[String]("lend_tx_id")
+    def lenderAddress = column[String]("lender_address")
 
-    def timeStamp = column[String]("TIME_STAMP")
-    def ttl = column[Long]("TTL")
-    def deleted = column[Boolean]("DELETED")
+    def timeStamp = column[String]("time_stamp")
+    def ttl = column[Long]("ttl")
+    def deleted = column[Boolean]("deleted")
 
     def * =
       ( id,

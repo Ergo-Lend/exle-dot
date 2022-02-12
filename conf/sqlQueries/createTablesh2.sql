@@ -7,46 +7,46 @@ DROP TABLE FUND_LEND_REQUESTS;
 DROP TABLE REPAYMENT_REQUESTS;
 
 CREATE TABLE CREATE_REQUESTS (
-    ID                          BIGINT Not null PRIMARY key auto_increment,
-    NAME                        VARCHAR(255) NOT NULL,
-    DESCRIPTION                 VARCHAR(10000),
-    GOAL                        BIGINT NOT NULL,
-    DEADLINE_HEIGHT             BIGINT NOT NULL,
+    id                          BIGINT Not null PRIMARY key auto_increment,
+    name                        VARCHAR(255) NOT NULL,
+    description                 VARCHAR(10000),
+    goal                        BIGINT NOT NULL,
+    deadline_height             BIGINT NOT NULL,
     repayment_height            BIGINT NOT NULL,
-    INTEREST_RATE               BIGINT NOT NULL,
-    TX_STATE                    INT,
-    BORROWER_ADDRESS            VARCHAR(10000),
-    PAYMENT_ADDRESS             VARCHAR(10000),
-    CREATE_TX_ID                VARCHAR(100),
-    TIME_STAMP                  VARCHAR(100),
-    TTL                         BIGINT,
-    DELETED                     BOOLEAN
+    interest_rate               BIGINT NOT NULL,
+    tx_state                    INT,
+    borrower_address            VARCHAR(10000),
+    payment_address             VARCHAR(10000),
+    create_tx_id                VARCHAR(100),
+    time_stamp                  VARCHAR(100),
+    ttl                         BIGINT,
+    deleted                     BOOLEAN
 );
 
 CREATE TABLE FUND_LEND_REQUESTS (
-    ID                          BIGINT NOT NULL primary key auto_increment,
-    LEND_BOX_ID                 VARCHAR(10000),
-    ERG_AMOUNT                  BIGINT NOT NULL,
-    TX_STATE                       INT,
-    PAYMENT_ADDRESS             VARCHAR(10000),
-    LEND_TX_ID                  VARCHAR(1000000),
-    LENDER_ADDRESS              VARCHAR(10000),
-    TIME_STAMP                  VARCHAR(100),
-    TTL                         BIGINT,
-    DELETED                     BOOLEAN
+    id                          BIGINT NOT NULL primary key auto_increment,
+    lend_box_id                 VARCHAR(10000),
+    erg_amount                  BIGINT NOT NULL,
+    tx_state                       INT,
+    payment_address             VARCHAR(10000),
+    lend_tx_id                  VARCHAR(1000000),
+    lender_address              VARCHAR(10000),
+    time_stamp                  VARCHAR(100),
+    ttl                         BIGINT,
+    deleted                     BOOLEAN
 );
 
 CREATE TABLE REPAYMENT_REQUESTS (
-    ID                          BIGINT NOT NULL primary key auto_increment,
-    REPAYMENT_BOX_ID            VARCHAR(10000),
-    ERG_AMOUNT                  BIGINT NOT NULL,
-    TX_STATE                       INT,
-    PAYMENT_ADDRESS             VARCHAR(10000),
-    REPAYMENT_TX_ID             VARCHAR(1000000),
-    USER_ADDRESS                VARCHAR(10000),
-    TIME_STAMP                  VARCHAR(100),
-    TTL                         BIGINT,
-    DELETED                     BOOLEAN
+    id                          BIGINT NOT NULL primary key auto_increment,
+    repayment_box_id            VARCHAR(10000),
+    erg_amount                  BIGINT NOT NULL,
+    tx_state                       INT,
+    payment_address             VARCHAR(10000),
+    repayment_tx_id             VARCHAR(1000000),
+    user_address                VARCHAR(10000),
+    time_stamp                  VARCHAR(100),
+    ttl                         BIGINT,
+    deleted                     BOOLEAN
 );
 
 
