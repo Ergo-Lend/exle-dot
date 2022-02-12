@@ -71,7 +71,7 @@ object ExplorerRunner {
 
     tx match {
       case "proxyContract" => FundLendRunner.createFundLendProxyContract(client, explorer)
-      case "handleFund" => FundLendRunner.handleFundLend(client, explorer)
+//      case "handleFund" => FundLendRunner.handleFundLend(client, explorer)
       case "handleRefundProxy" => FundLendRunner.handleRefundProxy(client)
       case "handleRefundLend" => FundLendRunner.refundLend(client, explorer)
       case "fundSuccess" => FundLendRunner.lendFundSuccess(client, explorer)
@@ -83,7 +83,7 @@ object ExplorerRunner {
 
     tx match {
       case "proxyContract" => RepaymentRunner.createFundRepaymentProxyContract(client, explorer)
-      case "handleFund" => RepaymentRunner.handleFundRepayment(client, explorer)
+//      case "handleFund" => RepaymentRunner.handleFundRepayment(client, explorer)
       case "handleRefundProxy" => RepaymentRunner.handleRefundProxy(client)
       case "repaymentSuccess" => RepaymentRunner.repaymentSuccess(client, explorer)
     }

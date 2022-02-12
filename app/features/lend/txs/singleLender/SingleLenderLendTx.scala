@@ -8,6 +8,7 @@ import features.lend.dao.{CreateLendReq, FundLendReq}
 import org.ergoplatform.appkit.{BlockchainContext, InputBox, Parameters, SignedTransaction}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /**
  * Initiates Lending Transaction
@@ -27,7 +28,7 @@ import scala.collection.JavaConverters._
  * - Lending Box
  */
 class SingleLenderLendInitiationTx(val serviceBox: InputBox,
-                                   val lendInitiationProxyContractPayment: InputBox) extends FundingTx {
+                                   val lendInitiationProxyContractPayment: mutable.Buffer[InputBox]) extends FundingTx {
   var paymentBox: Option[SingleLenderInitiationPaymentBox] = None
 
   def runTx(ctx: BlockchainContext): SignedTransaction = {
@@ -46,9 +47,9 @@ class SingleLenderLendInitiationTx(val serviceBox: InputBox,
     val wrappedOutputLendBox: SingleLenderLendBox = SingleLenderLendBox.createViaPaymentBox(paymentBox.get)
     val outputLendBox = wrappedOutputLendBox.getInitiationOutputBox(ctx, txB)
 
-    val inputBoxes = List(serviceBox, lendInitiationProxyContractPayment).asJava
+    val inputBoxes = Seq(serviceBox) ++ lendInitiationProxyContractPayment
 
-    val lendInitiationTx = txB.boxesToSpend(inputBoxes)
+    val lendInitiationTx = txB.boxesToSpend(inputBoxes.asJava)
       .fee(Parameters.MinFee)
       .outputs(outputServiceBox, outputLendBox)
       .sendChangeTo(wrappedOutputLendBox.getBorrowersAddress.getErgoAddress)
@@ -77,7 +78,7 @@ class SingleLenderLendInitiationTx(val serviceBox: InputBox,
 }
 
 class SingleLenderFundLendBoxTx(var lendingBox: InputBox,
-                                val singleLenderFundLendPaymentBox: InputBox) extends FundingTx {
+                                val singleLenderFundLendPaymentBoxes: mutable.Buffer[InputBox]) extends FundingTx {
   var paymentBox: Option[SingleLenderFundLendPaymentBox] = None
 
   /**
@@ -96,9 +97,9 @@ class SingleLenderFundLendBoxTx(var lendingBox: InputBox,
     val wrappedOutputLendBox = inputLendBox.funded(fundLendPaymentBox.singleLenderRegister.lendersAddress)
     val outputLendBox = wrappedOutputLendBox.getFundedOutputBox(ctx, txB)
 
-    val inputBoxes = List(lendingBox, singleLenderFundLendPaymentBox).asJava
+    val inputBoxes = Seq(lendingBox) ++ singleLenderFundLendPaymentBoxes
 
-    val lendInitiationTx = txB.boxesToSpend(inputBoxes)
+    val lendInitiationTx = txB.boxesToSpend(inputBoxes.asJava)
       .fee(Parameters.MinFee)
       .outputs(outputLendBox)
       .sendChangeTo(wrappedOutputLendBox.getLendersAddress.getErgoAddress)
@@ -117,7 +118,7 @@ class SingleLenderFundLendBoxTx(var lendingBox: InputBox,
 
   def applyPaymentBoxInfo(singleLenderRegister: SingleLenderRegister): Unit = {
     paymentBox = Option.apply(new SingleLenderFundLendPaymentBox(
-      value = singleLenderFundLendPaymentBox.getValue,
+      singleLenderFundLendPaymentBoxes,
       singleLenderRegister = singleLenderRegister))
   }
 }
@@ -229,7 +230,7 @@ class SingleLenderRefundLendBoxTx(val serviceBox: InputBox, var lendBox: InputBo
 
 object SingleLenderLendInitiationTx {
   def create(serviceBox: InputBox,
-             lendInitiationContractPayment: InputBox,
+             lendInitiationContractPayment: mutable.Buffer[InputBox],
              fundingInfoRegister: FundingInfoRegister,
              lendingProjectDetailsRegister: LendingProjectDetailsRegister,
              borrowerRegister: BorrowerRegister): SingleLenderLendInitiationTx = {
@@ -242,9 +243,9 @@ object SingleLenderLendInitiationTx {
 
 object SingleLenderFundLendBoxTx {
   def create(lendBox: InputBox,
-             singleLenderFundLendPaymentBox: InputBox,
+             singleLenderFundLendPaymentBoxes: mutable.Buffer[InputBox],
              singleLenderRegister: SingleLenderRegister): SingleLenderFundLendBoxTx = {
-    val singleLenderFundLendBoxTx = new SingleLenderFundLendBoxTx(lendBox, singleLenderFundLendPaymentBox)
+    val singleLenderFundLendBoxTx = new SingleLenderFundLendBoxTx(lendBox, singleLenderFundLendPaymentBoxes)
     singleLenderFundLendBoxTx.applyPaymentBoxInfo(singleLenderRegister)
 
     singleLenderFundLendBoxTx
@@ -253,7 +254,7 @@ object SingleLenderFundLendBoxTx {
 
 
 object SingleLenderTxFactory {
-  def createLendInitiationTx(serviceBox: InputBox, singleLenderPaymentBox: InputBox, req: CreateLendReq): SingleLenderLendInitiationTx = {
+  def createLendInitiationTx(serviceBox: InputBox, singleLenderPaymentBox: mutable.Buffer[InputBox], req: CreateLendReq): SingleLenderLendInitiationTx = {
     val lendInitiationTx = new SingleLenderLendInitiationTx(serviceBox, singleLenderPaymentBox)
     val fundingInfoRegister = new FundingInfoRegister(
       fundingGoal = req.goal,
@@ -273,14 +274,14 @@ object SingleLenderTxFactory {
   }
 
   def createLendInitiationTx(serviceBox: InputBox,
-                             singleLenderPaymentBox: InputBox,
+                             singleLenderPaymentBoxes: mutable.Buffer[InputBox],
                              fundingInfoRegister: FundingInfoRegister,
                              lendingProjectDetailsRegister: LendingProjectDetailsRegister,
                              borrowerRegister: BorrowerRegister): SingleLenderLendInitiationTx = {
 
     val singleLenderLendInitiationTx = SingleLenderLendInitiationTx.create(
       serviceBox,
-      singleLenderPaymentBox,
+      singleLenderPaymentBoxes,
       fundingInfoRegister,
       lendingProjectDetailsRegister,
       borrowerRegister)
@@ -295,9 +296,9 @@ object SingleLenderTxFactory {
    * @return
    */
   def createFundingLendBoxTx(lendBox: InputBox,
-                                singleLenderFundPaymentBox: InputBox,
-                                req: FundLendReq): SingleLenderFundLendBoxTx = {
-    val singleLenderFundLendBoxTx = new SingleLenderFundLendBoxTx(lendBox, singleLenderFundPaymentBox)
+                             singleLenderFundPaymentBoxes: mutable.Buffer[InputBox],
+                             req: FundLendReq): SingleLenderFundLendBoxTx = {
+    val singleLenderFundLendBoxTx = new SingleLenderFundLendBoxTx(lendBox, singleLenderFundPaymentBoxes)
     val singleLenderRegister = new SingleLenderRegister(req.lenderAddress)
 
     singleLenderFundLendBoxTx.applyPaymentBoxInfo(singleLenderRegister)
@@ -306,9 +307,9 @@ object SingleLenderTxFactory {
   }
 
   def createFundingLendBoxTx(lendBox: InputBox,
-                                singleLenderFundPaymentBox: InputBox,
-                                singleLenderRegister: SingleLenderRegister): SingleLenderFundLendBoxTx = {
-    val singleLenderFundLendBoxTx = SingleLenderFundLendBoxTx.create(lendBox, singleLenderFundPaymentBox, singleLenderRegister)
+                             singleLenderFundPaymentBoxes: mutable.Buffer[InputBox],
+                             singleLenderRegister: SingleLenderRegister): SingleLenderFundLendBoxTx = {
+    val singleLenderFundLendBoxTx = SingleLenderFundLendBoxTx.create(lendBox, singleLenderFundPaymentBoxes, singleLenderRegister)
 
     singleLenderFundLendBoxTx
   }

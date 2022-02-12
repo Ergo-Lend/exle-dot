@@ -23,10 +23,9 @@ class ExplorerController @Inject()(client: Client, val controllerComponents: Con
       Ok(message).as("application/json")
   }
 
-  def getBoxById: Action[Json] = Action(circe.json) {
+  def getBoxById(id: String): Action[Json] = Action(circe.json) {
     implicit request => {
       try {
-        val id: String = getRequestBodyAsString(request, "id")
         val box = getUnspentBoxById(id)
         println(box)
         Ok(box).as("application/json")
@@ -36,10 +35,9 @@ class ExplorerController @Inject()(client: Client, val controllerComponents: Con
     }
   }
 
-  def getTxsInMempoolByAddress: Action[Json] = Action(circe.json) {
+  def getTxsInMempoolByAddressViaController(address: String): Action[Json] = Action(circe.json) {
     implicit request => {
       try {
-        val address: String = getRequestBodyAsString(request, "address")
         val txs = getTxsInMempoolByAddress(address)
         Ok(txs).as("application/json")
       } catch {

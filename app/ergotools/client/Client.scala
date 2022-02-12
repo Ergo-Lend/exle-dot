@@ -13,7 +13,7 @@ class Client {
   private val logger: Logger = Logger(this.getClass)
   private var client: ErgoClient = _
 
-  def setClient(): Long = {
+  def setClient(): Unit = {
     println("Ergo Client Starting up...")
     try {
       client = RestApiErgoClient.create(Configs.nodeUrl, Configs.networkType, "", Configs.explorerUrl)
@@ -24,7 +24,6 @@ class Client {
     } catch {
       case e: Throwable =>
         logger.error(message = s"Could not set client! ${e.getMessage}.")
-        0L
     }
   }
 
@@ -58,7 +57,7 @@ class Client {
       try {
         ctx.getCoveringBoxesFor(address, (1e9 * 1e8).toLong, null).getBoxes.asScala.toList
       } catch {
-        case _: Throwable => throw connectionException()
+        case e: Throwable => throw connectionException(e.getMessage)
       }
     )
   }
@@ -67,6 +66,16 @@ class Client {
     client.execute(ctx =>
       try {
         ctx.getCoveringBoxesFor(address, amount, null)
+      } catch {
+        case _: Throwable => throw connectionException()
+      }
+    )
+  }
+
+  def getCoveringBoxesFor(address: Address, amount: Long, tokensToSpend: java.util.List[ErgoToken]): CoveringBoxes = {
+    client.execute(ctx =>
+      try {
+        ctx.getCoveringBoxesFor(address, amount, tokensToSpend)
       } catch {
         case _: Throwable => throw connectionException()
       }

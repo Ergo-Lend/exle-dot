@@ -8,6 +8,7 @@ import features.lend.dao.FundRepaymentReq
 import org.ergoplatform.appkit.{Address, BlockchainContext, InputBox, Parameters, SignedTransaction}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 /**
  * Tx: SingleLender Fund Repayment
@@ -17,11 +18,12 @@ import scala.collection.JavaConverters._
  * @param repaymentBox
  */
 class SingleLenderFundRepaymentTx(var repaymentBox: InputBox,
-                                  val singleLenderFundRepaymentPaymentBox: InputBox) extends FundingTx {
+                                  val singleLenderFundRepaymentPaymentBoxes: mutable.Buffer[InputBox]) extends FundingTx {
   var paymentBox: Option[SingleLenderFundRepaymentPaymentBox] = None
 
-  def getInputBoxes: List[InputBox] = {
-    List(repaymentBox, singleLenderFundRepaymentPaymentBox)
+  def getInputBoxes: Seq[InputBox] = {
+    val inputBoxes = Seq(repaymentBox) ++ singleLenderFundRepaymentPaymentBoxes
+    inputBoxes
   }
   /**
    *
@@ -37,7 +39,7 @@ class SingleLenderFundRepaymentTx(var repaymentBox: InputBox,
     val wrappedInputRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
 
     // if funded then return fundedBox, else return repaymentBox with valid fund
-    val outputRepaymentBox = wrappedInputRepaymentBox.fundBox(singleLenderFundRepaymentPaymentBox.getValue - Parameters.MinFee).getOutputBox(ctx, txB)
+    val outputRepaymentBox = wrappedInputRepaymentBox.fundBox(wrappedPaymentBox.value - Parameters.MinFee).getOutputBox(ctx, txB)
 
     val fundRepaymentTx = txB.boxesToSpend(getInputBoxes.asJava)
       .fee(Configs.fee)
@@ -56,16 +58,16 @@ class SingleLenderFundRepaymentTx(var repaymentBox: InputBox,
 
   def applyPaymentBoxInfo(singleAddressRegister: SingleAddressRegister): Unit = {
     paymentBox = Option.apply(new SingleLenderFundRepaymentPaymentBox(
-      singleLenderFundRepaymentPaymentBox.getValue,
+      singleLenderFundRepaymentPaymentBoxes,
       singleAddressRegister))
   }
 }
 
 object SingleLenderFundRepaymentTx {
   def create(repaymentBox: InputBox,
-             singleLenderFundRepaymentPaymentBox: InputBox,
+             singleLenderFundRepaymentPaymentBoxes: mutable.Buffer[InputBox],
              singleAddressRegister: SingleAddressRegister): SingleLenderFundRepaymentTx = {
-    val singleLenderFundRepaymentTx = new SingleLenderFundRepaymentTx(repaymentBox, singleLenderFundRepaymentPaymentBox)
+    val singleLenderFundRepaymentTx = new SingleLenderFundRepaymentTx(repaymentBox, singleLenderFundRepaymentPaymentBoxes)
     singleLenderFundRepaymentTx.applyPaymentBoxInfo(singleAddressRegister)
 
     singleLenderFundRepaymentTx
@@ -134,7 +136,7 @@ class SingleLenderRepaymentFundedTx(val serviceBox: InputBox, val repaymentBox: 
 
 object SingleRepaymentTxFactory {
   def createLenderFundRepaymentTx(repaymentBox: InputBox,
-                                  repaymentPaymentBox: InputBox,
+                                  repaymentPaymentBox: mutable.Buffer[InputBox],
                                   req: FundRepaymentReq): SingleLenderFundRepaymentTx = {
     val singleLenderFundRepaymentTx = new SingleLenderFundRepaymentTx(repaymentBox, repaymentPaymentBox)
     val singleAddressRegister = new SingleAddressRegister(req.userAddress)
@@ -144,9 +146,9 @@ object SingleRepaymentTxFactory {
   }
 
   def createLenderFundRepaymentTx(repaymentBox: InputBox,
-                                  repaymentPaymentBox: InputBox,
+                                  repaymentPaymentBoxes: mutable.Buffer[InputBox],
                                   singleAddressRegister: SingleAddressRegister): SingleLenderFundRepaymentTx = {
-    val singleLenderFundRepaymentTx = SingleLenderFundRepaymentTx.create(repaymentBox, repaymentPaymentBox, singleAddressRegister)
+    val singleLenderFundRepaymentTx = SingleLenderFundRepaymentTx.create(repaymentBox, repaymentPaymentBoxes, singleAddressRegister)
 
     singleLenderFundRepaymentTx
   }

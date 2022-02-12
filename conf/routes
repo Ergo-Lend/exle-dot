@@ -5,7 +5,7 @@
 
 # An example controller showing a sample home page
 
-GET     /              features.lend.LendController.test
+GET     /                               features.lend.LendController.test
 # Lend
 GET     /api/lend/test                  features.lend.LendController.test
 GET     /api/lend/:lendId               features.lend.LendController.getLendBoxById(lendId: String)
@@ -16,11 +16,12 @@ POST    /api/lend/fund                  features.lend.LendController.fundLendBox
 GET     /api/repayment/:repaymentId     features.lend.LendController.getRepaymentBoxById(repaymentId: String)
 GET     /api/repayment                  features.lend.LendController.getRepaymentBoxes(offset: Int?=0, limit: Int?=100)
 POST    /api/repayment/fund             features.lend.LendController.fundRepaymentBox
+POST    /api/repayment/fullFund         features.lend.LendController.fundRepaymentBoxFully
 
 # Explorer
 GET     /api/explorer/test              features.base.ExplorerController.test
-GET     /api/explorer/box               features.base.ExplorerController.getBoxById
-GET     /api/explorer/txs               features.base.ExplorerController.getTxsInMempoolByAddress
+GET     /api/explorer/box/:id           features.base.ExplorerController.getBoxById(id: String)
+GET     /api/explorer/txs/:address      features.base.ExplorerController.getTxsInMempoolByAddressViaController(address: String)
 GET     /api/explorer/txs/confirmation  features.base.ExplorerController.getTxConfirmation
 
 # Map static resources from the /public folder to the /assets URL path

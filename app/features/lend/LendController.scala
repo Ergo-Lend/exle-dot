@@ -1,8 +1,9 @@
 package features.lend
 
 import config.Configs
+import ergotools.ErgUtils
 import ergotools.client.Client
-import features.lend.boxes.{LendProxyAddress, SingleLenderLendBox}
+import features.lend.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.{getRequestBodyAsLong, getRequestBodyAsString}
 import helpers.{ErgoValidator, ExceptionThrowable}
 import io.circe.Json
@@ -25,30 +26,19 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       Ok("cool").as("application/json")
   }
 
+  // <editor-fold desc="Get Controllers">
+
   def getLendBoxes(offset: Int, limit: Int): Action[AnyContent] = Action { implicit request: Request[AnyContent] => {
     logger.info("Getting Lending funds")
-    try {
-      val lendBoxes = explorer.getLendBoxes(offset, limit)
-      val lendBoxesJson: ListBuffer[Json] = ListBuffer()
-      for (lendBox <- lendBoxes) {
-        val lendingProjectDetailsRegister = lendBox.lendingProjectDetailsRegister
-        val fundingInfoRegister = lendBox.fundingInfoRegister
-        val borrowerRegister = lendBox.borrowerRegister
 
-        lendBoxesJson += Json.fromFields(List(
-          ("id", Json.fromString(lendBox.id.toString)),
-          ("name", Json.fromString(lendingProjectDetailsRegister.projectName)),
-          ("description", Json.fromString(lendingProjectDetailsRegister.description)),
-          ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
-          ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
-          ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
-          ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress))
-        ))
-      }
+    try {
+      val wrappedLendBoxes: List[SingleLenderLendBox] = explorer.getLendBoxes(offset, limit)
+      val lendBoxesJson: List[Json] = wrappedLendBoxes.map(lendBoxToJson(_))
 
       val lendBoxJsonList = Json.fromFields(List(
-        ("items", Json.fromValues(lendBoxesJson.toList))
+        ("items", Json.fromValues(lendBoxesJson))
       ))
+
       Ok(lendBoxJsonList.toString()).as("application/json")
     } catch {
       case e: Throwable => exception(e, logger)
@@ -59,33 +49,13 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     logger.info("Getting Repayment funds")
 
     try {
-      val repaymentBoxes = explorer.getRepaymentBoxes(offset, limit)
-      val repaymentDetailsJson: ListBuffer[Json] = ListBuffer()
-
-      for (repaymentBox <- repaymentBoxes) {
-        val lendingProjectDetailsRegister = repaymentBox.lendingProjectDetailsRegister
-        val fundingInfoRegister = repaymentBox.fundingInfoRegister
-        val borrowerRegister = repaymentBox.borrowerRegister
-        val repaymentDetailsRegister = repaymentBox.repaymentDetailsRegister
-
-        repaymentDetailsJson += Json.fromFields(List(
-          ("id", Json.fromString(repaymentBox.id.toString)),
-          ("name", Json.fromString(lendingProjectDetailsRegister.projectName)),
-          ("description", Json.fromString(lendingProjectDetailsRegister.description)),
-          ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
-          ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
-          ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
-          ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
-          ("repaymentAmount", Json.fromLong(repaymentDetailsRegister.repaymentAmount)),
-          ("repaymentHeightGoal", Json.fromLong(repaymentDetailsRegister.repaymentHeightGoal)),
-          ("fundedHeight", Json.fromLong(repaymentDetailsRegister.fundedHeight)),
-        ))
-      }
-
-      val lendBoxJsonList = Json.fromFields(List(
-        ("items", Json.fromValues(repaymentDetailsJson.toList))
+      val wrappedRepaymentBoxes: List[SingleLenderRepaymentBox] = explorer.getRepaymentBoxes(offset, limit)
+      val repaymentBoxesJson: List[Json] = wrappedRepaymentBoxes.map(repaymentBoxToJson(_))
+      val repaymentBoxJsonList = Json.fromFields(List(
+        ("items", Json.fromValues(repaymentBoxesJson))
       ))
-      Ok(lendBoxJsonList.toString()).as("application/json")
+
+      Ok(repaymentBoxJsonList.toString()).as("application/json")
     } catch {
       case e: Throwable => exception(e, logger)
     }
@@ -95,8 +65,11 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     implicit request:  Request[AnyContent] =>
       try {
         logger.info("Get Lend Funds by id: " + lendId)
-        val result = explorer.getLendBox(lendId)
-        Ok("cool").as("application/json")
+        val lendBox = explorer.getLendBox(lendId)
+        val wrappedLendBox = new SingleLenderLendBox(lendBox)
+        val lendBoxJson = lendBoxToJson(wrappedLendBox)
+
+        Ok(lendBoxJson).as("application/json")
       } catch {
         case e: Throwable => exception(e, logger)
       }
@@ -106,12 +79,55 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     implicit request:  Request[AnyContent] =>
       try {
         logger.info("Get Lend Funds by id: " + lendId)
-        val result = explorer.getRepaymentBox(lendId)
-        Ok("cool").as("application/json")
+        val repaymentBox = explorer.getRepaymentBox(lendId)
+        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val repaymentBoxJson = repaymentBoxToJson(wrappedRepaymentBox)
+
+        Ok(repaymentBoxJson).as("application/json")
       } catch {
         case e: Throwable => exception(e, logger)
       }
   }
+
+  def lendBoxToJson(wrappedLendBox: SingleLenderLendBox): Json = {
+    val lendingProjectDetailsRegister = wrappedLendBox.lendingProjectDetailsRegister
+    val fundingInfoRegister = wrappedLendBox.fundingInfoRegister
+    val borrowerRegister = wrappedLendBox.borrowerRegister
+
+    Json.fromFields(List(
+      ("id", Json.fromString(wrappedLendBox.id.toString)),
+      ("name", Json.fromString(lendingProjectDetailsRegister.projectName)),
+      ("description", Json.fromString(lendingProjectDetailsRegister.description)),
+      ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
+      ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
+      ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
+      ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress))
+    ))
+  }
+
+  def repaymentBoxToJson(wrappedRepaymentBox: SingleLenderRepaymentBox): Json = {
+    val lendingProjectDetailsRegister = wrappedRepaymentBox.lendingProjectDetailsRegister
+    val fundingInfoRegister = wrappedRepaymentBox.fundingInfoRegister
+    val borrowerRegister = wrappedRepaymentBox.borrowerRegister
+    val repaymentDetailsRegister = wrappedRepaymentBox.repaymentDetailsRegister
+
+    Json.fromFields(List(
+      ("id", Json.fromString(wrappedRepaymentBox.id.toString)),
+      ("name", Json.fromString(lendingProjectDetailsRegister.projectName)),
+      ("description", Json.fromString(lendingProjectDetailsRegister.description)),
+      ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
+      ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
+      ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
+      ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
+      ("repaymentAmount", Json.fromLong(repaymentDetailsRegister.repaymentAmount)),
+      ("repaymentHeightGoal", Json.fromLong(repaymentDetailsRegister.repaymentHeightGoal)),
+      ("fundedHeight", Json.fromLong(repaymentDetailsRegister.fundedHeight)),
+    ))
+  }
+
+  // </editor-fold>
+
+  // <editor-fold desc="Create and Fund Controllers">
 
   /**
    * Instantiates a lending fund.
@@ -139,36 +155,41 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val goal: Long = getRequestBodyAsLong(request, "goal")
         val deadlineHeight: Long = getRequestBodyAsLong(request, "deadlineHeight")
         val interestRate: Long = getRequestBodyAsLong(request, "interestRate")
-        val repaymentHeightLength: Long = getRequestBodyAsLong(request, "repaymentHeightLength")
+        val repaymentHeight: Long = getRequestBodyAsLong(request, "repaymentHeight")
 
         // validation
         if (name.length > 250) throw new Throwable("Name size limit is 250 char")
         if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
+
+        val currentHeight = client.getHeight
         ErgoValidator.validateErgValue(goal)
         ErgoValidator.validateAddress(walletAddress)
-        ErgoValidator.validateDeadline(deadlineHeight)
+        ErgoValidator.validateDeadline(currentHeight, deadlineHeight)
 
         // we don't need to validate charity percent
         val paymentAddress = lendProxyAddress.getLendCreateProxyAddress(
           pk = walletAddress,
           name = name,
           description = description,
-          deadlineHeight = deadlineHeight + client.getHeight,
+          deadlineHeight = deadlineHeight,
           goal = goal,
           interestRate = interestRate,
-          repaymentHeightLength = repaymentHeightLength
+          repaymentHeightLength = repaymentHeight
         )
-        val paymentAmount = SingleLenderLendBox.getLendBoxInitiationPayment()
+        val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
+        val paymentAmountInErgs = ErgUtils.nanoErgsToErgs(paymentAmountInNanoErgs)
         val delay = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotal", Json.fromLong(paymentAmount))
+          ("paymentAmountInNanoErgs", Json.fromLong(paymentAmountInNanoErgs)),
+          ("paymentAmountInErgs", Json.fromDoubleOrString(paymentAmountInErgs))
         ))
         Ok(result.toString()).as("application/json")
       } catch {
-        case e: Throwable => exception(e, logger)
+        case e: Throwable =>
+          exception(e, logger)
       }
   }
 
@@ -217,16 +238,17 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         // accounting
         val fundAmount: Long = getRequestBodyAsLong(request, "fundAmount")
 
-        println(Configs.networkType)
         ErgoValidator.validateAddress(walletAddress)
+        val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
+        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
           repaymentBoxId = repaymentBoxId,
           funderPk = walletAddress,
-          fundAmount = fundAmount
+          fundAmount = amount
         )
 
-        val amount = fundAmount + Configs.fee * 4
         val delay = Configs.creationDelay
 
         val result = Json.fromFields(List(
@@ -239,4 +261,41 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         case e: Throwable => exception(e, logger)
       }
   }
+
+  def fundRepaymentBoxFully(): Action[Json] = Action(circe.json) {
+    implicit request =>
+      try {
+        logger.info("repayment funding")
+
+        // account details
+        val repaymentBoxId: String = getRequestBodyAsString(request, "lendBoxId")
+        val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
+
+        println(Configs.networkType)
+        ErgoValidator.validateAddress(walletAddress)
+
+        val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
+        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val fundAmount = wrappedRepaymentBox.getFullFundAmount
+
+        val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
+          repaymentBoxId = repaymentBoxId,
+          funderPk = walletAddress,
+          fundAmount = fundAmount
+        )
+
+        val delay = Configs.creationDelay
+
+        val result = Json.fromFields(List(
+          ("deadline", Json.fromLong(delay)),
+          ("address", Json.fromString(paymentAddress)),
+          ("paymentTotal", Json.fromLong(fundAmount))
+        ))
+        Ok(result.toString()).as("application/json")
+      } catch {
+        case e: Throwable => exception(e, logger)
+      }
+  }
+  // </editor-fold>
+
 }

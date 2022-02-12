@@ -7,9 +7,10 @@ import features.lend.boxes.SingleLenderLendBox
 import features.lend.boxes.registers.SingleLenderRegister
 import features.lend.contracts.proxyContracts.LendProxyContractService
 import features.lend.runners.ExplorerRunner.{walletAddress, writeToFile}
-import features.lend.runners.FundLendRunner.lendBoxId
-import features.lend.txs.singleLender.{ProxyContractTx, SingleLenderTxFactory}
+import features.lend.txs.singleLender.{RefundProxyContractTx, SingleLenderTxFactory}
 import org.ergoplatform.appkit.{Address, ErgoContract, Parameters, SignedTransaction}
+
+import scala.collection.JavaConverters.asScalaBufferConverter
 
 case class FundLendRunner(lendBoxId: String, lenderAddress: String, explorer: LendBoxExplorer) {
   var paymentAddress: Address = Address.create("25JQJ8QcBRwjjm1C46MPfEoA9LuMDJwFGtFenRAG1rdaANCRqA1B7yKtwg3Q2GaTQKTRgfm7aArC2keXCuzsyZADJPZ3GqDm5owPPFWGmMzy1RkEetAShmuqere3qzEDvVWn6SHgER3toQyMkf1kP1ocEBr3V6nENh9YaWJE1nZj48E5qZvgsawAfKFbfY7a3YJMpNWcjSiZsiZVX94woNvkU2QxGuwMx8hDxMKFLrmK7WeNiirmHkkpjEbaxnTFnRE12Gmn3Y5aWfrMv5Kq7GLhCoakuKufxPStnZ3RNBZ7H7nVaMG2n4zaFBF6iX5ksERReq6nkiTGLjYQVfAH5UwNaYEH2BSCQvjcRSHKeyAhtznJErFdRuutEDeSGf3U8WJgofRwhxg89tcHFnaVZ7TZnT7LnHYdQStTfGcdS8HPtnx5Vv6ndU5bD")
@@ -47,14 +48,14 @@ case class FundLendRunner(lendBoxId: String, lenderAddress: String, explorer: Le
     val wrappedLendBox = new SingleLenderLendBox(lendBox)
     System.out.println(s"Getting boxes for ${paymentAddress.toString}")
 
-    val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, wrappedLendBox.getFundingTotalErgs()).getBoxes
+    val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, wrappedLendBox.getFundingTotalErgs()).getBoxes.asScala
 
-    System.out.println(s"${unspentPaymentBoxes.size()} box found...")
+    System.out.println(s"${unspentPaymentBoxes.size} box found...")
 
     val singleLenderRegister = new SingleLenderRegister(walletAddress)
     val fundLendTx = SingleLenderTxFactory.createFundingLendBoxTx(
       lendBox,
-      unspentPaymentBoxes.get(0),
+      unspentPaymentBoxes,
       singleLenderRegister)
 
     client.getClient.execute(ctx => {
@@ -127,46 +128,6 @@ object FundLendRunner {
     }
   }
 
-  def handleFundLend(client: Client, explorer: LendBoxExplorer): Unit = {
-    try {
-      client.getClient.execute(ctx => {
-        val lendBox = explorer.getLendBox(lendBoxId)
-        val paymentAddress: Address = Address.create(paymentAddressString)
-
-        System.out.println(s"Getting boxes for ${paymentAddressString}")
-
-        val unspentPaymentBoxes = client.getUnspentBox(paymentAddress)
-        System.out.println(s"${unspentPaymentBoxes.size} box found...")
-
-        val singleLenderRegister = new SingleLenderRegister(walletAddress)
-        val fundLendTx = SingleLenderTxFactory.createFundingLendBoxTx(
-          lendBox,
-          unspentPaymentBoxes(0),
-          singleLenderRegister)
-
-        val signedTransaction = fundLendTx.runTx(ctx)
-        val fundTxId = ctx.sendTransaction(signedTransaction)
-
-        if (fundTxId == null) throw failedTxException(s"Lend Fund failed for ${paymentAddressString}")
-
-        val stringBuilder = new StringBuilder()
-        stringBuilder.append(s"Create Tx ID: ${fundTxId} \n")
-        stringBuilder.append(s"BoxId: ${signedTransaction.getOutputsToSpend.get(1).getId} \n")
-        writeToFile("LendInitiation.txt", stringBuilder.toString())
-
-        System.out.println(s"Create Tx ID: ${fundTxId}")
-        System.out.println()
-        System.out.println(signedTransaction)
-        System.out.println()
-        System.out.println(s"Box Id: ${signedTransaction.getOutputsToSpend.get(1).getId}")
-      })
-    } catch {
-      case e: Exception => {
-        throw e
-      }
-    }
-  }
-
   def handleRefundProxy(client: Client): Unit = {
     try {
       client.getClient.execute(ctx => {
@@ -176,11 +137,11 @@ object FundLendRunner {
 
         // get payment box
         val unspentPaymentBoxes = client.getCoveringBoxesFor(
-          paymentAddress, lendBoxFundPayment).getBoxes
+          paymentAddress, lendBoxFundPayment).getBoxes.asScala
 
-        System.out.println(s"${unspentPaymentBoxes.size()} box found...")
+        System.out.println(s"${unspentPaymentBoxes.size} box found...")
 
-        val refundTx = new ProxyContractTx(unspentPaymentBoxes.get(0), walletAddress)
+        val refundTx = new RefundProxyContractTx(unspentPaymentBoxes, walletAddress)
 
         val signedTx = refundTx.runTx(ctx)
 

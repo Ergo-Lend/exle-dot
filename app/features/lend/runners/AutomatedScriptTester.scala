@@ -167,7 +167,7 @@ object AutomatedScriptTester {
 
   def checkTransactionComplete(signedTransaction: SignedTransaction): Boolean = {
     val checkTx = () => {
-      val txState = explorer.checkTransaction(signedTransaction.getId)
+      val txState = explorer.checkTransactionState(signedTransaction.getId)
 
       txState
     }

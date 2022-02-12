@@ -3,9 +3,9 @@ package features.lend.handlers
 import config.Configs
 import ergotools.TxState
 import ergotools.client.Client
-import errors.failedTxException
+import errors.{connectionException, failedTxException, skipException}
 import features.lend.LendBoxExplorer
-import features.lend.boxes.{SingleLenderLendBox}
+import features.lend.boxes.SingleLenderLendBox
 import features.lend.dao.{FundLendReq, FundLendReqDAO}
 import features.lend.txs.singleLender.SingleLenderTxFactory
 import helpers.{StackTrace, Time}
@@ -13,6 +13,7 @@ import org.ergoplatform.appkit.{Address, InputBox}
 import play.api.Logger
 
 import javax.inject.Inject
+import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplorer, fundLendReqDAO: FundLendReqDAO)
@@ -45,11 +46,22 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
         val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
-        if (unSpentPaymentBoxes.getCoveredAmount >= Configs.fee * 4) {
-          logger.info(s"")
+        if (unSpentPaymentBoxes.getCoveredAmount >= SingleLenderLendBox.getLendBoxInitiationPayment) {
+          logger.info(s"Request ${req.id} is going back to the request pool, creation fee is enough")
+          fundLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
+          throw skipException()
+        } else {
+          val refundTxId = refundBox(req)
+          if (refundTxId.nonEmpty) {
+            fundLendReqDAO.deleteById(req.id)
+          }
         }
       } catch {
-        case e: Throwable => logger.info("funding removal failed")
+        case _: connectionException => throw new Throwable
+        case _: failedTxException => throw new Throwable
+        case e: skipException => throw e
+        case _: Throwable =>
+          logger.error(s"Checking creation request ${req.id} failed")
       }
     }
   }
@@ -67,22 +79,25 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
           try {
             fundLendTx(req, lendBox)
           } catch {
-            case e: Throwable => logger.info(s"funding failed for request ${req.lendBoxId}")
+            case e: Throwable =>
+              logger.info(s"funding failed for request ${req.lendBoxId}")
+              throw e
           }
         }
       }
     } catch {
-      case _: Throwable =>
+      case e: Throwable =>
         logger.error(s"Error")
+        throw e
     }
   }
 
-  def fundLendTx(req: FundLendReq, lendingBox: InputBox): InputBox = {
+  def fundLendTx(req: FundLendReq, lendingBox: InputBox): Unit = {
     client.getClient.execute(ctx => {
       try {
-        val paymentBoxList = getPaymentBoxes(req).getBoxes
+        val paymentBoxList = getPaymentBoxes(req).getBoxes.asScala
 
-        val fundLendTx = SingleLenderTxFactory.createFundingLendBoxTx(lendingBox, paymentBoxList.get(0), req)
+        val fundLendTx = SingleLenderTxFactory.createFundingLendBoxTx(lendingBox, paymentBoxList, req)
         val signedTx = fundLendTx.runTx(ctx)
 
         var fundTxId = ctx.sendTransaction(signedTx)
@@ -92,16 +107,15 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
 
         fundLendReqDAO.updateLendTxId(req.id, fundTxId)
         fundLendReqDAO.updateStateById(req.id, TxState.Mined)
-
-        signedTx.getOutputsToSpend.get(0)
       } catch {
-        case _: Throwable => logger.error("Fund Failed")
-          lendingBox
+        case e: Throwable =>
+          logger.error("Fund Failed")
+          throw e
       }
     })
   }
 
-  def refundBox(req: FundLendReq): Unit = {
+  def refundBox(req: FundLendReq): String = {
     client.getClient.execute(ctx => {
       try {
         val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
@@ -116,35 +130,12 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
         if (refundTxId == null) throw failedTxException(s"refund lend tx sending failed for ${req.id}")
         else refundTxId = refundTxId.replaceAll("\"", "")
 
-        fundLendReqDAO.deleteById(req.id)
+        refundTxId
       } catch {
-        case _: Throwable => logger.error("Fund Failed")
+        case e: Throwable =>
+          logger.error("Fund Failed")
+          throw e
       }
     })
-  }
-
-  def isReady(req: FundLendReq): Boolean = {
-    val paymentAddress = Address.create(req.paymentAddress)
-    val coveringList = client.getCoveringBoxesFor(paymentAddress, 4 * Configs.fee)
-    if (coveringList.isCovered) {
-      fundLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
-    } else {
-      val numberTxInMempool = lendBoxExplorer.getNumberTxInMempoolByAddress(req.paymentAddress)
-      if (numberTxInMempool > 0) {
-        fundLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
-      }
-    }
-
-    val reqTxState = TxState.apply(req.state)
-    if (reqTxState == TxState.Unsuccessful) {
-      if (coveringList.isCovered) return true
-    } else if (reqTxState == TxState.Mined) {
-      val txState = lendBoxExplorer.checkTransaction(req.lendTxID.getOrElse(""))
-      if (txState == TxState.Mined)
-        fundLendReqDAO.updateStateById(req.id, TxState.Mempooled)
-      else if (txState == TxState.Unsuccessful) return true
-    }
-
-    false
   }
 }

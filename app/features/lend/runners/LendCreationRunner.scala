@@ -7,10 +7,11 @@ import features.lend.boxes.SingleLenderLendBox
 import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister}
 import features.lend.contracts.proxyContracts.LendProxyContractService
 import features.lend.runners.ExplorerRunner.{walletAddress, writeToFile}
-import features.lend.runners.LendCreationRunner.{description, goal, name}
-import features.lend.txs.singleLender.{ProxyContractTx, SingleLenderTxFactory}
+import features.lend.txs.singleLender.{RefundProxyContractTx, SingleLenderTxFactory}
 import org.ergoplatform.appkit.{Address, ErgoContract, InputBox, Parameters, SignedTransaction}
 import play.api.libs.json.JsResult.Exception
+
+import scala.collection.JavaConverters.asScalaBufferConverter
 
 object Implicits {
   implicit class CaseClassToString(c: AnyRef) {
@@ -32,7 +33,7 @@ case class LendInitiationDetails(val name: String = "Test Lend 2.0",
                                  val deadlineHeight: Long,
                                  val repaymentHeight: Long,
                                  val walletAddress: String) {
-  var lendBoxCreationPayment: Long = SingleLenderLendBox.getLendBoxInitiationPayment()
+  var lendBoxCreationPayment: Long = SingleLenderLendBox.getLendBoxInitiationPayment
 }
 
 case class LendInitiationRunner(lendInitiationDetails: LendInitiationDetails) {
@@ -71,9 +72,9 @@ case class LendInitiationRunner(lendInitiationDetails: LendInitiationDetails) {
     System.out.println(s"Getting boxes for ${paymentAddress.toString}")
 
     // get payment box
-    val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, lendInitiationDetails.lendBoxCreationPayment).getBoxes
+    val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, lendInitiationDetails.lendBoxCreationPayment).getBoxes.asScala
 
-    System.out.println(s"${unspentPaymentBoxes.size()} box found...")
+    System.out.println(s"${unspentPaymentBoxes.size} box found...")
 
     val lendServiceBoxInputBox: InputBox = explorer.getServiceBox
     val fundingInfoRegister = new FundingInfoRegister(
@@ -85,7 +86,7 @@ case class LendInitiationRunner(lendInitiationDetails: LendInitiationDetails) {
     val borrowerRegister = new BorrowerRegister(lendInitiationDetails.walletAddress)
     val lendInitiationTx = SingleLenderTxFactory.createLendInitiationTx(
       lendServiceBoxInputBox,
-      unspentPaymentBoxes.get(0),
+      unspentPaymentBoxes,
       fundingInfoRegister,
       lendingProjectDetailsRegister,
       borrowerRegister)
@@ -104,7 +105,7 @@ case class LendInitiationRunner(lendInitiationDetails: LendInitiationDetails) {
 
 object LendCreationRunner {
 
-  val lendBoxCreationPayment: Long = SingleLenderLendBox.getLendBoxInitiationPayment()
+  val lendBoxCreationPayment: Long = SingleLenderLendBox.getLendBoxInitiationPayment
   val paymentAddressString: String = "S4zcopbihvfXvFPWQHBz5jxeRVosPDtPtP6W7xptmX2C9u4QxkdKTv2Uv9NrKHQeeevBBrDPSi2GQMhgxALRc2hy98CJxS8MrniJPrn3BnvnJhQg2pNQWYwfCVewUzFViGyBJqsZwS66we6PYznEdfLAAoFv3cfUSTgyJDVH1MPgNkFuP9sKVsNp7oy4aXkK28CUFJ9kcoWz6tgLTT8QbiZt43m3ZEm3e3fjQoAxhYGeLq61516JwRq2eh9ZHwAA3o84qzrp7n1CUTXHsJe4ugYA2KbZfSHyLKspxo7uu6nTEfyzJ2WiZRwEem31rtPgNqb5bYvvvVtQZvTDDxxVpUe71yQyatX7njAr6Ay5zGUNuQncJKtaC4fBEkiXxnD8x9buManiZyzG8uBS7ZnF8n4hNmViqxmQwfX7A4mSQvUsKq6q1THyB2c1qTjYmJbhvHaqt3NijTzS4nbP8RdRRYyxn"
 
   val name: String = "Test Lend 2.0"
@@ -167,9 +168,9 @@ object LendCreationRunner {
       System.out.println(s"Getting boxes for ${paymentAddressString}")
 
       // get payment box
-      val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, lendBoxCreationPayment).getBoxes
+      val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, lendBoxCreationPayment).getBoxes.asScala
 
-      System.out.println(s"${unspentPaymentBoxes.size()} box found...")
+      System.out.println(s"${unspentPaymentBoxes.size} box found...")
 
       val lendServiceBoxInputBox: InputBox = explorer.getServiceBox
       val fundingInfoRegister = new FundingInfoRegister(goal, deadlineHeightRecorded, interestRate, repaymentHeightRecorded)
@@ -177,7 +178,7 @@ object LendCreationRunner {
       val borrowerRegister = new BorrowerRegister(walletAddress)
       val lendInitiationTx = SingleLenderTxFactory.createLendInitiationTx(
         lendServiceBoxInputBox,
-        unspentPaymentBoxes.get(0),
+        unspentPaymentBoxes,
         fundingInfoRegister,
         lendingProjectDetailsRegister,
         borrowerRegister)
@@ -208,11 +209,11 @@ object LendCreationRunner {
       System.out.println(s"Getting boxes for ${paymentAddressString}")
 
       // get payment box
-      val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, lendBoxCreationPayment).getBoxes
+      val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, lendBoxCreationPayment).getBoxes.asScala
 
-      System.out.println(s"${unspentPaymentBoxes.size()} box found...")
+      System.out.println(s"${unspentPaymentBoxes.size} box found...")
 
-      val refundTx = new ProxyContractTx(unspentPaymentBoxes.get(0), walletAddress)
+      val refundTx = new RefundProxyContractTx(unspentPaymentBoxes, walletAddress)
 
       val signedTx = refundTx.runTx(ctx)
 

@@ -168,7 +168,7 @@ object SingleLenderLendBox {
       SingleLenderRegister.emptyRegister)
   }
 
-  def getLendBoxInitiationPayment(): Long = {
+  def getLendBoxInitiationPayment: Long = {
     val lendBoxCreation = Configs.minBoxErg
     val lendInitiationTxFee = Parameters.MinFee
 
