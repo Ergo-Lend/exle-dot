@@ -1,9 +1,9 @@
+package response
+
 import ergotools.ergopay.{ErgoPayResponse, Severity}
 import io.circe.Decoder.Result
 import io.circe.Json
 import io.circe.parser._
-import io.circe.syntax._
-import io.circe.generic.auto._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

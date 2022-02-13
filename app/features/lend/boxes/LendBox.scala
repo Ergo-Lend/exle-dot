@@ -4,7 +4,6 @@ import config.Configs
 import ergotools.LendServiceTokens
 import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import features.lend.contracts.singleLenderLendBoxScript
-import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit._
 import special.collection.Coll
 
@@ -190,8 +189,7 @@ object SingleLenderLendBoxContract extends Contract {
   }
 }
 
-trait Box {
-}
+trait Box
 
 abstract class LendBox extends Box {
   def getBorrowersAddress: Address

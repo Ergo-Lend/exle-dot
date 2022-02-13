@@ -3,6 +3,7 @@
 //import ergotools.TxState
 //import features.lend.dao.{CreateLendReq, CreateLendReqDAO}
 //import helpers.Time
+//import org.scalatest.Ignore
 //import org.scalatest.concurrent.ScalaFutures
 //import org.scalatest.flatspec.AnyFlatSpec
 //import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -10,6 +11,7 @@
 //import play.api.Application
 //import play.api.inject.guice.GuiceApplicationBuilder
 //
+//@Ignore
 //class LendDAOSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFutures {
 //  implicit override lazy val app = new GuiceApplicationBuilder().
 //    configure(
