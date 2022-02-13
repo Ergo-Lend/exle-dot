@@ -24,5 +24,8 @@ GET     /api/explorer/box/:id           features.base.ExplorerController.getBoxB
 GET     /api/explorer/txs/:address      features.base.ExplorerController.getTxsInMempoolByAddressViaController(address: String)
 GET     /api/explorer/txs/confirmation  features.base.ExplorerController.getTxConfirmation
 
+# Base
+GET     /pay/roundtrip/:address         features.base.PayController.roundTrip(address: String)
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

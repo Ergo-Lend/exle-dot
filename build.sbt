@@ -16,18 +16,34 @@ resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repos
 
 val ergoDevVer = "develop-dd40e4e5-SNAPSHOT"
 val ergoLatestVer = "4.0.6"
+val ergoDependencies = Seq(
+  "org.scorexfoundation" %% "scrypto" % "2.1.10",
+  "org.ergoplatform" %% "ergo-playground-env" % "0.0.0-86-400c8c4b-SNAPSHOT",
+  "org.ergoplatform" %% "ergo-appkit" % ergoLatestVer,
+)
 
-libraryDependencies ++= Seq(
+val circeDependencies = Seq(
+  "com.dripower" %% "play-circe" % "2712.0")
+
+val dbDependencies = Seq(
   jdbc,
   "org.postgresql" % "postgresql" % "42.2.24",
-  "org.ergoplatform" %% "ergo-playground-env" % "0.0.0-86-400c8c4b-SNAPSHOT",
   "com.h2database" % "h2" % "1.4.200",
+)
+
+libraryDependencies ++= Seq(
   "org.playframework.anorm" %% "anorm" % "2.6.10",
-  "org.ergoplatform" %% "ergo-appkit" % ergoLatestVer,
-  "org.scorexfoundation" %% "scrypto" % "2.1.10",
-  "com.dripower" %% "play-circe" % "2712.0",
   "com.typesafe.play" %% "play-slick" % "4.0.0",
   "com.typesafe.slick" %% "slick" % "3.3.0",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.3.0",
   "org.scalaj" %% "scalaj-http" % "2.4.2",
 )
+
+libraryDependencies ++= dbDependencies ++ ergoDependencies ++ circeDependencies
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
+
+assembly / assemblyJarName := s"${name.value}-${version.value}.jar"
