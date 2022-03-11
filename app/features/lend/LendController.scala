@@ -110,7 +110,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
       ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
       ("lenderPk", Json.fromString(lenderRegister.lendersAddress)),
-      ("boxState", Json.fromString(BoxState.Repayment.toString)),
+      ("boxState", Json.fromString(BoxState.Lend.toString)),
     ))
   }
 
