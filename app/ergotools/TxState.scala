@@ -10,3 +10,8 @@ object TxState extends Enumeration {
   type TxState = Value
   val Unsuccessful, Mempooled, Mined, Completed = Value
 }
+
+object BoxState extends Enumeration {
+  type TxState = Value
+  val Lend, Repayment = Value
+}
