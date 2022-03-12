@@ -106,7 +106,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
       ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
       ("fundingGoalInErgs", Json.fromDoubleOrString(fundingGoalInErgs)),
-      ("funded", Json.fromBoolean(fullyFunded)),
+      ("isFunded", Json.fromBoolean(fullyFunded)),
       ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
       ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
       ("lenderPk", Json.fromString(lenderRegister.lendersAddress)),
@@ -138,7 +138,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       ("interestPercent", Json.fromLong(fundingInfoRegister.interestRatePercent)),
       ("repaymentAmountInNanoErgs", Json.fromLong(repaymentDetailsRegister.repaymentAmount)),
       ("repaymentAmountInErgs", Json.fromDoubleOrString(repaymentAmountInErgs)),
-      ("funded", Json.fromBoolean(fullyFunded)),
+      ("isFunded", Json.fromBoolean(fullyFunded)),
       ("repaymentHeightGoal", Json.fromLong(repaymentDetailsRegister.repaymentHeightGoal)),
       ("fundedHeight", Json.fromLong(repaymentDetailsRegister.fundedHeight)),
       ("boxState", Json.fromString(BoxState.Repayment.toString))
