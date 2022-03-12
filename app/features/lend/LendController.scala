@@ -68,16 +68,18 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       try {
         logger.info("Get Lend Funds by id: " + lendId)
         val lendBox = explorer.getLendBox(lendId)
-        val wrappedLendBox = new SingleLenderLendBox(lendBox)
-        val lendBoxJson = lendBoxToJson(wrappedLendBox)
-
-        // Check to see if its a repayment box
         if (lendBox.getRegisters.size() > 3)
         {
-          throw incorrectBoxStateException()
+          val wrappedRepaymentBox = new SingleLenderRepaymentBox(lendBox)
+          val repaymentBoxJson = repaymentBoxToJson(wrappedRepaymentBox)
+
+          Ok(repaymentBoxJson).as("application/json")
         } else {
+          val wrappedLendBox = new SingleLenderLendBox(lendBox)
+          val lendBoxJson = lendBoxToJson(wrappedLendBox)
           Ok(lendBoxJson).as("application/json")
         }
+        // Check to see if its a repayment box
       } catch {
         case e: Throwable => exception(e, logger)
       }
