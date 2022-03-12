@@ -3,6 +3,7 @@ package features.lend
 import config.Configs
 import ergotools.{BoxState, ErgUtils}
 import ergotools.client.Client
+import errors.incorrectBoxStateException
 import features.lend.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.{getRequestBodyAsLong, getRequestBodyAsString}
 import helpers.{ErgoValidator, ExceptionThrowable}
@@ -68,6 +69,11 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val lendBox = explorer.getLendBox(lendId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
         val lendBoxJson = lendBoxToJson(wrappedLendBox)
+        try {
+          val wrappedRepaymentBox = new SingleLenderRepaymentBox(lendBox)
+        } catch {
+          case e: Throwable => throw new incorrectBoxStateException()
+        }
 
         Ok(lendBoxJson).as("application/json")
       } catch {

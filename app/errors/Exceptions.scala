@@ -9,5 +9,6 @@ final case class parseException(private val message: String = "Parsing failed") 
 final case class finishedLendException(private val message: String = "raffle finished") extends Throwable(message)
 final case class skipException(private val message: String = "skip") extends Throwable(message)
 final case class proveException(private val message: String = "Tx proving failed", val additionalInfo: String = "") extends Throwable(if (additionalInfo.nonEmpty) s"${message}: ${additionalInfo}" else message)
+final case class incorrectBoxStateException(private val message: String = s"BoxState is incorrect", val additionalInfo: String = "") extends Throwable(if (additionalInfo.nonEmpty) s"${message}: ${additionalInfo}" else message)
 
 final case class paymentBoxInfoNotFoundException(private val message: String = "Payment box info cannot be found") extends Throwable(message)
