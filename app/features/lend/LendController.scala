@@ -333,4 +333,80 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
   }
   // </editor-fold>
 
+  // <editor-fold desc="Mock Controllers">
+  def mockFundLendBox(): Action[Json] = Action(circe.json) {
+    implicit request =>
+      try {
+        logger.info("lend fund creation")
+
+        // account details
+        val lendBoxId: String = getRequestBodyAsString(request, "boxId")
+        val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
+
+        ErgoValidator.validateAddress(walletAddress)
+        val lendBox = explorer.getLendBox(lendBoxId)
+        val wrappedLendBox = new SingleLenderLendBox(lendBox)
+        val amount = wrappedLendBox.getFundingTotalErgs()
+        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
+
+        val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
+          lendBoxId = lendBoxId,
+          lenderPk = walletAddress,
+          fundAmount = amount,
+          writeToDb = false
+        )
+
+        val delay = Configs.creationDelay
+
+        val result = Json.fromFields(List(
+          ("deadline", Json.fromLong(delay)),
+          ("address", Json.fromString(paymentAddress)),
+          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
+          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs))
+        ))
+        Ok(result.toString()).as("application/json")
+      } catch {
+        case e: Throwable => exception(e, logger)
+      }
+  }
+
+  def mockFundRepaymentBox(): Action[Json] = Action(circe.json) {
+    implicit request =>
+      try {
+        logger.info("repayment funding")
+
+        // account details
+        val repaymentBoxId: String = getRequestBodyAsString(request, "boxId")
+        val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
+
+        // accounting
+        val fundAmount: Long = getRequestBodyAsLong(request, "fundAmount")
+
+        ErgoValidator.validateAddress(walletAddress)
+        val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
+        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
+        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
+
+        val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
+          repaymentBoxId = repaymentBoxId,
+          funderPk = walletAddress,
+          fundAmount = amount,
+          writeToDb = false
+        )
+
+        val delay = Configs.creationDelay
+
+        val result = Json.fromFields(List(
+          ("deadline", Json.fromLong(delay)),
+          ("address", Json.fromString(paymentAddress)),
+          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
+          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs)),
+        ))
+        Ok(result.toString()).as("application/json")
+      } catch {
+        case e: Throwable => exception(e, logger)
+      }
+  }
+  // </editor-fold>
 }

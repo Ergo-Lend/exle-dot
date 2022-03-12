@@ -52,18 +52,21 @@ class LendProxyAddress @Inject()(lendProxyContractService: LendProxyContractServ
     }
   }
 
-  def getFundLendBoxProxyAddress(lendBoxId: String, lenderPk: String, fundAmount: Long): String= {
+  def getFundLendBoxProxyAddress(lendBoxId: String, lenderPk: String, fundAmount: Long, writeToDb: Boolean = true): String= {
     try {
       val paymentAddress = lendProxyContractService.getFundLendBoxProxyContractString(lendBoxId, lenderPk)
-      fundLendReqDAO.insert(
-        lendBoxId = lendBoxId,
-        fundingErgAmount = fundAmount,
-        state = TxState.Unsuccessful,
-        walletAddress = lenderPk,
-        paymentAddress = paymentAddress,
-        lendTxID = null,
-        timeStamp = LocalDateTime.now().toString,
-        ttl = Configs.creationDelay + Time.currentTime)
+      if (writeToDb)
+      {
+        fundLendReqDAO.insert(
+          lendBoxId = lendBoxId,
+          fundingErgAmount = fundAmount,
+          state = TxState.Unsuccessful,
+          walletAddress = lenderPk,
+          paymentAddress = paymentAddress,
+          lendTxID = null,
+          timeStamp = LocalDateTime.now().toString,
+          ttl = Configs.creationDelay + Time.currentTime)
+      }
 
       paymentAddress
     } catch {
@@ -73,18 +76,21 @@ class LendProxyAddress @Inject()(lendProxyContractService: LendProxyContractServ
     }
   }
 
-  def getFundRepaymentBoxProxyAddress(repaymentBoxId: String, funderPk: String, fundAmount: Long): String= {
+  def getFundRepaymentBoxProxyAddress(repaymentBoxId: String, funderPk: String, fundAmount: Long, writeToDb: Boolean = true): String= {
     try {
       val paymentAddress = lendProxyContractService.getFundRepaymentBoxProxyContractString(repaymentBoxId, funderPk)
-      fundRepaymentReqDAO.insert(
-        repaymentBoxId = repaymentBoxId,
-        fundingErgAmount = fundAmount,
-        state = TxState.Unsuccessful,
-        walletAddress = funderPk,
-        paymentAddress = paymentAddress,
-        repaymentTxID = null,
-        timeStamp = LocalDateTime.now().toString,
-        ttl = Configs.creationDelay + Time.currentTime)
+      if (writeToDb)
+      {
+        fundRepaymentReqDAO.insert(
+          repaymentBoxId = repaymentBoxId,
+          fundingErgAmount = fundAmount,
+          state = TxState.Unsuccessful,
+          walletAddress = funderPk,
+          paymentAddress = paymentAddress,
+          repaymentTxID = null,
+          timeStamp = LocalDateTime.now().toString,
+          ttl = Configs.creationDelay + Time.currentTime)
+      }
 
       paymentAddress
     } catch {
