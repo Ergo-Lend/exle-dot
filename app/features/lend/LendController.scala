@@ -12,6 +12,7 @@ import org.ergoplatform.appkit.Parameters
 import play.api.Logger
 import play.api.mvc._
 import play.api.libs.circe.Circe
+import special.collection.Coll
 
 import javax.inject._
 import scala.collection.mutable.ListBuffer
@@ -69,13 +70,14 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val lendBox = explorer.getLendBox(lendId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
         val lendBoxJson = lendBoxToJson(wrappedLendBox)
-        try {
-          val wrappedRepaymentBox = new SingleLenderRepaymentBox(lendBox)
-        } catch {
-          case e: Throwable => throw new incorrectBoxStateException()
-        }
 
-        Ok(lendBoxJson).as("application/json")
+        // Check to see if its a repayment box
+        if (lendBox.getRegisters.size() > 3)
+        {
+          throw incorrectBoxStateException()
+        } else {
+          Ok(lendBoxJson).as("application/json")
+        }
       } catch {
         case e: Throwable => exception(e, logger)
       }
