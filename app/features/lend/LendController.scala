@@ -125,6 +125,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     val repaymentAmountInErgs = ErgUtils.nanoErgsToErgs(repaymentDetailsRegister.repaymentAmount)
     val fullyFunded = wrappedRepaymentBox.value >= repaymentDetailsRegister.repaymentAmount
 
+    // test
     Json.fromFields(List(
       ("id", Json.fromString(wrappedRepaymentBox.id.toString)),
       ("name", Json.fromString(lendingProjectDetailsRegister.projectName)),
