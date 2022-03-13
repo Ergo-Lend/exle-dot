@@ -409,7 +409,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       }
   }
 
-  def createMockLendBox(): Action[Json] = Action(circe.json) {
+  def mockCreateLendBox(): Action[Json] = Action(circe.json) {
     implicit request =>
       try {
         logger.info("lend fund creation")
