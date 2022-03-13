@@ -408,5 +408,58 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         case e: Throwable => exception(e, logger)
       }
   }
+
+  def createLendBox(): Action[Json] = Action(circe.json) {
+    implicit request =>
+      try {
+        logger.info("lend fund creation")
+
+        // account details
+        val name: String = getRequestBodyAsString(request, "name")
+        val description: String = getRequestBodyAsString(request, "description")
+        val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
+
+        // accounting
+        val goal: Long = getRequestBodyAsLong(request, "goal")
+        val deadlineHeight: Long = getRequestBodyAsLong(request, "deadlineHeight")
+        val interestRate: Long = getRequestBodyAsLong(request, "interestRate")
+        val repaymentHeight: Long = getRequestBodyAsLong(request, "repaymentHeight")
+
+        // validation
+        if (name.length > 250) throw new Throwable("Name size limit is 250 char")
+        if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
+
+        val currentHeight = client.getHeight
+        ErgoValidator.validateErgValue(goal)
+        ErgoValidator.validateAddress(walletAddress)
+        ErgoValidator.validateDeadline(currentHeight, deadlineHeight)
+
+        // we don't need to validate charity percent
+        val paymentAddress = lendProxyAddress.getLendCreateProxyAddress(
+          pk = walletAddress,
+          name = name,
+          description = description,
+          deadlineHeight = client.getHeight + deadlineHeight,
+          goal = goal,
+          interestRate = interestRate,
+          repaymentHeightLength = repaymentHeight,
+          writeToDb = false
+        )
+        val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
+        val paymentAmountInErgs = ErgUtils.nanoErgsToErgs(paymentAmountInNanoErgs)
+        val delay = Configs.creationDelay
+
+        val result = Json.fromFields(List(
+          ("deadline", Json.fromLong(delay)),
+          ("address", Json.fromString(paymentAddress)),
+          ("paymentAmountInNanoErgs", Json.fromLong(paymentAmountInNanoErgs)),
+          ("paymentAmountInErgs", Json.fromDoubleOrString(paymentAmountInErgs))
+        ))
+        Ok(result.toString()).as("application/json")
+      } catch {
+        case e: Throwable =>
+          exception(e, logger)
+      }
+  }
   // </editor-fold>
 }

@@ -22,7 +22,8 @@ class LendProxyAddress @Inject()(lendProxyContractService: LendProxyContractServ
                                 deadlineHeight: Long,
                                 goal: Long,
                                 interestRate: Long,
-                                repaymentHeightLength: Long): String = {
+                                repaymentHeightLength: Long,
+                                writeToDb: Boolean = true): String = {
     try {
       val paymentAddress = lendProxyContractService.getLendCreateProxyContractString(
         pk,
@@ -31,19 +32,23 @@ class LendProxyAddress @Inject()(lendProxyContractService: LendProxyContractServ
         interestRate,
         repaymentHeightLength)
 
-      createLendReqDAO.insert(
-        name = name,
-        description = description,
-        goal = goal,
-        deadlineHeight = deadlineHeight,
-        repaymentHeight = repaymentHeightLength,
-        interestRatePercent = interestRate,
-        state = TxState.Unsuccessful,
-        walletAddress = pk,
-        paymentAddress = paymentAddress,
-        createTxId = null,
-        timeStamp = LocalDateTime.now().toString,
-        ttl = Configs.creationDelay + Time.currentTime)
+      if (writeToDb)
+      {
+        createLendReqDAO.insert(
+          name = name,
+          description = description,
+          goal = goal,
+          deadlineHeight = deadlineHeight,
+          repaymentHeight = repaymentHeightLength,
+          interestRatePercent = interestRate,
+          state = TxState.Unsuccessful,
+          walletAddress = pk,
+          paymentAddress = paymentAddress,
+          createTxId = null,
+          timeStamp = LocalDateTime.now().toString,
+          ttl = Configs.creationDelay + Time.currentTime)
+      }
+
       paymentAddress
     } catch {
       case e: Throwable =>

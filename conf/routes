@@ -12,6 +12,7 @@ GET     /api/lend/:lendId               features.lend.LendController.getLendBoxB
 GET     /api/lend                       features.lend.LendController.getLendBoxes(offset: Int?=0, limit: Int?=100)
 POST    /api/lend/create                features.lend.LendController.createLendBox
 POST    /api/lend/fund                  features.lend.LendController.fundLendBox
+POST    /api/lend/mockCreate            features.lend.LendController.mockCreateLendBox
 POST    /api/lend/mockFund              features.lend.LendController.mockFundLendBox
 
 GET     /api/repayment/:repaymentId     features.lend.LendController.getRepaymentBoxById(repaymentId: String)
