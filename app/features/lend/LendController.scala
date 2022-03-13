@@ -202,7 +202,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           pk = walletAddress,
           name = name,
           description = description,
-          deadlineHeight = deadlineHeight,
+          deadlineHeight = client.getHeight + deadlineHeight,
           goal = goal,
           interestRate = interestRate,
           repaymentHeightLength = repaymentHeight
