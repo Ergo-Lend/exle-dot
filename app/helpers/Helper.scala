@@ -39,10 +39,8 @@ object ErgoValidator {
     }
   }
 
-  def validateDeadline(currentHeight: Long, value: Long): Unit = {
-    val heightDifference = value - currentHeight
-
-    if (heightDifference < 1) throw new Throwable("Deadline should be positive")
-    else if (heightDifference > 262800) throw new Throwable("Maximum deadline is 262800 blocks (about 1 year)")
+  def validateDeadline(value: Long): Unit = {
+    if (value < 1) throw new Throwable("Deadline should be positive")
+    else if (value > 262800) throw new Throwable("Maximum deadline is 262800 blocks (about 1 year)")
   }
 }

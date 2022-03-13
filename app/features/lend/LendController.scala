@@ -192,10 +192,9 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         if (name.length > 250) throw new Throwable("Name size limit is 250 char")
         if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
 
-        val currentHeight = client.getHeight
         ErgoValidator.validateErgValue(goal)
         ErgoValidator.validateAddress(walletAddress)
-        ErgoValidator.validateDeadline(currentHeight, deadlineHeight)
+        ErgoValidator.validateDeadline(deadlineHeight)
 
         // we don't need to validate charity percent
         val paymentAddress = lendProxyAddress.getLendCreateProxyAddress(
@@ -429,10 +428,9 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         if (name.length > 250) throw new Throwable("Name size limit is 250 char")
         if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
 
-        val currentHeight = client.getHeight
         ErgoValidator.validateErgValue(goal)
         ErgoValidator.validateAddress(walletAddress)
-        ErgoValidator.validateDeadline(currentHeight, deadlineHeight)
+        ErgoValidator.validateDeadline(deadlineHeight)
 
         // we don't need to validate charity percent
         val paymentAddress = lendProxyAddress.getLendCreateProxyAddress(
