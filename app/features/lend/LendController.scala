@@ -213,8 +213,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentAmountInNanoErgs", Json.fromLong(paymentAmountInNanoErgs)),
-          ("paymentAmountInErgs", Json.fromDoubleOrString(paymentAmountInErgs))
+          ("fee", Json.fromLong(paymentAmountInNanoErgs)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -249,8 +248,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
-          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs))
+          ("fee", Json.fromLong(amount)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -287,8 +285,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
-          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs)),
+          ("fee", Json.fromLong(amount)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -323,7 +320,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotal", Json.fromLong(fundAmount))
+          ("fee", Json.fromLong(fundAmount))
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -360,8 +357,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
-          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs))
+          ("fee", Json.fromLong(amount)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -399,8 +395,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentTotalInNanoErgs", Json.fromLong(amount)),
-          ("paymentTotalInErgs", Json.fromDoubleOrString(amountInErgs)),
+          ("fee", Json.fromLong(amount)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {
@@ -450,8 +445,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
-          ("paymentAmountInNanoErgs", Json.fromLong(paymentAmountInNanoErgs)),
-          ("paymentAmountInErgs", Json.fromDoubleOrString(paymentAmountInErgs))
+          ("fee", Json.fromLong(paymentAmountInNanoErgs)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {
