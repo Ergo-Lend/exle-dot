@@ -20,6 +20,7 @@ GET     /api/repayment                  features.lend.LendController.getRepaymen
 POST    /api/repayment/fund             features.lend.LendController.fundRepaymentBox
 POST    /api/repayment/fullfund         features.lend.LendController.fundRepaymentBoxFully
 POST    /api/repayment/mockFund         features.lend.LendController.mockFundRepaymentBox
+POST    /api/repayment/mockFullFund     features.lend.LendController.mockFundRepaymentBoxFully
 
 # Explorer
 GET     /api/explorer/test              features.base.ExplorerController.test

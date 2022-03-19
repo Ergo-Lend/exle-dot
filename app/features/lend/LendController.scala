@@ -403,6 +403,42 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       }
   }
 
+  def mockFundRepaymentBoxFully(): Action[Json] = Action(circe.json) {
+    implicit request =>
+      try {
+        logger.info("repayment funding")
+
+        // account details
+        val repaymentBoxId: String = getRequestBodyAsString(request, "boxId")
+        val walletAddress: String = getRequestBodyAsString(request, "walletAddress")
+
+        println(Configs.networkType)
+        ErgoValidator.validateAddress(walletAddress)
+
+        val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
+        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val fundAmount = wrappedRepaymentBox.getFullFundAmount
+
+        val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
+          repaymentBoxId = repaymentBoxId,
+          funderPk = walletAddress,
+          fundAmount = fundAmount,
+          writeToDb = false
+        )
+
+        val delay = Configs.creationDelay
+
+        val result = Json.fromFields(List(
+          ("deadline", Json.fromLong(delay)),
+          ("address", Json.fromString(paymentAddress)),
+          ("fee", Json.fromLong(fundAmount))
+        ))
+        Ok(result.toString()).as("application/json")
+      } catch {
+        case e: Throwable => exception(e, logger)
+      }
+  }
+
   def mockCreateLendBox(): Action[Json] = Action(circe.json) {
     implicit request =>
       try {
