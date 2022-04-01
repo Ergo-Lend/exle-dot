@@ -234,7 +234,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         ErgoValidator.validateAddress(walletAddress)
         val lendBox = explorer.getLendBox(lendBoxId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
-        val amount = wrappedLendBox.getFundingTotalErgs()
+        val amount = wrappedLendBox.getFundingTotalErgs
         val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
@@ -342,7 +342,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         ErgoValidator.validateAddress(walletAddress)
         val lendBox = explorer.getLendBox(lendBoxId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
-        val amount = wrappedLendBox.getFundingTotalErgs()
+        val amount = wrappedLendBox.getFundingTotalErgs
         val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(

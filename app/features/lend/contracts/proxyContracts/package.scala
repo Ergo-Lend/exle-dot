@@ -31,7 +31,7 @@ package object proxyContracts {
    * - deadlineHeight
    * - interestRate
    * - repaymentHeightLength
-   * - borrowerPk
+   * - serviceOwner
    * - minFee
    */
   lazy val createSingleLenderLendBoxProxyScript: String =
@@ -106,8 +106,7 @@ package object proxyContracts {
        |    val fundable = boxIdCheck && !deadlineReached
        |    if (fundable) {
        |
-       |      val fundingValue = SELF.value
-       |      val newFundedValue = inputLendBox.value + fundingValue - minFee
+       |      val newFundedValue = inputLendBox.value + fundingGoal + minFee
        |
        |      val outputLendBoxLenderPk = outputLendBox.R7[Coll[Byte]]
        |
@@ -155,7 +154,7 @@ package object proxyContracts {
    * InputVariables:
    * - boxIdToFund
    * - minFee
-   * - userAddress
+   * - funderPk
    * - serviceRepaymentToken
    */
   lazy val repaySingleLenderLoanProxyScript: String =
@@ -200,12 +199,39 @@ package object proxyContracts {
        |      val repaymentCheck = {
        |        allOf(Coll(
        |          fundable,
-       |          inputRepaymentBox.tokens(0)._1 == serviceRepaymentToken,
-       |          outputRepaymentBox.value == amountRepaidOutput
+       |          inputRepaymentBox.tokens(0)._1 == serviceRepaymentToken
        |        ))
        |      }
        |
-       |      sigmaProp(repaymentCheck)
+       |      // Check if it will overfund, if it does, return overflow
+       |      // funds to funder
+       |      val fullFundedRepaymentBoxValue = repaymentGoal + minFee
+       |      val overfunded = amountRepaidOutput > (fullFundedRepaymentBoxValue)
+       |      if (overfunded)
+       |      {
+       |
+       |        // 1. RepaymentBoxFunded Appropriately
+       |        // 2. Fund back to lender with right funds
+       |        val repaymentGoalBox = outputRepaymentBox.value == fullFundedRepaymentBoxValue
+       |        val fundsBackToFunderBox = OUTPUTS(1)
+       |        val fundsBackToFunder = fundsBackToFunderBox.propositionBytes == funderPk
+       |
+       |        val overfundedSigma = {
+       |          allOf(Coll(
+       |            repaymentGoalBox,
+       |            fundsBackToFunderBox.value == (amountRepaidOutput - fullFundedRepaymentBoxValue),
+       |            fundsBackToFunder
+       |          ))
+       |        }
+       |
+       |        sigmaProp(repaymentCheck && overfundedSigma)
+       |      }
+       |      else {
+       |        val valueTransferred = outputRepaymentBox.value == amountRepaidOutput
+       |
+       |        sigmaProp(repaymentCheck && valueTransferred)
+       |      }
+       |
        |    } else {
        |      sigmaProp(false)
        |    }

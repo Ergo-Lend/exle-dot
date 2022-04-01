@@ -13,3 +13,5 @@ RepaymentProxyRefund.txt
 /.project
 /.settings
 /RUNNING_PID
+.env
+logfile

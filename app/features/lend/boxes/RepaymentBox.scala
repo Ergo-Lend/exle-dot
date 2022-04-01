@@ -51,6 +51,17 @@ class SingleLenderRepaymentBox(
     id = inputBox.getId
   )
 
+  def this(singleLenderLendBox: SingleLenderLendBox, fundedHeight: Long) = this(
+    value = Parameters.MinFee,
+    fundingInfoRegister = singleLenderLendBox.fundingInfoRegister,
+    lendingProjectDetailsRegister = singleLenderLendBox.lendingProjectDetailsRegister,
+    borrowerRegister = singleLenderLendBox.borrowerRegister,
+    singleLenderRegister = singleLenderLendBox.singleLenderRegister,
+    repaymentDetailsRegister = RepaymentDetailsRegister.apply(
+      fundedHeight, singleLenderLendBox.fundingInfoRegister
+    )
+  )
+
   /**
    * Returns the outputbox for repayment
    *

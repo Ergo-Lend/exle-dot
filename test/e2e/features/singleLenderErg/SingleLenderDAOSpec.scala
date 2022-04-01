@@ -5,7 +5,6 @@
 //import helpers.Time
 //import org.scalatest.Ignore
 //import org.scalatest.concurrent.ScalaFutures
-//import org.scalatest.flatspec.AnyFlatSpec
 //import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 //import org.scalatestplus.play.PlaySpec
 //import play.api.Application
@@ -15,17 +14,11 @@
 //class LendDAOSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFutures {
 //  implicit override lazy val app = new GuiceApplicationBuilder().
 //    configure(
-////      "slick.dbs.mydb.driver" -> "slick.driver.PostgresDriver$",
-////      "slick.dbs.mydb.db.driver" -> "org.postgresql.Driver",
-////      "slick.dbs.mydb.db.url" -> "jdbc:postgresql://localhost:5432/test",
-////      "slick.dbs.mydb.db.user" -> "",
-////      "slick.dbs.mydb.db.password" -> ""
-//        "slick.dbs.mydb.driver" -> "slick.driver.H2Profile$",
-//      "slick.dbs.default.driver" -> "slick.driver.H2Driver$",
-//        "slick.dbs.mydb.db.driver" -> "org.h2.Driver",
-//        "slick.dbs.mydb.db.url" -> "jdbc:h2:tcp://localhost/~/test",
-//        "slick.dbs.mydb.db.user" -> "sa",
-//        "slick.dbs.mydb.db.password" -> ""
+//      "slick.dbs.mydb.driver" -> "slick.driver.PostgresDriver$",
+//      "slick.dbs.mydb.db.driver" -> "org.postgresql.Driver",
+//      "slick.dbs.mydb.db.url" -> ${"JDBC_TEST_URL"},
+//      "slick.dbs.mydb.db.user" -> "",
+//      "slick.dbs.mydb.db.password" -> ""
 //    ).build
 //
 //  def lendDAO(implicit app: Application): CreateLendReqDAO = Application.instanceCache[CreateLendReqDAO].apply(app)

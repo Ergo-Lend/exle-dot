@@ -45,7 +45,7 @@ class SingleLenderLendInitiationTx(val serviceBox: InputBox,
 
     // create outputLendingBox
     val wrappedOutputLendBox: SingleLenderLendBox = SingleLenderLendBox.createViaPaymentBox(paymentBox.get)
-    val outputLendBox = wrappedOutputLendBox.getInitiationOutputBox(ctx, txB)
+    val outputLendBox = wrappedOutputLendBox.getOutputBox(ctx, txB)
 
     val inputBoxes = Seq(serviceBox) ++ lendInitiationProxyContractPayment
 
@@ -94,8 +94,8 @@ class SingleLenderFundLendBoxTx(var lendingBox: InputBox,
 
     val fundLendPaymentBox = paymentBox.get
     val inputLendBox = new SingleLenderLendBox(lendingBox)
-    val wrappedOutputLendBox = inputLendBox.funded(fundLendPaymentBox.singleLenderRegister.lendersAddress)
-    val outputLendBox = wrappedOutputLendBox.getFundedOutputBox(ctx, txB)
+    val wrappedOutputLendBox = inputLendBox.fundBox(fundLendPaymentBox.singleLenderRegister.lendersAddress)
+    val outputLendBox = wrappedOutputLendBox.getOutputBox(ctx, txB)
 
     val inputBoxes = Seq(lendingBox) ++ singleLenderFundLendPaymentBoxes
 

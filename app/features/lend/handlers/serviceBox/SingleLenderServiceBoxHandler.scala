@@ -154,7 +154,7 @@ object SingleLenderServiceBoxHandler {
     val serviceInfo: ServiceBoxInfoRegister = new ServiceBoxInfoRegister(name = "ErgoLend", description = "A Lending Platform on Ergo")
     val boxInfo: StringRegister = new StringRegister("SingleLenderServiceBox")
     val ergoLendPubKeyRegister: SingleAddressRegister = new SingleAddressRegister(ownerAddressString)
-    val profitSharingPercentageRegister: ProfitSharingRegister = new ProfitSharingRegister(profitSharingPercentage = 18L)
+    val profitSharingPercentageRegister: ProfitSharingRegister = new ProfitSharingRegister(profitSharingPercentage = Configs.profitSharingPercentage, Configs.serviceFee)
 
     val prover: ErgoProver = ctx.newProverBuilder().withMnemonic(
       SecretString.create(nodeConfig.getWallet.getMnemonic),

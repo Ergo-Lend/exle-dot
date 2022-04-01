@@ -27,8 +27,8 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
 
   def processRequests(): Unit = {
     client.getClient.execute((ctx: BlockchainContext) => {
-      processFundedLendBoxes(ctx)
-      processFundedRepaymentBoxes(ctx)
+//      processFundedLendBoxes(ctx)
+//      processFundedRepaymentBoxes(ctx)
       processRefundLendBoxes(ctx)
     })
   }

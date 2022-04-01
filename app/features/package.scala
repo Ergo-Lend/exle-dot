@@ -12,6 +12,11 @@ package object features {
     request.body.hcursor.downField(key).as[Long].getOrElse(throw new Throwable(processedErrorMessage))
   }
 
+  def getRequestBodyAsDouble(request: Request[Json], key: String, errorMessage: String = ""): Double = {
+    val processedErrorMessage = processErrorMessage(key, errorMessage)
+    request.body.hcursor.downField(key).as[Double].getOrElse(throw new Throwable(processedErrorMessage))
+  }
+
   def processErrorMessage(key: String, errorMessage: String): String = {
     if (errorMessage.isEmpty())
       s"$key field must exist"

@@ -1,4 +1,4 @@
-package response
+package ergopay
 
 import ergotools.ergopay.{ErgoPayResponse, Severity}
 import io.circe.Decoder.Result

@@ -92,14 +92,17 @@ case class ServiceBoxInfoRegister(name: String,
   }
 }
 
-case class ProfitSharingRegister(profitSharingPercentage: Long) extends LongRegister {
+// For Percentage, we're using /1000 rather than /100, so that we can get 1 decimal
+case class ProfitSharingRegister(profitSharingPercentage: Long, serviceFeeAmount: Long) extends LongRegister {
   def this(registerData: Array[Long]) = this(
-    profitSharingPercentage = registerData(0))
+    profitSharingPercentage = registerData(0),
+    serviceFeeAmount = registerData(1))
 
   def toRegister: ErgoValue[Coll[Long]] = {
-    val register: Array[Long] = new Array[Long](1)
+    val register: Array[Long] = new Array[Long](2)
 
     register(0) = profitSharingPercentage
+    register(1) = serviceFeeAmount
 
     ergoValueOf(register)
   }

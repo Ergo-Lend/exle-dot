@@ -110,15 +110,11 @@ class SingleLenderRepaymentFundedTx(val serviceBox: InputBox, val repaymentBox: 
     val wrappedInputServiceBox = new LendServiceBox(serviceBox)
 
     val outputServiceBox = wrappedInputServiceBox.consumeRepaymentBox(wrappedRepaymentBox, ctx, txB).asJava
-    val ergoLendInterest = wrappedInputServiceBox.profitSharingPercentage.profitSharingPercentage * wrappedRepaymentBox.repaymentDetailsRegister.totalInterestAmount / 100
-    val outputLendersPaymentBox = wrappedRepaymentBox.
-      repaidLendersPaymentBox(ergoLendInterest).
-      getOutputBox(ctx, txB)
 
     // Send change to ErgoLend
     val lendInitiationTx = txB.boxesToSpend(getInputBoxes.asJava)
       .fee(Configs.fee)
-      .outputs(outputServiceBox.get(0), outputServiceBox.get(1), outputLendersPaymentBox)
+      .outputs(outputServiceBox.get(0), outputServiceBox.get(1), outputServiceBox.get(2))
       .sendChangeTo(wrappedRepaymentBox.getLendersAddress)
       .build()
 
