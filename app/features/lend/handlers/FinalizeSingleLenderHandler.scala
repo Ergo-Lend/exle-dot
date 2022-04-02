@@ -27,8 +27,8 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
 
   def processRequests(): Unit = {
     client.getClient.execute((ctx: BlockchainContext) => {
-//      processFundedLendBoxes(ctx)
-//      processFundedRepaymentBoxes(ctx)
+      processFundedLendBoxes(ctx)
+      processFundedRepaymentBoxes(ctx)
       processRefundLendBoxes(ctx)
     })
   }
@@ -159,7 +159,7 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
       client.getAllUnspentBox(Address.create(encodedAddress))
         .filter(box => {
           val wrappedBox = new SingleLenderLendBox(box)
-          val isFunded = wrappedBox.value < wrappedBox.fundingInfoRegister.fundingGoal
+          val isFunded = wrappedBox.value > wrappedBox.fundingInfoRegister.fundingGoal
           val isPastDeadline = client.getHeight > wrappedBox.fundingInfoRegister.deadlineHeight
 
           val shouldRefund = !isFunded && isPastDeadline
@@ -190,6 +190,8 @@ class FinalizeSingleLenderHandler @Inject()(client: Client, explorer: LendBoxExp
       val signedTxId = ctx.sendTransaction(signedTx)
 
       if (!isTxPassed(signedTxId)) throw failedTxException(s"refund Transaction failed for ${lendBox.getId}")
+      else
+        logger.info(s"Refund Lend Box: Success! TxID ${signedTxId}")
     } catch {
       case e: Throwable => throw e
     }

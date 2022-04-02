@@ -1,9 +1,8 @@
 package contracts.SingleLender
 
 import config.Configs
-import contracts.{client, dummyAddress, dummyProver, dummyTxId, ergoClient}
+import contracts.{client, dummyAddress, dummyProver, dummyTxId}
 import ergotools.LendServiceTokens
-import errors.failedTxException
 import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.lend.contracts.proxyContracts.LendProxyContractService
@@ -27,7 +26,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
      * 2. Just enough ergs in Proxy Contract
      */
     "instantiating a box" should {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 
@@ -123,7 +122,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
     // Pays to ErgoLend
     "refunding an instantiate lend proxy contract" should {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 
@@ -162,7 +161,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     "refunding a instantiate lend proxy contract to other than borrower" should {
       "fail" in {
 
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -224,7 +223,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "reabsorb a lend box before Due Date" should {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val tx = refundLendBoxTx()
             "should fail as due date is not there yet" in {
@@ -237,7 +236,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "reabsorb a minimum lend box after Due Date" should {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val tx = refundLendBoxTx(deadlineHeight = -100)
             "should pass as funding has expired" in {
@@ -248,7 +247,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "reabsorb a funded lend box after Due Date" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val tx = refundLendBoxTx(deadlineHeight = -100, funded = true)
             assertThrows[Exception] {
@@ -282,7 +281,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
     "dealing with fundLendContract" can {
       "refund" should {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -321,7 +320,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         }
 
         "refund to different lender" should {
-          ergoClient.execute {
+          client.getClient.execute {
             ctx => {
               val txB = ctx.newTxBuilder()
 
@@ -368,7 +367,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
   "Fund Loan Successfully" when {
     "fund successful" should {
       "hack to repay to other than borrower fails" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -412,7 +411,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "convert to repayment box, repaid to borrower succeed" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -454,7 +453,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "convert a passed deadline fundbox succeeds (if converted to repayment and borrower)" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -496,7 +495,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "no repayment box fails" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -539,7 +538,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
   "RepaymentBox" when {
     "funding a repayment box" can {
       "fund full amount to repayment box" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -576,7 +575,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "fund partial amount to repayment box" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -616,7 +615,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
       "over-fund amount to repayment box" should {
         "without returning overpayment to funder, fails" in {
-          ergoClient.execute {
+          client.getClient.execute {
             ctx => {
               val txB = ctx.newTxBuilder()
 
@@ -657,7 +656,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         }
 
         "returning overpayment to Someone else, fails" in {
-          ergoClient.execute {
+          client.getClient.execute {
             ctx => {
               val txB = ctx.newTxBuilder()
 
@@ -704,7 +703,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         }
 
         "returning overpayment to funder" in {
-          ergoClient.execute {
+          client.getClient.execute {
             ctx => {
               val txB = ctx.newTxBuilder()
 
@@ -752,7 +751,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
     "dealing with fund repayment proxy contract" can {
       "refund" should {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -792,7 +791,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
         "refund to different lender" should {
           "fail" in {
-            ergoClient.execute {
+            client.getClient.execute {
               ctx => {
                 val txB = ctx.newTxBuilder()
 
@@ -849,7 +848,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     }
 
     "hack successfully funded Repayment, fails" in {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 
@@ -901,7 +900,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       def defaultedSemiFundedTx(isHackerHackRepaidBox: Boolean) : UnsignedTransaction = {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -940,7 +939,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
     "consume defaulted and not repaid at all" can {
       "fail" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -970,7 +969,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     }
 
     "profit sharing less than min box, will have no profit sharing box" in {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 
@@ -1015,7 +1014,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     }
 
     "interest rates is at 0%" in {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 
@@ -1059,7 +1058,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     }
 
     def consumeRepaymentTx(funded: Boolean): UnsignedTransaction = {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 
@@ -1107,7 +1106,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
   // <editor-fold desc="Functions for Tx">
   def refundLendBoxTx(deadlineHeight: Long = 100,
                       funded: Boolean = false): UnsignedTransaction = {
-    ergoClient.execute {
+    client.getClient.execute {
       ctx => {
         val txB = ctx.newTxBuilder()
 
@@ -1159,7 +1158,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
   }
 
   def overfundLendBoxTx(fundAmount: Long, hacked: Boolean = false): UnsignedTransaction = {
-    ergoClient.execute {
+    client.getClient.execute {
       ctx => {
         val txB = ctx.newTxBuilder()
 
@@ -1199,7 +1198,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
   }
 
   def fundLendBoxTx(fundAmount: Long, lenderAddress: Address): SignedTransaction = {
-    ergoClient.execute {
+    client.getClient.execute {
       ctx => {
         val txB = ctx.newTxBuilder()
 

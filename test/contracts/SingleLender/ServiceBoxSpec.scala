@@ -1,22 +1,17 @@
 package contracts.SingleLender
 
-import config.Configs
-import contracts.{dummyAddress, dummyProver, dummyTxId, ergoClient}
+import contracts.{client, dummyTxId}
 import ergotools.LendServiceTokens
 import features.lend.boxes.LendServiceBox
-import features.lend.contracts.proxyContracts.createSingleLenderLendBoxProxyScript
-import org.ergoplatform.ErgoAddressEncoder
-import org.ergoplatform.appkit.{ConstantsBuilder, ErgoClient, ErgoToken, Parameters, RestApiErgoClient}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-
-import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class ServiceBoxSpec extends AnyWordSpec with Matchers {
   val serviceBox: LendServiceBox = buildGenesisServiceBox()
   "Service Box" when {
+    client.setClient()
     "Genesis" should {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
           val inputServiceBox = serviceBox

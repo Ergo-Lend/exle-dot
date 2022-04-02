@@ -9,18 +9,14 @@ import scala.collection.JavaConverters._
 import javax.inject.Singleton
 
 @Singleton
-class Client(ergoClient: ErgoClient = null) {
+class Client() {
   private val logger: Logger = Logger(this.getClass)
   private var client: ErgoClient = _
 
   def setClient(): Unit = {
     println("Ergo Client Starting up...")
     try {
-      if (ergoClient != null) {
-        client = ergoClient
-      } else {
-        client = RestApiErgoClient.create(Configs.nodeUrl, Configs.networkType, "", Configs.explorerUrl)
-      }
+      client = RestApiErgoClient.create(Configs.nodeUrl, Configs.networkType, "", Configs.explorerUrl)
       client.execute(ctx => {
         System.out.println(s"Client Instantiated, Current Height: ${ctx.getHeight}")
         ctx.getHeight

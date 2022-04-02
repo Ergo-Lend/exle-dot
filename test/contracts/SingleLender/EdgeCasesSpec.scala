@@ -1,12 +1,11 @@
 package contracts.SingleLender
 
 import config.Configs
-import contracts.{client, dummyAddress, dummyProver, dummyTxId, ergoClient}
-import ergotools.LendServiceTokens
-import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
+import contracts.{client, dummyAddress, dummyProver, dummyTxId}
+import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox}
 import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import features.lend.contracts.proxyContracts.LendProxyContractService
-import org.ergoplatform.appkit.{Address, ErgoContract, Parameters, SignedTransaction, UnsignedTransaction}
+import org.ergoplatform.appkit.{ErgoContract, Parameters, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import sigmastate.lang.exceptions.InterpreterException
@@ -33,7 +32,7 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
       }
 
       "passes on default consumption" in {
-        ergoClient.execute {
+        client.getClient.execute {
           ctx => {
             val txB = ctx.newTxBuilder()
 
@@ -113,7 +112,7 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
                            repaymentHeight: Long = repaymentHeightLength,
                            fundingGoal: Long = goal,
                            borrowerAddress: String = dummyAddress.toString): UnsignedTransaction = {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 

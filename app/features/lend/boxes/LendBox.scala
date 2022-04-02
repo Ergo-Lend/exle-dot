@@ -85,7 +85,7 @@ case class SingleLenderLendBox(value: Long,
    * @param txB
    * @return
    */
-  private def getInitiationOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
+  def getInitiationOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx)
     val lendBox = txB.outBoxBuilder()
       .value(value)
@@ -105,7 +105,7 @@ case class SingleLenderLendBox(value: Long,
    * @param txB
    * @return
    */
-  private def getFundedOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
+  def getFundedOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     // If lender is null, then it can't possibly be funded.
     if (singleLenderRegister.lendersAddress.getBytes().deep == Array.emptyByteArray.deep) {
       //@todo create better exception
@@ -166,7 +166,7 @@ case class SingleLenderLendBox(value: Long,
 
 object SingleLenderLendBox {
   def createViaPaymentBox(paymentBox: SingleLenderInitiationPaymentBox): SingleLenderLendBox = {
-    val lendBoxInitialValue = paymentBox.value - Parameters.MinFee
+    val lendBoxInitialValue = paymentBox.value - Parameters.MinFee - Configs.serviceFee
     return new SingleLenderLendBox(
       lendBoxInitialValue,
       paymentBox.fundingInfoRegister,
@@ -179,7 +179,7 @@ object SingleLenderLendBox {
     val lendBoxCreation = Configs.minBoxErg
     val lendInitiationTxFee = Parameters.MinFee
 
-    val totalPayment = lendBoxCreation + lendInitiationTxFee
+    val totalPayment = lendBoxCreation + lendInitiationTxFee + Configs.serviceFee
 
     return totalPayment
   }

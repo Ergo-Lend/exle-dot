@@ -45,13 +45,15 @@ class SingleLenderLendInitiationTx(val serviceBox: InputBox,
 
     // create outputLendingBox
     val wrappedOutputLendBox: SingleLenderLendBox = SingleLenderLendBox.createViaPaymentBox(paymentBox.get)
-    val outputLendBox = wrappedOutputLendBox.getOutputBox(ctx, txB)
+    val outputLendBox = wrappedOutputLendBox.getInitiationOutputBox(ctx, txB)
+    val outputServiceFeeBox = new FundsToAddressBox(Configs.serviceFee, Configs.serviceOwner.toString)
+      .getOutputBox(ctx, txB)
 
     val inputBoxes = Seq(serviceBox) ++ lendInitiationProxyContractPayment
 
     val lendInitiationTx = txB.boxesToSpend(inputBoxes.asJava)
       .fee(Parameters.MinFee)
-      .outputs(outputServiceBox, outputLendBox)
+      .outputs(outputServiceBox, outputLendBox, outputServiceFeeBox)
       .sendChangeTo(wrappedOutputLendBox.getBorrowersAddress.getErgoAddress)
       .build()
 
@@ -60,7 +62,6 @@ class SingleLenderLendInitiationTx(val serviceBox: InputBox,
       signedTx
     } catch {
       case e: Throwable => {
-        e.printStackTrace()
         throw proveException(additionalInfo = e.toString)
       }
     }
@@ -165,14 +166,14 @@ class SingleLenderLendBoxFundedTx(val serviceBox: InputBox, var lendBox: InputBo
     val inputBoxes = List(serviceBox, lendBox).asJava
 
     // Change is send back to lender
-    val lendInitiationTx = txB.boxesToSpend(inputBoxes)
+    val lendFundTx = txB.boxesToSpend(inputBoxes)
       .fee(Parameters.MinFee)
       .outputs(outputServiceBox, outputRepaymentBox, outputFundedBorrowerBox)
       .sendChangeTo(repaymentBox.getLendersAddress)
       .build()
 
     try {
-      val signedTx = prover.sign(lendInitiationTx)
+      val signedTx = prover.sign(lendFundTx)
       signedTx
     } catch {
       case e: Throwable => {
@@ -204,16 +205,12 @@ class SingleLenderRefundLendBoxTx(val serviceBox: InputBox, var lendBox: InputBo
     val prover = ctx.newProverBuilder().build()
 
     val outputServiceBox = wrappedInputServiceBox.refundLend.getOutputServiceBox(ctx, txB)
-    val refundToBorrowerPaymentBox =
-      new FundsToAddressBox(wrappedInputLendingBox.value - Parameters.MinFee, wrappedInputLendingBox.getBorrowersAddress)
-        .getOutputBox(ctx, txB)
-
     val inputBoxes = List(serviceBox, lendBox).asJava
 
     // Change is send back to lender
     val lendInitiationTx = txB.boxesToSpend(inputBoxes)
       .fee(Configs.fee)
-      .outputs(outputServiceBox, refundToBorrowerPaymentBox)
+      .outputs(outputServiceBox)
       .sendChangeTo(wrappedInputLendingBox.getBorrowersAddress.getErgoAddress)
       .build()
 
@@ -221,9 +218,8 @@ class SingleLenderRefundLendBoxTx(val serviceBox: InputBox, var lendBox: InputBo
       val signedTx = prover.sign(lendInitiationTx)
       signedTx
     } catch {
-      case e: Throwable => {
-        throw proveException()
-      }
+      case e: Throwable => throw e
+      case e: proveException => throw new proveException()
     }
   }
 }

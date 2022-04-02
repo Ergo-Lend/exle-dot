@@ -48,7 +48,7 @@ package object SingleLender {
                            loanName: String = loanName,
                            loanDescription: String = loanDescription,
                            borrowerAddress: Address = dummyAddress): SingleLenderLendBox = {
-    ergoClient.execute {
+    client.getClient.execute {
       ctx => {
         val fundingInfoRegister = new FundingInfoRegister(
           fundingGoal = goal,
@@ -77,7 +77,7 @@ package object SingleLender {
   def createWrappedRepaymentBox(fundingGoal: Long = goal,
                                 interestRate: Long = interestRate,
                                 lendersAddress: Address = dummyAddress): SingleLenderRepaymentBox = {
-    ergoClient.execute {
+    client.getClient.execute {
       ctx => {
         val wrappedLendBox = createWrappedLendBox(goal = fundingGoal, interestRate = interestRate).fundBox(lendersAddress.toString)
         val wrappedRepaymentBox = new SingleLenderRepaymentBox(wrappedLendBox, ctx.getHeight + 100)
@@ -97,7 +97,7 @@ package object SingleLender {
                                    borrowerAddress: Address = dummyAddress,
                                    lenderAddress: Address = dummyAddress,
                                    fundedRepaymentHeight: Long): SingleLenderRepaymentBox = {
-    ergoClient.execute {
+    client.getClient.execute {
       ctx => {
         val fundingInfoRegister = new FundingInfoRegister(
           fundingGoal = goal,

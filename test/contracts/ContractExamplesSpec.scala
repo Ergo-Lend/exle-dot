@@ -1,10 +1,6 @@
 package contracts
 
-import config.Configs
-import ergotools.LendServiceTokens
-import features.lend.contracts.proxyContracts.createSingleLenderLendBoxProxyScript
-import org.ergoplatform.ErgoAddressEncoder
-import org.ergoplatform.appkit.{ConstantsBuilder, ErgoClient, ErgoToken, Parameters, RestApiErgoClient}
+import org.ergoplatform.appkit.{ConstantsBuilder, Parameters}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -12,9 +8,10 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class ContractExamplesSpec extends AnyWordSpec with Matchers {
   "Contract Examples" can {
+    client.setClient()
 
     "Prove a true contract" should {
-      ergoClient.execute {
+      client.getClient.execute {
         ctx =>
           val trueContract = ctx.compileContract(ConstantsBuilder.create().build(), "{sigmaProp(true)}")
           val falseContract = ctx.compileContract(ConstantsBuilder.create().build(), "{sigmaProp(false)}")

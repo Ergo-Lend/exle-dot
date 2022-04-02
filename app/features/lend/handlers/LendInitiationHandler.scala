@@ -1,10 +1,10 @@
 package features.lend.handlers
 
 import config.Configs
-import ergotools.TxState
+import ergotools.{TimeUtils, TxState}
 import ergotools.client.Client
 import ergotools.explorer.Explorer
-import errors.{connectionException, failedTxException, paymentNotCoveredException, skipException}
+import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import features.lend.LendBoxExplorer
 import features.lend.boxes.SingleLenderLendBox
 import features.lend.dao.{CreateLendReq, CreateLendReqDAO, DAO, ProxyReq}
@@ -15,6 +15,8 @@ import helpers.{StackTrace, Time}
 import org.ergoplatform.appkit.{Address, CoveringBoxes, InputBox, Parameters}
 import play.api.Logger
 
+import java.sql.Date
+import java.time.LocalDateTime
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,7 +31,8 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
     createLendReqDAO.all.onComplete((requests => {
       requests.get.map(req => {
         try {
-          if (req.ttl <= Time.currentTime || req.state == 2) {
+          logger.info(Time.currentTime.toString)
+          if (req.ttl <= Time.currentTime || req.state == 2 || req.state == 4) {
             handleRemoval(req)
           } else {
             handleReq(req)
@@ -42,7 +45,6 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
     )
   }
 
-  //@todo finish removals
   def handleRemoval(req: CreateLendReq): Unit = {
     val paymentAddress = Address.create(req.paymentAddress)
     val unSpentPaymentBoxes = client.getAllUnspentBox(paymentAddress)
@@ -51,7 +53,10 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
         val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
-        if (unSpentPaymentBoxes.getCoveredAmount >= SingleLenderLendBox.getLendBoxInitiationPayment) {
+        val covered = unSpentPaymentBoxes.getCoveredAmount >= SingleLenderLendBox.getLendBoxInitiationPayment
+        val has5MinutesPassed = TimeUtils.hasPassed(LocalDateTime.parse(req.timeStamp), 5)
+        val isScriptReducedToFalse = req.state == TxState.ScriptFalsed
+        if ((covered && !has5MinutesPassed) && isScriptReducedToFalse) {
           logger.info(s"Request ${req.id} is going back to the request pool, creation fee is enough")
           createLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
           throw skipException()
@@ -62,9 +67,9 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
           }
         }
       } catch {
-        case _: connectionException => throw new Throwable
-        case _: failedTxException => throw new Throwable
-        case e: skipException => throw e
+        case _: connectionException => throw new connectionException()
+        case _: failedTxException => throw new failedTxException("creation removal failed")
+        case e: skipException => logger.info(s"Skipping removal: Request has enough funds")
         case _: Throwable => logger.error(s"Checking creation request ${req.id} failed")
       }
     }
@@ -103,7 +108,12 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
         createLendReqDAO.updateCreateTxID(req.id, createTxId)
         createLendReqDAO.updateStateById(req.id, TxState.Mined)
       } catch {
-        case _: Throwable => logger.error("Create Failed")
+        case e: proveException => {
+          createLendReqDAO.updateStateById(req.id, TxState.ScriptFalsed)
+          logger.error(s"Create Failure: Contract reduced to false")
+          refundCreateLendProxy(req)
+        }
+        case _: Throwable => logger.error(s"Create Failed for req ${req.id}")
       }
     })
   }
@@ -124,7 +134,7 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
 }
 
 class ProxyContractTxHandler @Inject()(client: Client, explorer: Explorer, dao: DAO) {
-  def getPaymentBoxes(req: ProxyReq, amount: Long = (Parameters.MinFee * 2)): CoveringBoxes = {
+  def getPaymentBoxes(req: ProxyReq, amount: Long = SingleLenderLendBox.getLendBoxInitiationPayment): CoveringBoxes = {
     val paymentAddress = Address.create(req.paymentAddress)
     val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, amount)
 
