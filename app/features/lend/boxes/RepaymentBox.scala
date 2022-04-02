@@ -51,6 +51,17 @@ class SingleLenderRepaymentBox(
     id = inputBox.getId
   )
 
+  def this(singleLenderLendBox: SingleLenderLendBox, fundedHeight: Long) = this(
+    value = Parameters.MinFee,
+    fundingInfoRegister = singleLenderLendBox.fundingInfoRegister,
+    lendingProjectDetailsRegister = singleLenderLendBox.lendingProjectDetailsRegister,
+    borrowerRegister = singleLenderLendBox.borrowerRegister,
+    singleLenderRegister = singleLenderLendBox.singleLenderRegister,
+    repaymentDetailsRegister = RepaymentDetailsRegister.apply(
+      fundedHeight, singleLenderLendBox.fundingInfoRegister
+    )
+  )
+
   /**
    * Returns the outputbox for repayment
    *
@@ -120,15 +131,9 @@ class SingleLenderRepaymentBox(
   }
 
   def repaidLendersPaymentBox(ergoLendInterest: Long): FundsToAddressBox = {
-    val isFunded = value >= repaymentDetailsRegister.repaymentAmount
-    if (isFunded) {
-      new FundsToAddressBox(
-        value - ergoLendInterest - Parameters.MinFee,
-        singleLenderRegister.lendersAddress)
-    } else {
-      // @todo Better failure
-      throw failedTxException(s"repayment not fully repaid")
-    }
+    new FundsToAddressBox(
+      value - ergoLendInterest - Parameters.MinFee,
+      singleLenderRegister.lendersAddress)
   }
 
   /**

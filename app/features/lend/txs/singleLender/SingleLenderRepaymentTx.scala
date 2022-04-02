@@ -5,7 +5,7 @@ import errors.proveException
 import features.lend.boxes.registers.SingleAddressRegister
 import features.lend.boxes.{LendServiceBox, PaymentBox, SingleLenderFundRepaymentPaymentBox, SingleLenderRepaymentBox}
 import features.lend.dao.FundRepaymentReq
-import org.ergoplatform.appkit.{Address, BlockchainContext, InputBox, Parameters, SignedTransaction}
+import org.ergoplatform.appkit.{Address, BlockchainContext, InputBox, Parameters, SignedTransaction, UnsignedTransaction, UnsignedTransactionBuilder}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -51,8 +51,8 @@ class SingleLenderFundRepaymentTx(var repaymentBox: InputBox,
       val signedTx = prover.sign(fundRepaymentTx)
       signedTx
     } catch {
-      case e: Throwable =>
-        throw e
+      case e: proveException => throw new proveException()
+      case e: Throwable => throw e
     }
   }
 
@@ -109,18 +109,23 @@ class SingleLenderRepaymentFundedTx(val serviceBox: InputBox, val repaymentBox: 
     val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
     val wrappedInputServiceBox = new LendServiceBox(serviceBox)
 
-    val outputServiceBox = wrappedInputServiceBox.consumeRepaymentBox(wrappedRepaymentBox, ctx, txB).asJava
-    val ergoLendInterest = wrappedInputServiceBox.profitSharingPercentage.profitSharingPercentage * wrappedRepaymentBox.repaymentDetailsRegister.totalInterestAmount / 100
-    val outputLendersPaymentBox = wrappedRepaymentBox.
-      repaidLendersPaymentBox(ergoLendInterest).
-      getOutputBox(ctx, txB)
+    val outputBoxes = wrappedInputServiceBox.consumeRepaymentBox(wrappedRepaymentBox, ctx, txB).asJava
 
     // Send change to ErgoLend
-    val lendInitiationTx = txB.boxesToSpend(getInputBoxes.asJava)
-      .fee(Configs.fee)
-      .outputs(outputServiceBox.get(0), outputServiceBox.get(1), outputLendersPaymentBox)
-      .sendChangeTo(wrappedRepaymentBox.getLendersAddress)
-      .build()
+    var lendInitiationTx: UnsignedTransaction = null
+    if (outputBoxes.size() >= 3) {
+      lendInitiationTx = txB.boxesToSpend(getInputBoxes.asJava)
+        .fee(Configs.fee)
+        .outputs(outputBoxes.get(0), outputBoxes.get(1), outputBoxes.get(2))
+        .sendChangeTo(wrappedRepaymentBox.getLendersAddress)
+        .build()
+    } else {
+      lendInitiationTx = txB.boxesToSpend(getInputBoxes.asJava)
+        .fee(Configs.fee)
+        .outputs(outputBoxes.get(0), outputBoxes.get(1))
+        .sendChangeTo(wrappedRepaymentBox.getLendersAddress)
+        .build()
+    }
 
     try {
       val signedTx = prover.sign(lendInitiationTx)

@@ -3,19 +3,15 @@ package features.lend
 import config.Configs
 import ergotools.{BoxState, ErgUtils}
 import ergotools.client.Client
-import errors.incorrectBoxStateException
 import features.lend.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.{getRequestBodyAsLong, getRequestBodyAsString}
 import helpers.{ErgoValidator, ExceptionThrowable}
 import io.circe.Json
-import org.ergoplatform.appkit.Parameters
 import play.api.Logger
 import play.api.mvc._
 import play.api.libs.circe.Circe
-import special.collection.Coll
 
 import javax.inject._
-import scala.collection.mutable.ListBuffer
 
 @Singleton
 class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendProxyAddress: LendProxyAddress, val controllerComponents: ControllerComponents)
@@ -234,7 +230,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         ErgoValidator.validateAddress(walletAddress)
         val lendBox = explorer.getLendBox(lendBoxId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
-        val amount = wrappedLendBox.getFundingTotalErgs()
+        val amount = wrappedLendBox.getFundingTotalErgs
         val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
@@ -342,7 +338,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         ErgoValidator.validateAddress(walletAddress)
         val lendBox = explorer.getLendBox(lendBoxId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
-        val amount = wrappedLendBox.getFundingTotalErgs()
+        val amount = wrappedLendBox.getFundingTotalErgs
         val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
@@ -482,6 +478,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           ("deadline", Json.fromLong(delay)),
           ("address", Json.fromString(paymentAddress)),
           ("fee", Json.fromLong(paymentAmountInNanoErgs)),
+          ("ergs", Json.fromDoubleOrString(paymentAmountInErgs)),
         ))
         Ok(result.toString()).as("application/json")
       } catch {

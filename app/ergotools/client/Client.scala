@@ -9,7 +9,7 @@ import scala.collection.JavaConverters._
 import javax.inject.Singleton
 
 @Singleton
-class Client {
+class Client() {
   private val logger: Logger = Logger(this.getClass)
   private var client: ErgoClient = _
 

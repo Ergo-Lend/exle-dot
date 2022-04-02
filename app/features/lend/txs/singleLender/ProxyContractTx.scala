@@ -1,5 +1,6 @@
 package features.lend.txs.singleLender
 
+import errors.proveException
 import features.lend.boxes.FundsToAddressBox
 import org.ergoplatform.appkit.{Address, BlockchainContext, InputBox, Parameters, SignedTransaction}
 
@@ -30,8 +31,12 @@ class RefundProxyContractTx(val paymentBoxes: mutable.Buffer[InputBox],
       .sendChangeTo(Address.create(funderAddress).getErgoAddress)
       .build()
 
-    val signedTx = prover.sign(refundTx)
+    try {
+      val signedTx = prover.sign(refundTx)
+      signedTx
+    } catch {
+      case e: proveException => throw new proveException()
+    }
 
-    signedTx
   }
 }

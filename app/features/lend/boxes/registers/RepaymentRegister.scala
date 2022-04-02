@@ -50,14 +50,14 @@ object RepaymentDetailsRegister {
     val repaymentHeightLength = fundingInfoRegister.repaymentHeightLength
 
     val repaymentHeightGoal = fundedHeight + repaymentHeightLength
-    val totalInterestAmount = (fundingGoal * interestRate/100)
+    val totalInterestAmount = (fundingGoal * interestRate) / 1000
     val repaymentAmount = fundingGoal + totalInterestAmount
 
     new RepaymentDetailsRegister(fundedHeight, repaymentAmount, totalInterestAmount, repaymentHeightGoal)
   }
 
   def calculateInterestRate(fundingGoal: Long, interestRate: Long): Long = {
-    val totalInterestAmount = (fundingGoal * interestRate/100)
+    val totalInterestAmount = (fundingGoal * interestRate) / 1000
 
     totalInterestAmount
   }

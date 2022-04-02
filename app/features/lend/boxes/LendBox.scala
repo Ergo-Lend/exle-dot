@@ -39,7 +39,7 @@ case class SingleLenderLendBox(value: Long,
     val r4 = inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Long]].toArray
     val r5 = inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Coll[Byte]]].toArray
     val r6 = inputBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray
-    val r7 = inputBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray
+    val r7 = inputBox.getRegisters.get(3).getValue.asInstanceOf[Coll[Byte]].toArray
     val boxToken = inputBox.getTokens.get(0)
     val fundingInfoRegister = new FundingInfoRegister(r4)
     val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(r5)
@@ -67,9 +67,9 @@ case class SingleLenderLendBox(value: Long,
     id = inputBox.getId
   )
 
-  def funded(lenderAddress: String): SingleLenderLendBox = {
+  def fundBox(lenderAddress: String): SingleLenderLendBox = {
     val lenderRegister = new SingleLenderRegister(lenderAddress)
-    val fundedValue = getFundingTotalErgs()
+    val fundedValue = getFundingTotalErgs
     new SingleLenderLendBox(
       value = fundedValue,
       fundingInfoRegister,
@@ -88,7 +88,7 @@ case class SingleLenderLendBox(value: Long,
   def getInitiationOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx)
     val lendBox = txB.outBoxBuilder()
-      .value(Configs.minBoxErg)
+      .value(value)
       .contract(lendBoxContract)
       .tokens(lendToken)
       .registers(
@@ -105,7 +105,7 @@ case class SingleLenderLendBox(value: Long,
    * @param txB
    * @return
    */
-  override def getFundedOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
+  def getFundedOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     // If lender is null, then it can't possibly be funded.
     if (singleLenderRegister.lendersAddress.getBytes().deep == Array.emptyByteArray.deep) {
       //@todo create better exception
@@ -126,12 +126,20 @@ case class SingleLenderLendBox(value: Long,
     lendBox
   }
 
+  override def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
+    if (value >= fundingInfoRegister.fundingGoal) {
+      getFundedOutputBox(ctx, txB)
+    } else {
+      getInitiationOutputBox(ctx, txB)
+    }
+  }
+
   /**
    * Total funding value =
    * FundingGoal + RepaymentBoxCreationValue + ProxyContractTxFee + LendBoxFundedTxFee - LendBoxValue
    * @return
    */
-  def getFundingTotalErgs(): Long = {
+  def getFundingTotalErgs: Long = {
     val repaymentBoxCreation = Configs.minBoxErg
     val proxyContractTxFee = Parameters.MinFee
     val lendBoxFundedTxFee = Parameters.MinFee
@@ -158,7 +166,7 @@ case class SingleLenderLendBox(value: Long,
 
 object SingleLenderLendBox {
   def createViaPaymentBox(paymentBox: SingleLenderInitiationPaymentBox): SingleLenderLendBox = {
-    val lendBoxInitialValue = paymentBox.value - Parameters.MinFee
+    val lendBoxInitialValue = paymentBox.value - Parameters.MinFee - Configs.serviceFee
     return new SingleLenderLendBox(
       lendBoxInitialValue,
       paymentBox.fundingInfoRegister,
@@ -171,7 +179,7 @@ object SingleLenderLendBox {
     val lendBoxCreation = Configs.minBoxErg
     val lendInitiationTxFee = Parameters.MinFee
 
-    val totalPayment = lendBoxCreation + lendInitiationTxFee
+    val totalPayment = lendBoxCreation + lendInitiationTxFee + Configs.serviceFee
 
     return totalPayment
   }
@@ -194,6 +202,5 @@ trait Box
 abstract class LendBox extends Box {
   def getBorrowersAddress: Address
   def getLendersAddress: Address
-  def getInitiationOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
-  def getFundedOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
+  def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
 }

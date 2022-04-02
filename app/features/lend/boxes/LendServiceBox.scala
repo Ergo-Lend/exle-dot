@@ -7,7 +7,7 @@ import features.lend.boxes.SingleLenderServiceBoxContract.getServiceBoxContract
 import features.lend.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import features.lend.contracts.singleLenderLendServiceBoxScript
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
 import special.collection.Coll
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
@@ -101,7 +101,7 @@ class LendServiceBox(val value: Long,
   def getOwnerProfitSharingBox(amountForProfitSplit: Long,
                                ctx: BlockchainContext,
                                txB: UnsignedTransactionBuilder): OutBox = {
-    val profitSharePercentage = profitSharingPercentage.profitSharingPercentage * amountForProfitSplit / 100
+    val profitSharePercentage = profitSharingPercentage.profitSharingPercentage * amountForProfitSplit / 1000
     val ownerProfitSharingBox = new FundsToAddressBox(profitSharePercentage, ergoLendPubKey.address)
 
     ownerProfitSharingBox.getOutputBox(ctx, txB)
@@ -174,11 +174,30 @@ class LendServiceBox(val value: Long,
    * @param txB
    * @return
    */
-  def consumeRepaymentBox(repaymentBox: RepaymentBox, ctx: BlockchainContext, txB: UnsignedTransactionBuilder): List[OutBox] = {
+  def consumeRepaymentBox(repaymentBox: SingleLenderRepaymentBox, ctx: BlockchainContext, txB: UnsignedTransactionBuilder): List[OutBox] = {
     val incrementedServiceBox = this.incrementRepaymentToken().getOutputServiceBox(ctx, txB)
-    val profitSharingBox = this.getOwnerProfitSharingBox(repaymentBox.getRepaymentInterest, ctx, txB)
 
-    val outputBoxList = List(incrementedServiceBox, profitSharingBox)
+    val repaymentInterest = repaymentBox.getRepaymentInterest
+    val profitShareAmount = profitSharingPercentage.profitSharingPercentage * repaymentInterest / 1000
+
+    val repaymentRepaid = repaymentBox.value >= repaymentBox.repaymentDetailsRegister.repaymentAmount
+    val profitShareAmountLessThanMinFee = profitShareAmount < Parameters.MinFee
+
+    var outputBoxList: List[OutBox] = null
+    if (repaymentRepaid && !profitShareAmountLessThanMinFee) {
+      val profitSharingBox = this.getOwnerProfitSharingBox(repaymentBox.getRepaymentInterest, ctx, txB)
+      val ergoLendInterest = (profitSharingPercentage.profitSharingPercentage *
+        repaymentBox.repaymentDetailsRegister.totalInterestAmount) / 1000
+      val outputLendersPaymentBox = repaymentBox.
+        repaidLendersPaymentBox(ergoLendInterest).
+        getOutputBox(ctx, txB)
+      outputBoxList = List(incrementedServiceBox, outputLendersPaymentBox, profitSharingBox)
+    } else {
+      val outputLendersPaymentBox = repaymentBox.
+        repaidLendersPaymentBox(0).
+        getOutputBox(ctx, txB)
+      outputBoxList = List(incrementedServiceBox, outputLendersPaymentBox)
+    }
 
     outputBoxList
   }
@@ -214,6 +233,7 @@ object SingleLenderServiceBoxContract {
       .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
       .item("lendBoxHash", lendBoxHash)
       .item("repaymentBoxHash", repaymentBoxHash)
+      .item("minFee", Parameters.MinFee)
       .build(), singleLenderLendServiceBoxScript)
   }
 }

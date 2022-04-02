@@ -3,17 +3,18 @@ package features.lend.handlers
 import config.Configs
 import ergotools.TxState
 import ergotools.client.Client
-import errors.{connectionException, failedTxException, skipException}
+import errors.{connectionException, failedTxException, proveException, skipException}
 import features.lend.LendBoxExplorer
 import features.lend.boxes.SingleLenderLendBox
 import features.lend.dao.{FundLendReq, FundLendReqDAO}
-import features.lend.txs.singleLender.SingleLenderTxFactory
+import features.lend.txs.singleLender.{RefundProxyContractTx, SingleLenderTxFactory}
 import helpers.{StackTrace, Time}
 import org.ergoplatform.appkit.{Address, InputBox}
 import play.api.Logger
 
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplorer, fundLendReqDAO: FundLendReqDAO)
@@ -41,17 +42,21 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
   def handleRemoval(req: FundLendReq): Unit = {
     val paymentAddress = Address.create(req.paymentAddress)
     val unSpentPaymentBoxes = client.getAllUnspentBox(paymentAddress)
+    val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
+    val wrappedLendBox = new SingleLenderLendBox(lendBox)
     logger.info("removing request" + req.id)
 
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
         val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
-        if (unSpentPaymentBoxes.getCoveredAmount >= SingleLenderLendBox.getLendBoxInitiationPayment) {
+        val covered = unSpentPaymentBoxes.getCoveredAmount >= req.ergAmount
+        val deadlinePassed = client.getHeight > wrappedLendBox.fundingInfoRegister.deadlineHeight
+        if (covered && !deadlinePassed) {
           logger.info(s"Request ${req.id} is going back to the request pool, creation fee is enough")
           fundLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
           throw skipException()
         } else {
-          val refundTxId = refundBox(req)
+          val refundTxId = refundProxyContract(req)
           if (refundTxId.nonEmpty) {
             fundLendReqDAO.deleteById(req.id)
           }
@@ -59,7 +64,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
       } catch {
         case _: connectionException => throw new Throwable
         case _: failedTxException => throw new Throwable
-        case e: skipException => throw e
+        case e: skipException => logger.info(s"Skipping Exception: Lend funding, increasing ttl")
         case _: Throwable =>
           logger.error(s"Checking creation request ${req.id} failed")
       }
@@ -77,7 +82,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
       if (isReady(req)) {
         val deadlinePassed = client.getHeight >= wrappedLendBox.fundingInfoRegister.deadlineHeight
         if (deadlinePassed) {
-          refundBox(req)
+          refundProxyContract(req)
         } else {
           try {
             fundLendTx(req, lendBox)
@@ -111,6 +116,11 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
         fundLendReqDAO.updateLendTxId(req.id, fundTxId)
         fundLendReqDAO.updateStateById(req.id, TxState.Mined)
       } catch {
+        case e: proveException => {
+          fundLendReqDAO.updateStateById(req.id, TxState.ScriptFalsed)
+          logger.error(s"Create Failure: Contract reduced to false")
+          refundProxyContract(req)
+        }
         case e: Throwable =>
           logger.error("Fund Failed")
           throw e
@@ -118,15 +128,13 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     })
   }
 
-  def refundBox(req: FundLendReq): String = {
+  def refundProxyContract(req: FundLendReq): String = {
     client.getClient.execute(ctx => {
       try {
-        val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
-        val serviceBox = lendBoxExplorer.getServiceBox
+        val paymentBoxes = getPaymentBoxes(req, req.ergAmount).getBoxes.asScala
+        val refundProxyContractTx = new RefundProxyContractTx(paymentBoxes, req.lenderAddress)
 
-        val refundLendBoxTx = SingleLenderTxFactory.createRefundLendBoxTx(serviceBox, lendBox)
-
-        val signedTx = refundLendBoxTx.runTx(ctx)
+        val signedTx = refundProxyContractTx.runTx(ctx)
 
         var refundTxId = ctx.sendTransaction(signedTx)
 

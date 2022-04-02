@@ -30,7 +30,7 @@ case class FundLendRunner(lendBoxId: String, lenderAddress: String, explorer: Le
     )
 
     paymentAddress = Address.create(paymentAddressString)
-    val totalAmountToFund = wrappedLendBox.getFundingTotalErgs()
+    val totalAmountToFund = wrappedLendBox.getFundingTotalErgs
 
     val stringBuilder = new StringBuilder()
     stringBuilder.append(s"pk: ${walletAddress}\n")
@@ -40,7 +40,7 @@ case class FundLendRunner(lendBoxId: String, lenderAddress: String, explorer: Le
     stringBuilder.append(s"paymentValue: ${totalAmountToFund/Parameters.OneErg} Ergs\n")
     writeToFile("FundLendReq.txt", stringBuilder.toString())
 
-    sendFunds(paymentAddressContract, wrappedLendBox.getFundingTotalErgs())
+    sendFunds(paymentAddressContract, wrappedLendBox.getFundingTotalErgs)
   }
 
   def handleProxyMerge(client: Client, explorer: LendBoxExplorer): Unit = {
@@ -48,7 +48,7 @@ case class FundLendRunner(lendBoxId: String, lenderAddress: String, explorer: Le
     val wrappedLendBox = new SingleLenderLendBox(lendBox)
     System.out.println(s"Getting boxes for ${paymentAddress.toString}")
 
-    val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, wrappedLendBox.getFundingTotalErgs()).getBoxes.asScala
+    val unspentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, wrappedLendBox.getFundingTotalErgs).getBoxes.asScala
 
     System.out.println(s"${unspentPaymentBoxes.size} box found...")
 
@@ -104,7 +104,7 @@ object FundLendRunner {
         lendBoxId,
         lenderPk)
 
-      val amount = wrappedLendBox.getFundingTotalErgs()
+      val amount = wrappedLendBox.getFundingTotalErgs
       val requiredPaymentInErgs: Float = amount/Parameters.OneErg.toFloat
 
       val stringBuilder = new StringBuilder()

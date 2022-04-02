@@ -68,6 +68,9 @@ object RegisterTypes {
 
   class AddressRegister(val address: String) extends CollByteRegister {
     def toRegister: ErgoValue[Coll[Byte]] = {
+      if (address.isEmpty) {
+        throw new RuntimeException("Address Register: Found an empty address");
+      }
       val borrowerPk = Address.create(address).getErgoAddress.script.bytes
 
       ergoValueOf(borrowerPk)
