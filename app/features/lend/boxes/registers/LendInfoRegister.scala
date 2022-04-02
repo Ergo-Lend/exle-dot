@@ -37,6 +37,12 @@ case class FundingInfoRegister(fundingGoal: Long,
 
     ergoValueOf(register)
   }
+
+  def interestRateAsDouble: Double = {
+    val interestRate = interestRatePercent.toDouble / 10
+
+    interestRate
+  }
 }
 
 case class LendingProjectDetailsRegister(projectName: String,

@@ -4,7 +4,7 @@ import config.Configs
 import ergotools.{BoxState, ErgUtils}
 import ergotools.client.Client
 import features.lend.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
-import features.{getRequestBodyAsLong, getRequestBodyAsString}
+import features.{getRequestBodyAsDouble, getRequestBodyAsLong, getRequestBodyAsString}
 import helpers.{ErgoValidator, ExceptionThrowable}
 import io.circe.Json
 import play.api.Logger
@@ -113,7 +113,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
       ("fundingGoalInErgs", Json.fromDoubleOrString(fundingGoalInErgs)),
       ("isFunded", Json.fromBoolean(fullyFunded)),
-      ("interestRate", Json.fromLong(fundingInfoRegister.interestRatePercent)),
+      ("interestRate", Json.fromDoubleOrString(fundingInfoRegister.interestRateAsDouble)),
       ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
       ("lenderPk", Json.fromString(lenderRegister.lendersAddress)),
       ("boxState", Json.fromString(BoxState.Lend.toString)),
@@ -142,7 +142,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       ("fundingGoalInErgs", Json.fromDoubleOrString(fundingGoalInErgs)),
       ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
       ("lenderPk", Json.fromString(lenderRegister.lendersAddress)),
-      ("interestRate", Json.fromLong(fundingInfoRegister.interestRatePercent)),
+      ("interestRate", Json.fromDoubleOrString(fundingInfoRegister.interestRateAsDouble)),
       ("repaymentAmountInNanoErgs", Json.fromLong(repaymentDetailsRegister.repaymentAmount)),
       ("repaymentAmountInErgs", Json.fromDoubleOrString(repaymentAmountInErgs)),
       ("isFunded", Json.fromBoolean(fullyFunded)),
@@ -181,12 +181,13 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         // accounting
         val goal: Long = getRequestBodyAsLong(request, "goal")
         val deadlineHeight: Long = getRequestBodyAsLong(request, "deadlineHeight")
-        val interestRate: Long = getRequestBodyAsLong(request, "interestRate")
+        val interestRate: Long = (getRequestBodyAsDouble(request, "interestRate") * 10).toLong
         val repaymentHeight: Long = getRequestBodyAsLong(request, "repaymentHeight")
 
         // validation
         if (name.length > 250) throw new Throwable("Name size limit is 250 char")
         if (description.length > 1000) throw new Throwable("description size limit is 1000 char")
+        if (interestRate < 0) throw new Throwable("interest rate cannot be negative")
 
         ErgoValidator.validateErgValue(goal)
         ErgoValidator.validateAddress(walletAddress)
@@ -203,7 +204,6 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           repaymentHeightLength = repaymentHeight
         )
         val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
-        val paymentAmountInErgs = ErgUtils.nanoErgsToErgs(paymentAmountInNanoErgs)
         val delay = Configs.creationDelay
 
         val result = Json.fromFields(List(
@@ -448,7 +448,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         // accounting
         val goal: Long = getRequestBodyAsLong(request, "goal")
         val deadlineHeight: Long = getRequestBodyAsLong(request, "deadlineHeight")
-        val interestRate: Long = getRequestBodyAsLong(request, "interestRate")
+        val interestRate: Long = (getRequestBodyAsDouble(request, "interestRate") * 10).toLong
         val repaymentHeight: Long = getRequestBodyAsLong(request, "repaymentHeight")
 
         // validation
