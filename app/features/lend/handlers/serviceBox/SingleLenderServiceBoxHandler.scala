@@ -1,13 +1,11 @@
 package features.lend.handlers.serviceBox
 
-import boxes.registers.RegisterTypes.{CollByte, NumberRegister, StringRegister}
+import boxes.registers.RegisterTypes.{StringRegister}
 import config.Configs
 import ergotools.{ContractUtils, LendServiceTokens}
 import features.lend.boxes.SingleLenderServiceBoxContract
 import features.lend.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
-import features.lend.contracts.singleLenderLendServiceBoxScript
-import org.ergoplatform.appkit
-import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
 
 import java.util.stream.Collectors

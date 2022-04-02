@@ -7,7 +7,7 @@ import errors.failedTxException
 import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.lend.contracts.proxyContracts.LendProxyContractService
-import org.ergoplatform.appkit.{Address, ErgoContract, Parameters, SignedTransaction, UnsignedTransaction}
+import org.ergoplatform.appkit.{Address, ErgoContract, OutBox, Parameters, SignedTransaction, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import sigmastate.lang.exceptions.InterpreterException
@@ -17,12 +17,6 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class SLProxyContractsSpec extends AnyWordSpec with Matchers {
   val serviceBox: LendServiceBox = buildGenesisServiceBox()
-  val goal: Long = 1e9.toLong
-  val interestRate = 100
-  val repaymentHeightLength = 100
-  val deadlineHeightLength = 100
-  val loanName = "Test Loan"
-  val loanDescription = "Test Loan Description"
 
   client.setClient()
   val lendProxyContractService = new LendProxyContractService(client)
@@ -128,7 +122,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     }
 
     // Pays to ErgoLend
-    "refunding a instantiate lend proxy contract" should {
+    "refunding an instantiate lend proxy contract" should {
       ergoClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
@@ -160,63 +154,50 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             .build()
 
           var signed: SignedTransaction = null
-          try {
-            signed = dummyProver.sign(tx)
-            "refund passes" in {
-              assert(true)
-            }
-          } catch {
-            case e: Exception => {
-              "should pass" in {
-                fail("transaction can't be signed" + e.printStackTrace())
-              }
-            }
-          }
+          signed = dummyProver.sign(tx)
         }
       }
     }
 
     "refunding a instantiate lend proxy contract to other than borrower" should {
+      "fail" in {
+
       ergoClient.execute {
         ctx => {
-          val txB = ctx.newTxBuilder()
+            val txB = ctx.newTxBuilder()
 
-          // Input Boxes
-          val lendCreationProxyContract: ErgoContract =
-            lendProxyContractService.getLendCreateProxyContract(
-              pk = dummyAddress.toString,
-              deadlineHeight = ctx.getHeight + deadlineHeightLength,
-              goal = goal,
-              interestRate = interestRate,
-              repaymentHeightLength = repaymentHeightLength
-            )
+            // Input Boxes
+            val lendCreationProxyContract: ErgoContract =
+              lendProxyContractService.getLendCreateProxyContract(
+                pk = dummyAddress.toString,
+                deadlineHeight = ctx.getHeight + deadlineHeightLength,
+                goal = goal,
+                interestRate = interestRate,
+                repaymentHeightLength = repaymentHeightLength
+              )
 
-          val inputProxyContract = txB.outBoxBuilder()
-            .contract(lendCreationProxyContract)
-            .value(Parameters.MinFee * 3 + Configs.serviceFee)
-            .build()
-            .convertToInputWith(dummyTxId, 0)
+            val inputProxyContract = txB.outBoxBuilder()
+              .contract(lendCreationProxyContract)
+              .value(Parameters.MinFee * 3 + Configs.serviceFee)
+              .build()
+              .convertToInputWith(dummyTxId, 0)
 
-          // Output Boxes
-          val refundToBorrower = new FundsToAddressBox(inputProxyContract.getValue - Parameters.MinFee, Configs.serviceOwner.toString)
-            .getOutputBox(ctx, txB)
+            // Output Boxes
+            val refundToBorrower = new FundsToAddressBox(inputProxyContract.getValue - Parameters.MinFee, Configs.serviceOwner.toString)
+              .getOutputBox(ctx, txB)
 
-          val tx = txB.boxesToSpend(Seq(inputProxyContract).asJava)
-            .fee(Parameters.MinFee)
-            .outputs(refundToBorrower)
-            .sendChangeTo(dummyAddress.getErgoAddress)
-            .build()
+            val tx = txB.boxesToSpend(Seq(inputProxyContract).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(refundToBorrower)
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
 
-          val signed = intercept[InterpreterException]{
-            dummyProver.sign(tx)
-          }
-
-          "refund passes" in {
-            assert(signed.getMessage() == "Script reduced to false")
+            assertThrows[InterpreterException] {
+              dummyProver.sign(tx)
+            }
           }
         }
       }
-
     }
   }
 
@@ -247,13 +228,8 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           ctx => {
             val tx = refundLendBoxTx()
             "should fail as due date is not there yet" in {
-              try {
+              assertThrows[Exception] {
                 dummyProver.sign(tx)
-                fail("Refund LendBox: transaction failed")
-              } catch {
-                case e: Exception => {
-                  assert(true)
-                }
               }
             }
           }
@@ -265,32 +241,18 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           ctx => {
             val tx = refundLendBoxTx(deadlineHeight = -100)
             "should pass as funding has expired" in {
-              try {
-                dummyProver.sign(tx)
-                assert(true)
-              } catch {
-                case e: Exception => {
-                  fail("Refund LendBox: transaction failed")
-                }
-              }
+              dummyProver.sign(tx)
             }
           }
         }
       }
 
-      "reabsorb a funded lend box after Due Date" should {
+      "reabsorb a funded lend box after Due Date" in {
         ergoClient.execute {
           ctx => {
             val tx = refundLendBoxTx(deadlineHeight = -100, funded = true)
-            "should pass as funding has expired" in {
-              try {
-                dummyProver.sign(tx)
-                assert(true)
-              } catch {
-                case e: Exception => {
-                  fail("Refund LendBox: transaction failed" + e.getMessage)
-                }
-              }
+            assertThrows[Exception] {
+              dummyProver.sign(tx)
             }
           }
         }
@@ -298,11 +260,22 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
       "over-funding a lend box" should {
         val fundAmount = goal * 2 + Parameters.MinFee * 2
-        val tx = overfundLendBoxTx(fundAmount, dummyAddress)
+        val tx = overfundLendBoxTx(fundAmount)
 
         val signedTx = dummyProver.sign(tx)
         "Funded Amount is same as funding goal" in {
           assert(signedTx.getOutputsToSpend.get(0).getValue == goal + Parameters.MinFee * 2)
+        }
+      }
+
+      "over-funding a lend box, but getting hacked" should {
+        val fundAmount = goal * 2 + Parameters.MinFee * 2
+        val tx = overfundLendBoxTx(fundAmount, hacked = true)
+
+        "fail" in {
+          assertThrows[InterpreterException] {
+            dummyProver.sign(tx)
+          }
         }
       }
     }
@@ -446,6 +419,48 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             // box funded
             val wrappedServiceBox = buildGenesisServiceBox()
             val wrappedLendBox = createWrappedLendBox().fundBox(dummyAddress.toString)
+
+            val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+            val inputLendBox = wrappedLendBox.getOutputBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+
+            // outputs
+            val outputServiceBox = wrappedServiceBox.fundedLend()
+              .getOutputServiceBox(ctx, txB)
+            val repaymentBox = new SingleLenderRepaymentBox(
+              wrappedLendBox,
+              ctx.getHeight + 10
+            ).getOutputBox(ctx, txB)
+            val borrowerFunds = new FundsToAddressBox(
+              wrappedLendBox.fundingInfoRegister.fundingGoal,
+              wrappedLendBox.borrowerRegister.borrowersAddress)
+              .getOutputBox(ctx, txB)
+
+
+            val tx = txB.boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(
+                outputServiceBox,
+                repaymentBox,
+                borrowerFunds
+              )
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
+
+            dummyProver.sign(tx)
+          }
+        }
+      }
+
+      "convert a passed deadline fundbox succeeds (if converted to repayment and borrower)" in {
+        ergoClient.execute {
+          ctx => {
+            val txB = ctx.newTxBuilder()
+
+            // box funded
+            val wrappedServiceBox = buildGenesisServiceBox()
+            val wrappedLendBox = createWrappedLendBox(deadlineHeightLength = ctx.getHeight - 100).fundBox(dummyAddress.toString)
 
             val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
               .convertToInputWith(dummyTxId, 0)
@@ -776,42 +791,40 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         }
 
         "refund to different lender" should {
-          ergoClient.execute {
-            ctx => {
-              val txB = ctx.newTxBuilder()
+          "fail" in {
+            ergoClient.execute {
+              ctx => {
+                val txB = ctx.newTxBuilder()
 
-              val wrappedInputRepaymentBox = createWrappedRepaymentBox()
-              val inputRepaymentBox = wrappedInputRepaymentBox.getOutputBox(ctx, txB)
-                .convertToInputWith(dummyTxId, 0)
+                val wrappedInputRepaymentBox = createWrappedRepaymentBox()
+                val inputRepaymentBox = wrappedInputRepaymentBox.getOutputBox(ctx, txB)
+                  .convertToInputWith(dummyTxId, 0)
 
-              val fundRepaymentProxyContract: ErgoContract =
-                lendProxyContractService.getFundRepaymentBoxProxyContract(
-                  repaymentBoxId = inputRepaymentBox.getId.toString,
-                  funderPk = dummyAddress.toString
-                )
+                val fundRepaymentProxyContract: ErgoContract =
+                  lendProxyContractService.getFundRepaymentBoxProxyContract(
+                    repaymentBoxId = inputRepaymentBox.getId.toString,
+                    funderPk = dummyAddress.toString
+                  )
 
-              val inputProxyContract = txB.outBoxBuilder()
-                .contract(fundRepaymentProxyContract)
-                .value(1e9.toLong)
-                .build()
-                .convertToInputWith(dummyTxId, 0)
+                val inputProxyContract = txB.outBoxBuilder()
+                  .contract(fundRepaymentProxyContract)
+                  .value(1e9.toLong)
+                  .build()
+                  .convertToInputWith(dummyTxId, 0)
 
-              // OutBox
-              val refundToLender = new FundsToAddressBox(inputProxyContract.getValue - Parameters.MinFee, Configs.serviceOwner.toString)
-                .getOutputBox(ctx, txB)
+                // OutBox
+                val refundToLender = new FundsToAddressBox(inputProxyContract.getValue - Parameters.MinFee, Configs.serviceOwner.toString)
+                  .getOutputBox(ctx, txB)
 
-              val tx = txB.boxesToSpend(Seq(inputProxyContract).asJava)
-                .fee(Parameters.MinFee)
-                .outputs(refundToLender)
-                .sendChangeTo(dummyAddress.getErgoAddress)
-                .build()
+                val tx = txB.boxesToSpend(Seq(inputProxyContract).asJava)
+                  .fee(Parameters.MinFee)
+                  .outputs(refundToLender)
+                  .sendChangeTo(dummyAddress.getErgoAddress)
+                  .build()
 
-              val signedTx = intercept[InterpreterException] {
-                dummyProver.sign(tx)
-              }
-
-              "fail" in {
-                assert(signedTx.getMessage() == "Script reduced to false")
+                assertThrows[InterpreterException] {
+                  dummyProver.sign(tx)
+                }
               }
             }
           }
@@ -819,10 +832,12 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
     }
 
-    "consume not fully repaid" should {
-      "fail" in {
-        assertThrows[failedTxException] {
-          consumeRepaymentTx(funded = false)
+    "consume semi-funded" should {
+      "fail if deadline not passed" in {
+        val unsignedTx: UnsignedTransaction = consumeRepaymentTx(funded = false)
+
+        assertThrows[InterpreterException] {
+          dummyProver.sign(unsignedTx)
         }
       }
     }
@@ -833,10 +848,86 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       dummyProver.sign(unsignedTx)
     }
 
-    "defaulted" can {
-      // Defaulted but partially paid
-      // Defaulted but not paid
-//      val unsignedTx: UnsignedTransaction = consumeRepaymentTx(funded = false)
+    "semi-funded but defaulted" should {
+      "still repayable to lender" in {
+        val tx = defaultedSemiFundedTx(isHackerHackRepaidBox = false)
+        dummyProver.sign(tx)
+      }
+
+      "hacker hack repayment box" in {
+        val tx = defaultedSemiFundedTx(isHackerHackRepaidBox = true)
+        assertThrows[InterpreterException] {
+          dummyProver.sign(tx)
+        }
+      }
+
+      def defaultedSemiFundedTx(isHackerHackRepaidBox: Boolean) : UnsignedTransaction = {
+        ergoClient.execute {
+          ctx => {
+            val txB = ctx.newTxBuilder()
+
+            val wrappedServiceBox = buildGenesisServiceBox()
+            val wrappedRepaymentBox = createRawWrappedRepaymentBox(interestRate = 0, fundedRepaymentHeight = (ctx.getHeight - 1000)).fundBox(0.5e9.toLong)
+
+            val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+            val inputRepaymentBox = wrappedRepaymentBox.getOutputBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+
+            // Output Boxes
+            val outputServiceBox = wrappedServiceBox.incrementRepaymentToken().getOutputServiceBox(ctx, txB)
+            val lendersBox = new FundsToAddressBox(
+              wrappedRepaymentBox.value - Parameters.MinFee,
+              if (!isHackerHackRepaidBox) {dummyAddress.toString} else {Configs.serviceOwner.toString})
+              .getOutputBox(ctx, txB)
+
+            val totalInputVal = inputServiceBox.getValue + inputRepaymentBox.getValue
+            val totalOutputVal = outputServiceBox.getValue + lendersBox.getValue
+
+            assert(totalInputVal - totalOutputVal == Parameters.MinFee, "Input, output value inbalance")
+            assert(ctx.getHeight > wrappedRepaymentBox.repaymentDetailsRegister.repaymentHeightGoal)
+
+            val tx = txB.boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(outputServiceBox, lendersBox)
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
+
+            tx
+          }
+        }
+      }
+    }
+
+    "consume defaulted and not repaid at all" can {
+      "fail" in {
+        ergoClient.execute {
+          ctx => {
+            val txB = ctx.newTxBuilder()
+
+            val wrappedServiceBox = buildGenesisServiceBox()
+            val wrappedRepaymentBox = createRawWrappedRepaymentBox(interestRate = 0, fundedRepaymentHeight = (ctx.getHeight - 1000))
+
+            val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+            val inputRepaymentBox = wrappedRepaymentBox.getOutputBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+
+            // Output Boxes
+            val outputServiceBox = wrappedServiceBox.incrementRepaymentToken().getOutputServiceBox(ctx, txB)
+
+            val tx = txB.boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(outputServiceBox)
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
+
+            assertThrows[Exception] {
+              dummyProver.sign(tx)
+            }
+          }
+        }
+      }
     }
 
     "profit sharing less than min box" in {
@@ -847,7 +938,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           // Input Boxes
           val wrappedServiceBox = buildGenesisServiceBox()
           var wrappedRepaymentBox = createWrappedRepaymentBox(fundingGoal = 0.01e9.toLong, interestRate = 1)
-            .fundBox(0.3e9.toLong)
+            .fundedBox()
 
           wrappedRepaymentBox = wrappedRepaymentBox.fundedBox()
 
@@ -928,14 +1019,14 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
     }
 
-    def consumeRepaymentTx(funded: Boolean, repaymentHeightNegative: Boolean = false): UnsignedTransaction = {
+    def consumeRepaymentTx(funded: Boolean): UnsignedTransaction = {
       ergoClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
 
           // Input Boxes
           val wrappedServiceBox = buildGenesisServiceBox()
-          var wrappedRepaymentBox = createWrappedRepaymentBox(repaymentHeightNegative = repaymentHeightNegative).fundBox(0.3e9.toLong)
+          var wrappedRepaymentBox = createWrappedRepaymentBox().fundBox(0.3e9.toLong)
 
           if (funded) {
             wrappedRepaymentBox = wrappedRepaymentBox.fundedBox()
@@ -947,29 +1038,25 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             .convertToInputWith(dummyTxId, 0)
 
           // Output Boxes
-          val outputBoxes = wrappedServiceBox.consumeRepaymentBox(
+          val outputBoxes: java.util.List[OutBox] = wrappedServiceBox.consumeRepaymentBox(
             repaymentBox = wrappedRepaymentBox,
             ctx,
             txB).asJava
 
-          val totalInputVal = inputServiceBox.getValue + inputRepaymentBox.getValue
-          val totalOutputVal = outputBoxes.get(0).getValue + outputBoxes.get(1).getValue + outputBoxes.get(2).getValue
-          val outputServiceBox = outputBoxes.get(0).convertToInputWith(dummyTxId, 0)
-          val outputProfitSharingBox = outputBoxes.get(2).convertToInputWith(dummyTxId, 0)
-          val outputLenderBox = outputBoxes.get(1).convertToInputWith(dummyTxId, 0)
-
-          assert(totalInputVal - totalOutputVal == Parameters.MinFee, "Input, output value inbalance")
-          assert(inputServiceBox.getTokens.get(2).getValue == outputServiceBox.getTokens.get(2).getValue - 1)
-          assert(outputLenderBox.getValue >= wrappedRepaymentBox.fundingInfoRegister.fundingGoal)
-          assert(Configs.addressEncoder.fromProposition(outputLenderBox.getErgoTree).get == dummyAddress.getErgoAddress)
-          assert(Configs.addressEncoder.fromProposition(outputProfitSharingBox.getErgoTree).get == Configs.serviceOwner.getErgoAddress)
-          assert(inputRepaymentBox.getValue >= wrappedRepaymentBox.repaymentDetailsRegister.repaymentAmount)
-
-          val tx = txB.boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
-            .fee(Parameters.MinFee)
-            .outputs(outputBoxes.get(0), outputBoxes.get(1), outputBoxes.get(2))
-            .sendChangeTo(dummyAddress.getErgoAddress)
-            .build()
+          var tx: UnsignedTransaction = null
+          if (outputBoxes.size() == 3) {
+            tx = txB.boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(outputBoxes.get(0), outputBoxes.get(1), outputBoxes.get(2))
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
+          } else {
+            tx = txB.boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(outputBoxes.get(0), outputBoxes.get(1))
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
+          }
 
           tx
         }
@@ -1032,7 +1119,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     }
   }
 
-  def overfundLendBoxTx(fundAmount: Long, lenderAddress: Address): UnsignedTransaction = {
+  def overfundLendBoxTx(fundAmount: Long, hacked: Boolean = false): UnsignedTransaction = {
     ergoClient.execute {
       ctx => {
         val txB = ctx.newTxBuilder()
@@ -1045,7 +1132,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         val fundLendProxyContract: ErgoContract =
           lendProxyContractService.getFundLendBoxProxyContract(
             lendId = inputLendBox.getId.toString,
-            lenderAddress = lenderAddress.toString
+            lenderAddress = dummyAddress.toString
           )
 
         val inputProxyContract = txB.outBoxBuilder()
@@ -1055,16 +1142,16 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           .convertToInputWith(dummyTxId, 0)
 
         // Output Boxes
-        val outputLendBox = wrappedInputLendBox.fundBox(lenderAddress.toString)
+        val outputLendBox = wrappedInputLendBox.fundBox(dummyAddress.toString)
           .getOutputBox(ctx, txB)
 
-        val fundsToAddressBox = new FundsToAddressBox(fundAmount - outputLendBox.getValue, lenderAddress)
+        val fundsToAddressBox = new FundsToAddressBox(fundAmount - outputLendBox.getValue, if (hacked) Configs.serviceOwner.toString else dummyAddress.toString)
           .getOutputBox(ctx, txB)
 
         val tx = txB.boxesToSpend(Seq(inputLendBox, inputProxyContract).asJava)
           .fee(Parameters.MinFee)
           .outputs(outputLendBox, fundsToAddressBox)
-          .sendChangeTo(lenderAddress.getErgoAddress)
+          .sendChangeTo(dummyAddress.getErgoAddress)
           .build()
 
         tx
@@ -1111,52 +1198,6 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
     }
   }
 
-  def createWrappedLendBox(value: Long = Parameters.MinFee,
-                           goal: Long = goal,
-                           deadlineHeightLength: Long = deadlineHeightLength,
-                           interestRate: Long = interestRate,
-                           repaymentHeightLength: Long = repaymentHeightLength,
-                           loanName: String = loanName,
-                           loanDescription: String = loanDescription,
-                           borrowerAddress: Address = dummyAddress): SingleLenderLendBox = {
-    ergoClient.execute {
-      ctx => {
-        val fundingInfoRegister = new FundingInfoRegister(
-          fundingGoal = goal,
-          deadlineHeight = ctx.getHeight + deadlineHeightLength,
-          interestRatePercent = interestRate,
-          repaymentHeightLength = repaymentHeightLength
-        )
-        val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
-          projectName = loanName,
-          description = loanDescription,
-        )
-        val borrowerRegister = new BorrowerRegister(borrowerAddress.toString)
-        val wrappedInputLendBox = new SingleLenderLendBox(
-          value = value,
-          fundingInfoRegister = fundingInfoRegister,
-          lendingProjectDetailsRegister = lendingProjectDetailsRegister,
-          borrowerRegister = borrowerRegister,
-          singleLenderRegister = SingleLenderRegister.emptyRegister
-        )
-
-        wrappedInputLendBox
-      }
-    }
-  }
-
-  def createWrappedRepaymentBox(fundingGoal: Long = goal,
-                                interestRate: Long = interestRate,
-                                repaymentHeightNegative: Boolean = false): SingleLenderRepaymentBox = {
-    ergoClient.execute {
-      ctx => {
-        val wrappedLendBox = createWrappedLendBox(goal = fundingGoal, interestRate = interestRate).fundBox(dummyAddress.toString)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(wrappedLendBox, ctx.getHeight + 100)
-
-        wrappedRepaymentBox
-      }
-    }
-  }
   // </editor-fold>
 }
 

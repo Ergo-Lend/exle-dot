@@ -6,6 +6,9 @@ import features.lend.LendBoxExplorer
 import java.io.{File, PrintWriter}
 
 
+/**
+ *
+ */
 object ExplorerRunner {
   val walletAddress = "9f83nJY4x9QkHmeek6PJMcTrf2xcaHAT3j5HD5sANXibXjMUixn"
   def main(args: Array[String]): Unit = {

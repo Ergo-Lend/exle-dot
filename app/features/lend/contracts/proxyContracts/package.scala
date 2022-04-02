@@ -107,13 +107,13 @@ package object proxyContracts {
        |    if (fundable) {
        |
        |      val newFundedValue = inputLendBox.value + fundingGoal + minFee
+       |      val isOverfunded = (SELF.value - newFundedValue) > 0
        |
        |      val outputLendBoxLenderPk = outputLendBox.R7[Coll[Byte]]
        |
        |      // -- Single Lender --
        |      //
        |      // Funds only happens once. Therefore must hit funding goal
-       |
        |      val fundLendBox = {
        |        allOf(Coll(
        |          fundable,
@@ -124,7 +124,18 @@ package object proxyContracts {
        |        ))
        |      }
        |
-       |      sigmaProp(fundLendBox)
+       |      if (isOverfunded) {
+       |        val refundExtraBox = OUTPUTS(1)
+       |        val overfundedCheck = {
+       |          allOf(Coll(
+       |            refundExtraBox.propositionBytes == lenderPk,
+       |            refundExtraBox.value > (SELF.value - newFundedValue - minFee)
+       |          ))
+       |        }
+       |        sigmaProp(fundLendBox && overfundedCheck)
+       |      } else {
+       |        sigmaProp(fundLendBox)
+       |      }
        |    } else {
        |      sigmaProp(false)
        |    }

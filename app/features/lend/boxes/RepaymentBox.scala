@@ -131,15 +131,9 @@ class SingleLenderRepaymentBox(
   }
 
   def repaidLendersPaymentBox(ergoLendInterest: Long): FundsToAddressBox = {
-    val isFunded = value >= repaymentDetailsRegister.repaymentAmount
-    if (isFunded) {
-      new FundsToAddressBox(
-        value - ergoLendInterest - Parameters.MinFee,
-        singleLenderRegister.lendersAddress)
-    } else {
-      // @todo Better failure
-      throw failedTxException(s"repayment not fully repaid")
-    }
+    new FundsToAddressBox(
+      value - ergoLendInterest - Parameters.MinFee,
+      singleLenderRegister.lendersAddress)
   }
 
   /**

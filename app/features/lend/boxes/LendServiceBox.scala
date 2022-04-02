@@ -180,8 +180,11 @@ class LendServiceBox(val value: Long,
     val repaymentInterest = repaymentBox.getRepaymentInterest
     val profitShareAmount = profitSharingPercentage.profitSharingPercentage * repaymentInterest / 1000
 
+    val repaymentRepaid = repaymentBox.value >= repaymentBox.repaymentDetailsRegister.repaymentAmount
+    val profitShareAmountLessThanMinFee = profitShareAmount < Parameters.MinFee
+
     var outputBoxList: List[OutBox] = null
-    if (profitShareAmount > Parameters.MinFee) {
+    if (repaymentRepaid && !profitShareAmountLessThanMinFee) {
       val profitSharingBox = this.getOwnerProfitSharingBox(repaymentBox.getRepaymentInterest, ctx, txB)
       val ergoLendInterest = (profitSharingPercentage.profitSharingPercentage *
         repaymentBox.repaymentDetailsRegister.totalInterestAmount) / 1000

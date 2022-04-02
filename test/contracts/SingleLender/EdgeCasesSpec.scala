@@ -3,10 +3,10 @@ package contracts.SingleLender
 import config.Configs
 import contracts.{client, dummyAddress, dummyProver, dummyTxId, ergoClient}
 import ergotools.LendServiceTokens
-import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox}
+import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import features.lend.contracts.proxyContracts.LendProxyContractService
-import org.ergoplatform.appkit.{ErgoContract, Parameters, SignedTransaction, UnsignedTransaction}
+import org.ergoplatform.appkit.{Address, ErgoContract, Parameters, SignedTransaction, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import sigmastate.lang.exceptions.InterpreterException
@@ -30,6 +30,47 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
       "passes on initiation" in {
         val tx = instantiateLendBox(interestRate = 0)
         dummyProver.sign(tx)
+      }
+
+      "passes on default consumption" in {
+        ergoClient.execute {
+          ctx => {
+            val txB = ctx.newTxBuilder()
+
+            val wrappedServiceBox = buildGenesisServiceBox()
+            val wrappedRepaymentBox = createRawWrappedRepaymentBox(interestRate = 0, fundedRepaymentHeight = (ctx.getHeight - 100)).fundedBox()
+
+            val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+            val inputRepaymentBox = wrappedRepaymentBox.getOutputBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+
+            // Output Boxes
+            val outputBoxes = wrappedServiceBox.consumeRepaymentBox(
+              repaymentBox = wrappedRepaymentBox,
+              ctx,
+              txB).asJava
+
+            val totalInputVal = inputServiceBox.getValue + inputRepaymentBox.getValue
+            val totalOutputVal = outputBoxes.get(0).getValue + outputBoxes.get(1).getValue
+            val outputServiceBox = outputBoxes.get(0).convertToInputWith(dummyTxId, 0)
+            val outputLenderBox = outputBoxes.get(1).convertToInputWith(dummyTxId, 0)
+
+            assert(totalInputVal - totalOutputVal == Parameters.MinFee, "Input, output value inbalance")
+            assert(inputServiceBox.getTokens.get(2).getValue == outputServiceBox.getTokens.get(2).getValue - 1)
+            assert(outputLenderBox.getValue >= wrappedRepaymentBox.fundingInfoRegister.fundingGoal)
+            assert(Configs.addressEncoder.fromProposition(outputLenderBox.getErgoTree).get == dummyAddress.getErgoAddress)
+            assert(inputRepaymentBox.getValue >= wrappedRepaymentBox.repaymentDetailsRegister.repaymentAmount)
+
+            val tx = txB.boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(outputBoxes.get(0), outputBoxes.get(1))
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
+
+            dummyProver.sign(tx)
+          }
+        }
       }
     }
 

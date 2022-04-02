@@ -111,8 +111,7 @@ package object contracts {
        |
        |
        |  val lendBoxSuccessfullyFunded = selfValue >= fundingGoal
-       |  val deadlineNotPassed = HEIGHT < deadlineHeight
-       |  if (lendBoxSuccessfullyFunded && deadlineNotPassed) {
+       |  if (lendBoxSuccessfullyFunded) {
        |
        |    val serviceBoxCheck = INPUTS(0).tokens(0)._1 == serviceNFT
        |
@@ -179,31 +178,20 @@ package object contracts {
        |
        |    // ** NOT FUNDED **
        |    // we first check if it passed the deadline
-       |    if (HEIGHT > deadlineHeight) {
+       |    // If it passes deadline, it's consumable. Because it's a minBox
+       |    // there's no refund.
+       |    val deadlinePassed = HEIGHT > deadlineHeight
+       |    if (deadlinePassed) {
        |      val serviceBoxCheck = INPUTS(0).tokens(0)._1 == serviceNFT
        |
        |      // Scenario 4: ** DEADLINE PASSED: REFUND **
        |      // Inputs: ServiceBox, LendBox
-       |      // Outputs: ServiceBox, Boxes[Borrowers address]
+       |      // Outputs: ServiceBox
        |      //
        |      // Checks:
-       |      // - Refunded box to lender
-       |      // - Refunded box value == LendBox value - MinFee
        |      // - ServiceBox has its own checks. Therefore not needed here
        |
-       |      val inputLendBox = INPUTS(1)
-       |      val refundToLenderBox = OUTPUTS(1)
-       |      val lendBoxLenderPk = SELF.R7[Coll[Byte]]
-       |
-       |      val boxValueToLender = if (SELF.value > minFee) {
-       |        //allOf(Coll(
-       |        //  refundToLenderBox.propositionBytes == lendBoxLenderPk.get,
-       |        //  refundToLenderBox.value == fundingGoal
-       |        //))
-       |        true
-       |      } else { true }
-       |
-       |      sigmaProp(allOf(Coll(boxValueToLender, lendBoxVerification, serviceBoxCheck)))
+       |      sigmaProp(allOf(Coll(serviceBoxCheck)))
        |
        |    } else {
        |
@@ -312,12 +300,17 @@ package object contracts {
        |    }
        |
        |    val repaymentNotFullyFunded = repaymentBoxInput.value < SELF.R8[Coll[Long]].get(1)
-       |
        |    val transferredValue = repaymentBoxInput.value + proxyBox.value - minFee
-       |
        |    val isValueTransferred = repaymentBoxOutput.value == transferredValue
-       |
        |    val repaymentGoal = inputRepaymentBoxRepaymentDetails.get(1)
+       |
+       |    /**
+       |      * When overfunded
+       |      *
+       |      * We fill the repayment box and return the rest to the funder
+       |      * ErgoLend's proxy contract ensures the funds get returned to
+       |      * funder.
+       |      **/
        |    val overfunded = transferredValue > repaymentGoal
        |    if (overfunded) {
        |      val goaledRepaymentBox = repaymentBoxOutput.value == repaymentGoal + minFee
@@ -455,6 +448,7 @@ package object contracts {
    * - repaymentBoxHash
    * - minFee
    */
+  lazy val singleLenderLendServiceBoxScript2: String = "{sigmaProp(true)}"
   lazy val singleLenderLendServiceBoxScript: String =
     s"""{
        |  // Service Checks
@@ -547,16 +541,18 @@ package object contracts {
        |          serviceFullCheck
        |        )))
        |      } else {
-       |        // Repayment Success
+       |        // ** Repayment Success **
        |        // Service, Repayment -> Service, ProfitSharing, LenderRepaidFunds
        |        if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2) &&
        |          OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2 + 1) {
        |          // Profit Sharing
        |          val profitSharingBox = OUTPUTS(2)
+       |          val lendersBox = OUTPUTS(1)
        |
        |          val profitSharingBoxOwnerValidation =
        |            profitSharingBox.propositionBytes == spendingServiceBoxOwnerPubKey.get
        |          val repaymentDetails = INPUTS(1).R8[Coll[Long]]
+       |          val repaymentAmount = repaymentDetails.get(1)
        |          val repaymentInterestAmount = repaymentDetails.get(2)
        |
        |          // Interest rate above 1%, ErgoLend takes Profit.
@@ -565,23 +561,42 @@ package object contracts {
        |          val interestRate = fundingInfo.get(2)
        |
        |          val defaulted = repaymentDetails.get(3) < HEIGHT && INPUTS(1).value < repaymentDetails.get(1)
+       |
+       |          /**
+       |            *   Defaulted || Zero Interest Loans
+       |            *
+       |            *   Defaulted meaning, the repayments are not fully
+       |            *   funded, the deadline has passed, and they decide
+       |            *   to take their loss.
+       |            *
+       |            *   For both Defaulted and Zero Interest Loans,
+       |            *   ErgoLend will not take a cut.
+       |            *
+       |            *   Note: We are still taking profit if the loan
+       |            *     gets repaid after defaulting.
+       |            **/
        |          if (interestRate == 0 || defaulted) {
        |            // There will only be servicebox and lender box (+ miner's fee)
        |            // not putting count of boxes for potential credit check
        |            sigmaProp(serviceFullCheck)
        |          } else {
        |            // Take profit
-       |            val profitSharingAmount = repaymentInterestAmount * (spendingServiceBoxProfitSharing.get(0)/1000)
+       |            val profitSharingAmount = (repaymentInterestAmount * spendingServiceBoxProfitSharing.get(0)) /1000
        |            val profitSharingAmountValidation = profitSharingBox.value >= profitSharingAmount
+       |
+       |            // Gives a margin error of minFee
+       |            val repaymentLendBoxAmount = repaymentAmount - profitSharingAmount - (2 * minFee)
+       |            val repaymentBoxRepaid = lendersBox.value >= repaymentLendBoxAmount
        |
        |            if (profitSharingAmount > minFee) {
        |              sigmaProp(allOf(Coll(
        |                profitSharingAmountValidation,
        |                serviceFullCheck,
-       |                profitSharingBoxOwnerValidation
+       |                profitSharingBoxOwnerValidation,
+       |                repaymentBoxRepaid
        |              )))
        |            } else {
-       |              sigmaProp(serviceFullCheck)
+       |              sigmaProp(serviceFullCheck && repaymentBoxRepaid)
        |            }
        |          }
        |
