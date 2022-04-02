@@ -54,9 +54,8 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
       try {
         val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
         val covered = unSpentPaymentBoxes.getCoveredAmount >= SingleLenderLendBox.getLendBoxInitiationPayment
-        val has5MinutesPassed = TimeUtils.hasPassed(LocalDateTime.parse(req.timeStamp), 5)
         val isScriptReducedToFalse = req.state == TxState.ScriptFalsed
-        if ((covered && !has5MinutesPassed) && isScriptReducedToFalse) {
+        if (covered && isScriptReducedToFalse) {
           logger.info(s"Request ${req.id} is going back to the request pool, creation fee is enough")
           createLendReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
           throw skipException()
