@@ -62,12 +62,12 @@ object SingleLenderServiceBoxHandler {
   def createNFTBox(ctx: BlockchainContext, config: ErgoToolConfig, nodeConfig: ErgoNodeConfig): SignedTransaction = {
 
     // Token Info
-    val nftName = "LendTest"
-    val nftDesc = "LendTestNFT: Grassroots Lending"
-    val lendTokenName = "LendTokenTest"
-    val lendTokenDesc = "LendTokenTest"
-    val repaymentTokenName = "RepaymentTokenTest"
-    val repaymentTokenDesc = "RepaymentTokenTest"
+    val nftName = "ErgoLend v0.1.0"
+    val nftDesc = "v0.1.0: SingleLender Erg P2P Lend Box Token"
+    val lendTokenName = "ErgoLend's SingleLender Erg P2P Lend Token"
+    val lendTokenDesc = "This token identifies a box to be a lend box, or an equivalent to a loan box, where lender can fund it fully to ensure funds are transferred to the borrower's wallet."
+    val repaymentTokenName = "SingleLender Erg P2P Repayment Box Token"
+    val repaymentTokenDesc = "This token identifies a box to be a repayment box, where borrowers or funders can fund this box in steps or fully, and it will ensure that funds are repaid back to lender."
 
     // service
     // lend
@@ -151,8 +151,9 @@ object SingleLenderServiceBoxHandler {
     val creationInfo: CreationInfoRegister = new CreationInfoRegister(creationHeight = ctx.getHeight)
     val serviceInfo: ServiceBoxInfoRegister = new ServiceBoxInfoRegister(name = "ErgoLend", description = "A Lending Platform on Ergo")
     val boxInfo: StringRegister = new StringRegister("SingleLenderServiceBox")
-    val ergoLendPubKeyRegister: SingleAddressRegister = new SingleAddressRegister(ownerAddressString)
-    val profitSharingPercentageRegister: ProfitSharingRegister = new ProfitSharingRegister(profitSharingPercentage = Configs.profitSharingPercentage, Configs.serviceFee)
+    val ergoLendPubKeyRegister: SingleAddressRegister = new SingleAddressRegister(Configs.serviceOwner.toString)
+    val profitSharingPercentageRegister: ProfitSharingRegister =
+      new ProfitSharingRegister(profitSharingPercentage = Configs.profitSharingPercentage, serviceFeeAmount = Configs.serviceFee)
 
     val prover: ErgoProver = ctx.newProverBuilder().withMnemonic(
       SecretString.create(nodeConfig.getWallet.getMnemonic),
@@ -209,7 +210,7 @@ object SingleLenderServiceBoxHandler {
       )
       .build()
 
-    val coveringBoxes = ctx.getCoveringBoxesFor(ownerAddress, Parameters.MinFee, null).getBoxes.get(0)
+//    val coveringBoxes = ctx.getCoveringBoxesFor(ownerAddress, Parameters.MinFee, null).getBoxes.get(0)
     val inputBoxes = List(
       spendingBoxesWithServiceNft.get(0),
       spendingBoxesWithLendTokensBoxes.get(0),

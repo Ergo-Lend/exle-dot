@@ -75,10 +75,11 @@ package object SingleLender {
   }
 
   def createWrappedRepaymentBox(fundingGoal: Long = goal,
-                                interestRate: Long = interestRate): SingleLenderRepaymentBox = {
+                                interestRate: Long = interestRate,
+                                lendersAddress: Address = dummyAddress): SingleLenderRepaymentBox = {
     ergoClient.execute {
       ctx => {
-        val wrappedLendBox = createWrappedLendBox(goal = fundingGoal, interestRate = interestRate).fundBox(dummyAddress.toString)
+        val wrappedLendBox = createWrappedLendBox(goal = fundingGoal, interestRate = interestRate).fundBox(lendersAddress.toString)
         val wrappedRepaymentBox = new SingleLenderRepaymentBox(wrappedLendBox, ctx.getHeight + 100)
 
         wrappedRepaymentBox

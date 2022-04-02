@@ -615,7 +615,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
 
       "over-fund amount to repayment box" should {
-        "without returning overpayment to funder" in {
+        "without returning overpayment to funder, fails" in {
           ergoClient.execute {
             ctx => {
               val txB = ctx.newTxBuilder()
@@ -656,7 +656,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           }
         }
 
-        "returning overpayment to Someone else" in {
+        "returning overpayment to Someone else, fails" in {
           ergoClient.execute {
             ctx => {
               val txB = ctx.newTxBuilder()
@@ -848,6 +848,45 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       dummyProver.sign(unsignedTx)
     }
 
+    "hack successfully funded Repayment, fails" in {
+      ergoClient.execute {
+        ctx => {
+          val txB = ctx.newTxBuilder()
+
+          // Input Boxes
+          val wrappedServiceBox = buildGenesisServiceBox()
+          val wrappedRepaymentBox = createWrappedRepaymentBox(lendersAddress = dummyAddress)
+            .fundedBox()
+
+          val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
+            .convertToInputWith(dummyTxId, 0)
+          val inputRepaymentBox = wrappedRepaymentBox.getOutputBox(ctx, txB)
+            .convertToInputWith(dummyTxId, 0)
+
+          // Output Boxes
+          val outputServiceBox = wrappedServiceBox.incrementRepaymentToken().getOutputServiceBox(ctx, txB)
+          val outputProfitSharingBox = wrappedServiceBox.getOwnerProfitSharingBox(wrappedRepaymentBox.getRepaymentInterest, ctx, txB)
+          val ergoLendInterest = (wrappedServiceBox.profitSharingPercentage.profitSharingPercentage *
+            wrappedRepaymentBox.repaymentDetailsRegister.totalInterestAmount) / 1000
+          val outputHackedBox = new FundsToAddressBox(
+            wrappedRepaymentBox.value - ergoLendInterest - Parameters.MinFee,
+            Configs.serviceOwner.toString)
+            .getOutputBox(ctx, txB)
+
+          val tx = txB.boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
+            .fee(Parameters.MinFee)
+            .outputs(outputServiceBox, outputHackedBox, outputProfitSharingBox)
+            .sendChangeTo(dummyAddress.getErgoAddress)
+            .build()
+
+          assertThrows[InterpreterException]
+          {
+            dummyProver.sign(tx)
+          }
+        }
+      }
+    }
+
     "semi-funded but defaulted" should {
       "still repayable to lender" in {
         val tx = defaultedSemiFundedTx(isHackerHackRepaidBox = false)
@@ -930,7 +969,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
     }
 
-    "profit sharing less than min box" in {
+    "profit sharing less than min box, will have no profit sharing box" in {
       ergoClient.execute {
         ctx => {
           val txB = ctx.newTxBuilder()
@@ -1026,7 +1065,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
           // Input Boxes
           val wrappedServiceBox = buildGenesisServiceBox()
-          var wrappedRepaymentBox = createWrappedRepaymentBox().fundBox(0.3e9.toLong)
+          var wrappedRepaymentBox = createWrappedRepaymentBox(lendersAddress = dummyAddress).fundBox(0.3e9.toLong)
 
           if (funded) {
             wrappedRepaymentBox = wrappedRepaymentBox.fundedBox()

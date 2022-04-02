@@ -371,7 +371,6 @@ package object contracts {
        |      }
        |
        |      sigmaProp(lenderRepaidBoxFunded && repaymentBoxVerification && serviceBoxVerification)
-       |
        |    } else {
        |      // Defaulted
        |      val repaymentDetails = SELF.R8[Coll[Long]]
