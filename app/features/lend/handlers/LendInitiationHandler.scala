@@ -138,7 +138,10 @@ class ProxyContractTxHandler @Inject()(client: Client, explorer: Explorer, dao: 
     val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, amount)
 
     if (!paymentBoxList.isCovered)
-      throw paymentNotCoveredException(s"Payment for request ${req.id} not covered the fee, request state id ${req.state} and request tx is ${req.txId}. Payment address: ${req.paymentAddress}")
+      throw paymentNotCoveredException(
+        s"Payment for request ${req.id} not covered the fee: \n" +
+          s"request state id ${req.state} and request tx is ${req.txId}.\n Payment address: ${req.paymentAddress}.\n " +
+          s"Amount to cover: ${amount}")
 
     paymentBoxList
   }
