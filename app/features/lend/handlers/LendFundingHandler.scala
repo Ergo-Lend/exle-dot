@@ -131,7 +131,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
   def refundProxyContract(req: FundLendReq): String = {
     client.getClient.execute(ctx => {
       try {
-        val paymentBoxes = getPaymentBoxes(req, req.ergAmount).getBoxes.asScala
+        val paymentBoxes = this.getPaymentBoxes(req, req.ergAmount).getBoxes.asScala
         val refundProxyContractTx = new RefundProxyContractTx(paymentBoxes, req.lenderAddress)
 
         val signedTx = refundProxyContractTx.runTx(ctx)
@@ -156,10 +156,10 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
 
     if (!paymentBoxList.isCovered)
       throw paymentNotCoveredException(
-        s"Payment for request ${req.id} not covered the fee: \n" +
-          s"request state id ${req.state} and request tx is ${req.txId}.\n Payment address: ${req.paymentAddress}.\n " +
-          s"Amount to cover: ${amount} \n " +
-          s"Payment Amount from request: ${req.ergAmount}")
+        s"FundLendReq: Payment for request ${req.id} not covered the fee, \n" +
+          s"request state id ${req.state} and request tx is ${req.txId}.\n Payment address -> ${req.paymentAddress}.\n " +
+          s"Amount to cover -> ${amount} \n " +
+          s"Payment Amount from request -> ${req.ergAmount}")
 
     paymentBoxList
   }
