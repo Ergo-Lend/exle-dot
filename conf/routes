@@ -18,7 +18,7 @@ POST    /api/lend/mockFund              features.lend.LendController.mockFundLen
 GET     /api/repayment/:repaymentId     features.lend.LendController.getRepaymentBoxById(repaymentId: String)
 GET     /api/repayment                  features.lend.LendController.getRepaymentBoxes(offset: Int?=0, limit: Int?=100)
 POST    /api/repayment/fund             features.lend.LendController.fundRepaymentBox
-POST    /api/repayment/fullfund         features.lend.LendController.fundRepaymentBoxFully
+POST    /api/repayment/fullFund         features.lend.LendController.fundRepaymentBoxFully
 POST    /api/repayment/mockFund         features.lend.LendController.mockFundRepaymentBox
 POST    /api/repayment/mockFullFund     features.lend.LendController.mockFundRepaymentBoxFully
 
