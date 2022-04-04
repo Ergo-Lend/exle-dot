@@ -103,7 +103,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
   def fundLendTx(req: FundLendReq, lendingBox: InputBox): Unit = {
     client.getClient.execute(ctx => {
       try {
-        val paymentBoxList = getPaymentBoxes(req).getBoxes.asScala
+        val paymentBoxList = this.getFundPaymentBoxes(req, req.ergAmount).getBoxes.asScala
 
         val fundLendTx = SingleLenderTxFactory.createFundingLendBoxTx(lendingBox, paymentBoxList, req)
         val signedTx = fundLendTx.runTx(ctx)
@@ -131,7 +131,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
   def refundProxyContract(req: FundLendReq): String = {
     client.getClient.execute(ctx => {
       try {
-        val paymentBoxes = this.getPaymentBoxes(req, req.ergAmount).getBoxes.asScala
+        val paymentBoxes = this.getFundPaymentBoxes(req, req.ergAmount).getBoxes.asScala
         val refundProxyContractTx = new RefundProxyContractTx(paymentBoxes, req.lenderAddress)
 
         val signedTx = refundProxyContractTx.runTx(ctx)
@@ -150,7 +150,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     })
   }
 
-   def getPaymentBoxes(req: FundLendReq, amount: Long): CoveringBoxes = {
+   def getFundPaymentBoxes(req: FundLendReq, amount: Long): CoveringBoxes = {
     val paymentAddress = Address.create(req.paymentAddress)
     val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, amount)
 
