@@ -3,13 +3,13 @@ package features.lend.handlers
 import config.Configs
 import ergotools.TxState
 import ergotools.client.Client
-import errors.{connectionException, failedTxException, proveException, skipException}
+import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import features.lend.LendBoxExplorer
 import features.lend.boxes.SingleLenderLendBox
-import features.lend.dao.{FundLendReq, FundLendReqDAO}
+import features.lend.dao.{FundLendReq, FundLendReqDAO, ProxyReq}
 import features.lend.txs.singleLender.{RefundProxyContractTx, SingleLenderTxFactory}
 import helpers.{StackTrace, Time}
-import org.ergoplatform.appkit.{Address, InputBox}
+import org.ergoplatform.appkit.{Address, CoveringBoxes, InputBox}
 import play.api.Logger
 
 import javax.inject.Inject
@@ -148,5 +148,19 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
           throw e
       }
     })
+  }
+
+   def getPaymentBoxes(req: FundLendReq, amount: Long): CoveringBoxes = {
+    val paymentAddress = Address.create(req.paymentAddress)
+    val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, amount)
+
+    if (!paymentBoxList.isCovered)
+      throw paymentNotCoveredException(
+        s"Payment for request ${req.id} not covered the fee: \n" +
+          s"request state id ${req.state} and request tx is ${req.txId}.\n Payment address: ${req.paymentAddress}.\n " +
+          s"Amount to cover: ${amount} \n " +
+          s"Payment Amount from request: ${req.ergAmount}")
+
+    paymentBoxList
   }
 }
