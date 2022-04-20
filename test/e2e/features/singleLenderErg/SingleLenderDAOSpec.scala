@@ -1,7 +1,7 @@
-//package daos
+//package e2e.features.singleLenderErg
 //
-//import ergotools.TxState
-//import features.lend.dao.{CreateLendReq, CreateLendReqDAO}
+//import lendcore.components.ergo.TxState
+//import features.lend.dao.{CreateLendReqDAO}
 //import helpers.Time
 //import org.scalatest.Ignore
 //import org.scalatest.concurrent.ScalaFutures
@@ -16,9 +16,9 @@
 //    configure(
 //      "slick.dbs.mydb.driver" -> "slick.driver.PostgresDriver$",
 //      "slick.dbs.mydb.db.driver" -> "org.postgresql.Driver",
-//      "slick.dbs.mydb.db.url" -> ${"JDBC_TEST_URL"},
-//      "slick.dbs.mydb.db.user" -> "",
-//      "slick.dbs.mydb.db.password" -> ""
+//      "slick.dbs.mydb.db.url" -> sys.env.get{"JDBC_TEST_URL"},
+//      "slick.dbs.mydb.db.user" -> ${"DATABASE_USERNAME"},
+//      "slick.dbs.mydb.db.password" -> ${"DATABASE_PASSWORD"}
 //    ).build
 //
 //  def lendDAO(implicit app: Application): CreateLendReqDAO = Application.instanceCache[CreateLendReqDAO].apply(app)
@@ -55,6 +55,7 @@
 //      whenReady(lendDAO.insert(
 //        "Surviving the Pandemic",
 //        "People need some gold gold to survive them pandemic",
+//        100,
 //        100,
 //        10000,
 //        10000,

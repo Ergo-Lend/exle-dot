@@ -1,4 +1,4 @@
-import ergotools.client.Client
+import lendcore.components.ergo.Client
 import org.ergoplatform.appkit.impl.ErgoTreeContract
 import org.ergoplatform.appkit.{Address, ErgoProver, InputBox}
 

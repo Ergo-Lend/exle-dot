@@ -15,3 +15,6 @@ RepaymentProxyRefund.txt
 /RUNNING_PID
 .env
 logfile
+
+# DB Stuff
+data

@@ -2,10 +2,10 @@ package contracts.SingleLender
 
 import config.Configs
 import contracts.{client, dummyAddress, dummyProver, dummyTxId}
-import ergotools.LendServiceTokens
-import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
-import features.lend.contracts.proxyContracts.LendProxyContractService
+import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import lendcore.core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
+import lendcore.core.SingleLender.Ergs.LendServiceTokens
+import lendcore.contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
 import org.ergoplatform.appkit.{Address, ErgoContract, OutBox, Parameters, SignedTransaction, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -56,7 +56,8 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             fundingGoal = goal,
             deadlineHeight = ctx.getHeight + deadlineHeightLength,
             interestRatePercent = interestRate,
-            repaymentHeightLength = repaymentHeightLength
+            repaymentHeightLength = repaymentHeightLength,
+            creationHeight = client.getHeight
           )
           val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
             projectName = loanName,
@@ -83,7 +84,9 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
           var signed: SignedTransaction = null
           try {
-            signed = dummyProver.sign(tx)
+            "pass" in {
+              signed = dummyProver.sign(tx)
+            }
 
             // Checks service box to have one less lend token
             "returns service box with one less lend token" in {
@@ -120,7 +123,68 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       }
     }
 
-    // Pays to ErgoLend
+    "overfunding instantiating a box" should {
+      client.getClient.execute {
+        ctx => {
+          val txB = ctx.newTxBuilder()
+
+          // Input Boxes
+          val inputServiceBox = serviceBox
+            .getOutputServiceBox(ctx, txB)
+            .convertToInputWith(dummyTxId, 0)
+
+          val lendCreationProxyContract: ErgoContract =
+            lendProxyContractService.getLendCreateProxyContract(
+              pk = dummyAddress.toString,
+              deadlineHeight = ctx.getHeight + deadlineHeightLength,
+              goal = goal,
+              interestRate = interestRate,
+              repaymentHeightLength = repaymentHeightLength
+            )
+
+          val inputProxyContract = txB.outBoxBuilder()
+            .contract(lendCreationProxyContract)
+            .value(goal)
+            .build()
+            .convertToInputWith(dummyTxId, 0)
+
+          // Output Boxes
+          val outputServiceBox = serviceBox.createLend().getOutputServiceBox(ctx, txB)
+          val fundingInfoRegister = new FundingInfoRegister(
+            fundingGoal = goal,
+            deadlineHeight = ctx.getHeight + deadlineHeightLength,
+            interestRatePercent = interestRate,
+            repaymentHeightLength = repaymentHeightLength,
+            creationHeight = client.getHeight
+          )
+          val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
+            projectName = loanName,
+            description = loanDescription,
+          )
+          val borrowerRegister = new BorrowerRegister(dummyAddress.toString)
+          val lendBox = new SingleLenderLendBox(
+            value = goal - SingleLenderLendBox.getLendBoxInitiationPayment + Parameters.MinFee,
+            fundingInfoRegister = fundingInfoRegister,
+            lendingProjectDetailsRegister = lendingProjectDetailsRegister,
+            borrowerRegister = borrowerRegister,
+            singleLenderRegister = SingleLenderRegister.emptyRegister
+          ).getOutputBox(ctx, txB)
+
+          val tx = txB.boxesToSpend(Seq(inputServiceBox, inputProxyContract).asJava)
+            .fee(Parameters.MinFee)
+            .outputs(outputServiceBox, lendBox)
+            .sendChangeTo(dummyAddress.getErgoAddress)
+            .build()
+
+          "fail" in {
+            intercept[InterpreterException]{
+              dummyProver.sign(tx)
+            }
+          }
+        }
+      }
+    }
+
     "refunding an instantiate lend proxy contract" should {
       client.getClient.execute {
         ctx => {
@@ -203,20 +267,20 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
   "LendBox: Funding" when {
     "funding a lend box" can {
       "fund successfully" should {
-        val fundAmount = goal + Parameters.MinFee * 2
-        val signedTx: SignedTransaction = fundLendBoxTx(fundAmount, dummyAddress)
-        val outputLendBox = signedTx.getOutputsToSpend.get(0)
-        val r4 = outputLendBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Long]].toArray
-        val r7 = outputLendBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray
-        val fundingInfoRegister = new FundingInfoRegister(r4)
-        val lendingInfoRegister = new SingleLenderRegister(r7)
-
         /**
          * Check For:
          * 1. If box is funded
          * 2. If Tx went through
          */
         "Funded Amount is same as funding goal" in {
+          val fundAmount = goal + Parameters.MinFee * 2
+          val signedTx: SignedTransaction = fundLendBoxTx(fundAmount, dummyAddress)
+          val outputLendBox = signedTx.getOutputsToSpend.get(0)
+          val r4 = outputLendBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Long]].toArray
+          val r7 = outputLendBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray
+          val fundingInfoRegister = new FundingInfoRegister(r4)
+          val lendingInfoRegister = new SingleLenderRegister(r7)
+
           assert(outputLendBox.getValue >= fundingInfoRegister.fundingGoal)
           assert(dummyAddress.toString == lendingInfoRegister.lendersAddress)
         }
@@ -261,8 +325,8 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         val fundAmount = goal * 2 + Parameters.MinFee * 2
         val tx = overfundLendBoxTx(fundAmount)
 
-        val signedTx = dummyProver.sign(tx)
         "Funded Amount is same as funding goal" in {
+          val signedTx = dummyProver.sign(tx)
           assert(signedTx.getOutputsToSpend.get(0).getValue == goal + Parameters.MinFee * 2)
         }
       }
@@ -274,6 +338,80 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         "fail" in {
           assertThrows[InterpreterException] {
             dummyProver.sign(tx)
+          }
+        }
+      }
+
+      "under-funding a lendbox" should {
+        val fundAmount = goal - Parameters.MinFee * 2
+        client.getClient.execute {
+          ctx => {
+            val txB = ctx.newTxBuilder()
+
+            // Input Box
+            val wrappedInputLendBox = createWrappedLendBox()
+            val inputLendBox = wrappedInputLendBox.getOutputBox(ctx, txB)
+              .convertToInputWith(dummyTxId, 0)
+
+            val fundLendProxyContract: ErgoContract =
+              lendProxyContractService.getFundLendBoxProxyContract(
+                lendId = inputLendBox.getId.toString,
+                lenderAddress = dummyAddress.toString
+              )
+
+            val inputProxyContract = txB.outBoxBuilder()
+              .contract(fundLendProxyContract)
+              .value(fundAmount)
+              .build()
+              .convertToInputWith(dummyTxId, 0)
+
+            // Output Boxes
+            val outputLendBox = createWrappedLendBox(value = fundAmount - Parameters.MinFee, lenderAddress = dummyAddress)
+              .getOutputBox(ctx, txB)
+
+            val tx = txB.boxesToSpend(Seq(inputLendBox, inputProxyContract).asJava)
+              .fee(Parameters.MinFee)
+              .outputs(outputLendBox)
+              .sendChangeTo(dummyAddress.getErgoAddress)
+              .build()
+
+            "fail" in {
+              intercept[Exception] {
+                dummyProver.sign(tx)
+              }
+            }
+          }
+        }
+
+      }
+
+      "created of lendbox is overfunded" should {
+        "fail" in {
+          val fundAmount = goal * 2 + Parameters.MinFee * 2
+          client.getClient.execute {
+            ctx => {
+              val txB = ctx.newTxBuilder()
+              val serviceBox = buildGenesisServiceBox()
+
+              val inputServiceBox = serviceBox.getOutputServiceBox(ctx, txB)
+                .convertToInputWith(dummyTxId, 0)
+              val inputLendBox = createOutputLendBox(fundAmount, lenderAddress = dummyAddress).convertToInputWith(dummyTxId, 0)
+
+              val outputServiceBox = serviceBox.incrementLendToken().getOutputServiceBox(ctx, txB)
+              val fundsToAddressBox = new FundsToAddressBox(fundAmount - Parameters.MinFee, dummyAddress.toString)
+                .getOutputBox(ctx, txB)
+
+              val tx = txB.boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
+                .fee(Parameters.MinFee)
+                .outputs(outputServiceBox, fundsToAddressBox)
+                .sendChangeTo(dummyAddress.getErgoAddress)
+                .build()
+
+
+              intercept[InterpreterException] {
+                dummyProver.sign(tx)
+              }
+            }
           }
         }
       }

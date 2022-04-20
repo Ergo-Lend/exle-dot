@@ -1,10 +1,11 @@
 package contracts
 
-import boxes.registers.RegisterTypes.StringRegister
+import lendcore.components.boxes.registers.RegisterTypes.StringRegister
 import config.Configs
-import features.lend.boxes.{LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
-import features.lend.boxes.registers.{BorrowerRegister, CreationInfoRegister, FundingInfoRegister, LendingProjectDetailsRegister, ProfitSharingRegister, RepaymentDetailsRegister, ServiceBoxInfoRegister, SingleAddressRegister, SingleLenderRegister}
-import org.ergoplatform.appkit.{Address, Parameters}
+import lendcore.core.SingleLender.Ergs.LendServiceTokens
+import lendcore.core.SingleLender.Ergs.boxes.{LendServiceBox, SingleLenderLendBox, SingleLenderLendBoxContract, SingleLenderRepaymentBox}
+import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, CreationInfoRegister, FundingInfoRegister, LendingProjectDetailsRegister, ProfitSharingRegister, RepaymentDetailsRegister, ServiceBoxInfoRegister, SingleAddressRegister, SingleLenderRegister}
+import org.ergoplatform.appkit.{Address, ErgoToken, OutBox, Parameters}
 
 /**
  * We need
@@ -47,14 +48,16 @@ package object SingleLender {
                            repaymentHeightLength: Long = repaymentHeightLength,
                            loanName: String = loanName,
                            loanDescription: String = loanDescription,
-                           borrowerAddress: Address = dummyAddress): SingleLenderLendBox = {
+                           borrowerAddress: Address = dummyAddress,
+                           lenderAddress: Address = null): SingleLenderLendBox = {
     client.getClient.execute {
       ctx => {
         val fundingInfoRegister = new FundingInfoRegister(
           fundingGoal = goal,
           deadlineHeight = ctx.getHeight + deadlineHeightLength,
           interestRatePercent = interestRate,
-          repaymentHeightLength = repaymentHeightLength
+          repaymentHeightLength = repaymentHeightLength,
+          creationHeight = client.getHeight
         )
         val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
           projectName = loanName,
@@ -66,10 +69,57 @@ package object SingleLender {
           fundingInfoRegister = fundingInfoRegister,
           lendingProjectDetailsRegister = lendingProjectDetailsRegister,
           borrowerRegister = borrowerRegister,
-          singleLenderRegister = SingleLenderRegister.emptyRegister
+          singleLenderRegister = if (lenderAddress == null) SingleLenderRegister.emptyRegister else new SingleLenderRegister(lenderAddress.toString)
         )
 
         wrappedInputLendBox
+      }
+    }
+  }
+
+  def createOutputLendBox(value: Long = Parameters.MinFee,
+                          goal: Long = goal,
+                          deadlineHeightLength: Long = deadlineHeightLength,
+                          interestRate: Long = interestRate,
+                          repaymentHeightLength: Long = repaymentHeightLength,
+                          loanName: String = loanName,
+                          loanDescription: String = loanDescription,
+                          borrowerAddress: Address = dummyAddress,
+                          lenderAddress: Address = null): OutBox = {
+    client.getClient.execute {
+      ctx => {
+        val txB = ctx.newTxBuilder()
+        val fundingInfoRegister = new FundingInfoRegister(
+          fundingGoal = goal,
+          deadlineHeight = ctx.getHeight + deadlineHeightLength,
+          interestRatePercent = interestRate,
+          repaymentHeightLength = repaymentHeightLength,
+          creationHeight = client.getHeight
+        )
+        val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
+          projectName = loanName,
+          description = loanDescription,
+        )
+        val borrowerRegister = new BorrowerRegister(borrowerAddress.toString)
+
+        val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx)
+        val lendToken: ErgoToken = new ErgoToken(LendServiceTokens.lendToken, 1)
+
+        val lendBox = txB.outBoxBuilder()
+          .value(value)
+          .contract(lendBoxContract)
+          .tokens(lendToken)
+          .registers(
+            fundingInfoRegister.toRegister,
+            lendingProjectDetailsRegister.toRegister,
+            borrowerRegister.toRegister,
+            if (lenderAddress == null)
+              SingleLenderRegister.emptyRegister.toRegister
+            else
+              new SingleLenderRegister(lenderAddress.toString).toRegister
+          ).build()
+
+        lendBox
       }
     }
   }
@@ -103,7 +153,8 @@ package object SingleLender {
           fundingGoal = goal,
           deadlineHeight = ctx.getHeight + deadlineHeightLength,
           interestRatePercent = interestRate,
-          repaymentHeightLength = repaymentHeightLength
+          repaymentHeightLength = repaymentHeightLength,
+          creationHeight = client.getHeight
         )
         val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
           projectName = loanName,

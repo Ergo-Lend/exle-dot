@@ -1,10 +1,9 @@
 package features.base
 
-import ergotools.client.Client
-import ergotools.explorer.Explorer
 import features.getRequestBodyAsString
 import helpers.ExceptionThrowable
 import io.circe.Json
+import lendcore.components.ergo.{Client, Explorer}
 import play.api.Logger
 import play.api.libs.circe.Circe
 import play.api.mvc._

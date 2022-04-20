@@ -1,8 +1,8 @@
 package e2e.features.singleLenderErg
 
 import config.Configs
-import ergotools.LendServiceTokens
-import features.lend.contracts.proxyContracts.createSingleLenderLendBoxProxyScript
+import lendcore.contracts.SingleLender.Ergs.proxyContracts.proxyContracts.createSingleLenderLendBoxProxyScript
+import lendcore.core.SingleLender.Ergs.LendServiceTokens
 import org.ergoplatform.ErgoAddressEncoder
 import org.ergoplatform.appkit.{ConstantsBuilder, ErgoClient, ErgoToken, RestApiErgoClient}
 import org.scalatest.matchers.should.Matchers

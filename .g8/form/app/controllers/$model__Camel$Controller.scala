@@ -33,7 +33,7 @@ class $model;format="Camel"$Controller @Inject()(mcc: MessagesControllerComponen
   def $model;format="camel"$Post() = Action { implicit request: MessagesRequest[AnyContent] =>
     $model;format="camel"$Form.bindFromRequest.fold(
       formWithErrors => {
-        // binding failure, you retrieve the form containing errors:
+        // binding failure, you retrieve the form containing lendcore.components.errors:
         BadRequest(views.html.$model;format="camel"$.form(formWithErrors))
       },
       $model;format="camel"$Data => {

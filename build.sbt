@@ -4,6 +4,8 @@ organization := "dot"
 version := "1.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
+//lazy val core = Project(id = "lendcore", base = file("lendcore"))
+//lazy val root = Project(id = "lend-service", base = file(".")).enablePlugins(PlayScala).dependsOn(core)
 
 scalaVersion := "2.12.10"
 
@@ -13,6 +15,16 @@ libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0
 resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/",
   "SonaType" at "https://oss.sonatype.org/content/groups/public",
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
+
+val DoobieVersion = "1.0.0-RC1"
+val NewTypeVersion = "0.4.4"
+
+val doobieDependencies = Seq(
+  "org.tpolecat" %% "doobie-core"     % DoobieVersion,
+  "org.tpolecat" %% "doobie-postgres" % DoobieVersion,
+  "org.tpolecat" %% "doobie-hikari"   % DoobieVersion,
+  "io.estatico"  %% "newtype"         % NewTypeVersion
+)
 
 val ergoDevVer = "develop-dd40e4e5-SNAPSHOT"
 val ergoLatestVer = "4.0.6"
@@ -39,7 +51,11 @@ libraryDependencies ++= Seq(
   "org.scalaj" %% "scalaj-http" % "2.4.2",
 )
 
-libraryDependencies ++= dbDependencies ++ ergoDependencies ++ circeDependencies
+libraryDependencies ++=
+//  doobieDependencies ++
+      dbDependencies ++
+      ergoDependencies ++
+      circeDependencies
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

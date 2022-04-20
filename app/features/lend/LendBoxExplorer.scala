@@ -1,18 +1,17 @@
 package features.lend
 
 import config.Configs
-import ergotools.{LendServiceTokens, TxState}
-import ergotools.TxState.TxState
-import ergotools.client.Client
-import ergotools.explorer.Explorer
-import errors.{connectionException, explorerException, parseException}
-import features.lend.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
-import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import lendcore.components.ergo.TxState.TxState
+import lendcore.components.errors.{connectionException, explorerException, parseException}
+import lendcore.core.SingleLender.Ergs.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
+import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
 import helpers.StackTrace
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{BlockchainContext, ErgoClientException, ErgoId, ErgoValue, InputBox}
 import play.api.Logger
 import io.circe.{Json => ciJson}
+import lendcore.components.ergo.{Client, Explorer}
+import lendcore.core.SingleLender.Ergs.LendServiceTokens
 import play.api.libs.json.{JsValue, Json}
 import sigmastate.serialization.ErgoTreeSerializer
 import special.collection.Coll
@@ -144,6 +143,10 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
   //<editor-fold desc="Json Functions">
 
   def getJsonBoxesViaId(boxesJson: ciJson, tokenString: String): Seq[ciJson] = {
+    if (boxesJson.isNull) {
+      throw new NullPointerException("Boxes Json is null")
+    }
+
     boxesJson.hcursor.downField("items").as[Seq[ciJson]].getOrElse(throw new Throwable("parse error"))
       .filter(_.hcursor.downField("assets").as[Seq[ciJson]].getOrElse(null).size == 1)
       .filter(_.hcursor.downField("assets").as[Seq[ciJson]].getOrElse(null).head

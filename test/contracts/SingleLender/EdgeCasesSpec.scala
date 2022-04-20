@@ -2,9 +2,9 @@ package contracts.SingleLender
 
 import config.Configs
 import contracts.{client, dummyAddress, dummyProver, dummyTxId}
-import features.lend.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox}
-import features.lend.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import features.lend.contracts.proxyContracts.LendProxyContractService
+import lendcore.core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox}
+import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import lendcore.contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
 import org.ergoplatform.appkit.{ErgoContract, Parameters, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -142,7 +142,8 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
             fundingGoal = fundingGoal,
             deadlineHeight = ctx.getHeight + deadlineHeight,
             interestRatePercent = interestRate,
-            repaymentHeightLength = repaymentHeight
+            repaymentHeightLength = repaymentHeight,
+            creationHeight = client.getHeight
           )
           val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
             projectName = loanName,

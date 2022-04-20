@@ -1,12 +1,11 @@
 package features.lend
 
 import config.Configs
-import ergotools.{BoxState, ErgUtils}
-import ergotools.client.Client
-import features.lend.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
+import lendcore.core.SingleLender.Ergs.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.{getRequestBodyAsDouble, getRequestBodyAsLong, getRequestBodyAsString}
 import helpers.{ErgoValidator, ExceptionThrowable}
 import io.circe.Json
+import lendcore.components.ergo.{BoxState, Client, ErgUtils}
 import play.api.Logger
 import play.api.mvc._
 import play.api.libs.circe.Circe
@@ -110,6 +109,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       ("description", Json.fromString(lendingProjectDetailsRegister.description)),
       ("value", Json.fromLong(wrappedLendBox.value)),
       ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
+      ("creationHeight", Json.fromLong(fundingInfoRegister.creationHeight)),
       ("fundingGoal", Json.fromLong(fundingInfoRegister.fundingGoal)),
       ("fundingGoalInErgs", Json.fromDoubleOrString(fundingGoalInErgs)),
       ("isFunded", Json.fromBoolean(fullyFunded)),
@@ -138,6 +138,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       ("description", Json.fromString(lendingProjectDetailsRegister.description)),
       ("value", Json.fromLong(wrappedRepaymentBox.value)),
       ("deadline", Json.fromLong(fundingInfoRegister.deadlineHeight)),
+      ("creationHeight", Json.fromLong(fundingInfoRegister.creationHeight)),
       ("fundingGoalInNanoErgs", Json.fromLong(fundingInfoRegister.fundingGoal)),
       ("fundingGoalInErgs", Json.fromDoubleOrString(fundingGoalInErgs)),
       ("borrowerPk", Json.fromString(borrowerRegister.borrowersAddress)),
@@ -198,6 +199,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           pk = walletAddress,
           name = name,
           description = description,
+          creationHeight = client.getHeight,
           deadlineHeight = client.getHeight + deadlineHeight,
           goal = goal,
           interestRate = interestRate,
@@ -464,12 +466,14 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           pk = walletAddress,
           name = name,
           description = description,
+          creationHeight = client.getHeight,
           deadlineHeight = client.getHeight + deadlineHeight,
           goal = goal,
           interestRate = interestRate,
           repaymentHeightLength = repaymentHeight,
           writeToDb = false
         )
+
         val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
         val paymentAmountInErgs = ErgUtils.nanoErgsToErgs(paymentAmountInNanoErgs)
         val delay = Configs.creationDelay

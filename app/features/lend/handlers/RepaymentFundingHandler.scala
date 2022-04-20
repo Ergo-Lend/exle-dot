@@ -1,14 +1,14 @@
 package features.lend.handlers
 
 import config.Configs
-import ergotools.TxState
-import ergotools.client.Client
-import errors.{connectionException, failedTxException, proveException, skipException}
+import lendcore.components.errors.{connectionException, failedTxException, proveException, skipException}
 import features.lend.LendBoxExplorer
-import features.lend.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
-import features.lend.dao.{FundLendReq, FundRepaymentReq, FundRepaymentReqDAO}
-import features.lend.txs.singleLender.{RefundProxyContractTx, SingleRepaymentTxFactory}
+import lendcore.core.SingleLender.Ergs.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
+import lendcore.core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleRepaymentTxFactory}
 import helpers.{StackTrace, Time}
+import lendcore.components.ergo.{Client, TxState}
+import lendcore.io.persistence.doobs.dbHandlers.FundRepaymentReqDAO
+import lendcore.io.persistence.doobs.models.FundRepaymentReq
 import org.ergoplatform.appkit.{Address, InputBox}
 import play.api.Logger
 

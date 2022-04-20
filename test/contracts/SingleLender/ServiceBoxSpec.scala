@@ -1,8 +1,8 @@
 package contracts.SingleLender
 
 import contracts.{client, dummyTxId}
-import ergotools.LendServiceTokens
-import features.lend.boxes.LendServiceBox
+import lendcore.core.SingleLender.Ergs.boxes.LendServiceBox
+import lendcore.core.SingleLender.Ergs.LendServiceTokens
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

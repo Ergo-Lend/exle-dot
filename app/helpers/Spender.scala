@@ -8,9 +8,9 @@ import java.util.stream.Collectors
 
 /**
  * Spender
- * Get boxes from explorer, and then tries to spend it.
- * Explorer -> Retrieve input boxes
- * Output boxes for spending.
+ * Get lendcore.components.boxes from explorer, and then tries to spend it.
+ * Explorer -> Retrieve input lendcore.components.boxes
+ * Output lendcore.components.boxes for spending.
  */
 object Spender {
   val minFee = Parameters.MinFee
@@ -36,7 +36,7 @@ object Spender {
 
       val wallet: ErgoWallet = ctx.getWallet
 
-      //1. Input is boxes at proxy contract address
+      //1. Input is lendcore.components.boxes at proxy contract address
       val spendingAddress: Address = Address.create(proxyContractAddress)
       val spendingBoxes: java.util.List[InputBox] = ctx.getUnspentBoxesFor(spendingAddress, 0, 20)
         .stream()

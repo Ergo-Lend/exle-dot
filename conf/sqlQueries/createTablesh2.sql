@@ -11,6 +11,7 @@ CREATE TABLE CREATE_REQUESTS (
     name                        VARCHAR(255) NOT NULL,
     description                 VARCHAR(10000),
     goal                        BIGINT NOT NULL,
+    creation_height             BIGINT NOT NULL,
     deadline_height             BIGINT NOT NULL,
     repayment_height            BIGINT NOT NULL,
     interest_rate               BIGINT NOT NULL,
