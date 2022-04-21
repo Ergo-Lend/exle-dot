@@ -3,9 +3,7 @@ package features.lend.handlers
 import config.Configs
 import lendcore.components.errors.{connectionException, failedTxException, proveException, skipException}
 import features.lend.LendBoxExplorer
-import lendcore.core.SingleLender.Ergs.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
 import lendcore.core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleRepaymentTxFactory}
-import lendcore.tools.runners.helpers.Time
 import lendcore.components.common.{StackTrace, Time}
 import lendcore.components.ergo.{Client, TxState}
 import lendcore.io.persistence.doobs.dbHandlers.FundRepaymentReqDAO

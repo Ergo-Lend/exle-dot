@@ -4,7 +4,6 @@ import config.Configs
 import lendcore.components.errors.{paymentBoxInfoNotFoundException, proveException}
 import lendcore.core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderFundLendPaymentBox, SingleLenderInitiationPaymentBox, SingleLenderLendBox, SingleLenderRepaymentBox}
 import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
-import features.lend.dao.FundLendReq
 import lendcore.io.persistence.doobs.models.{CreateLendReq, FundLendReq}
 import org.ergoplatform.appkit.{BlockchainContext, InputBox, Parameters, SignedTransaction}
 

@@ -4,11 +4,9 @@ import config.Configs
 import lendcore.components.errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import features.lend.LendBoxExplorer
 import lendcore.core.SingleLender.Ergs.boxes.SingleLenderLendBox
-import features.lend.dao.DAO
 import lendcore.core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
 import lendcore.tools.runners.ExplorerRunner.walletAddress
 import lendcore.tools.runners.LendCreationRunner.paymentAddressString
-import lendcore.tools.runners.helpers.StackTrace
 import lendcore.components.common.{StackTrace, Time}
 import lendcore.components.ergo.{Client, Explorer, TxState}
 import lendcore.io.persistence.doobs.dbHandlers.{CreateLendReqDAO, DAO}
@@ -16,8 +14,6 @@ import lendcore.io.persistence.doobs.models.{CreateLendReq, ProxyReq}
 import org.ergoplatform.appkit.{Address, CoveringBoxes, InputBox, Parameters}
 import play.api.Logger
 
-import java.sql.Date
-import java.time.LocalDateTime
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.ExecutionContext.Implicits.global
