@@ -3,9 +3,9 @@ package features.lend.handlers
 import config.Configs
 import lendcore.components.errors.{connectionException, failedTxException}
 import features.lend.LendBoxExplorer
+import lendcore.components.common.StackTrace
 import lendcore.core.SingleLender.Ergs.txs.{SingleLenderTxFactory, SingleRepaymentTxFactory}
 import lendcore.core.SingleLender.Ergs.boxes.{SingleLenderLendBox, SingleLenderLendBoxContract, SingleLenderRepaymentBox, SingleLenderRepaymentBoxContract}
-import helpers.StackTrace
 import lendcore.components.ergo.Client
 import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoClientException, InputBox}
 import play.api.Logger

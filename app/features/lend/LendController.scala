@@ -3,9 +3,10 @@ package features.lend
 import config.Configs
 import lendcore.core.SingleLender.Ergs.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.{getRequestBodyAsDouble, getRequestBodyAsLong, getRequestBodyAsString}
-import helpers.{ErgoValidator, ExceptionThrowable}
 import io.circe.Json
+import lendcore.components.common.ErgoValidator
 import lendcore.components.ergo.{BoxState, Client, ErgUtils}
+import lendcore.components.errors.ExceptionThrowable
 import play.api.Logger
 import play.api.mvc._
 import play.api.libs.circe.Circe

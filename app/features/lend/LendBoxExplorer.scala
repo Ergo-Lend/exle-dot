@@ -5,11 +5,11 @@ import lendcore.components.ergo.TxState.TxState
 import lendcore.components.errors.{connectionException, explorerException, parseException}
 import lendcore.core.SingleLender.Ergs.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
 import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
-import helpers.StackTrace
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{BlockchainContext, ErgoClientException, ErgoId, ErgoValue, InputBox}
 import play.api.Logger
 import io.circe.{Json => ciJson}
+import lendcore.components.common.StackTrace
 import lendcore.components.ergo.{Client, Explorer}
 import lendcore.core.SingleLender.Ergs.LendServiceTokens
 import play.api.libs.json.{JsValue, Json}

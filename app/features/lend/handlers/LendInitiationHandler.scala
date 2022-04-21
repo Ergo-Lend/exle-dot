@@ -8,7 +8,8 @@ import features.lend.dao.DAO
 import lendcore.core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
 import lendcore.tools.runners.ExplorerRunner.walletAddress
 import lendcore.tools.runners.LendCreationRunner.paymentAddressString
-import helpers.{StackTrace, Time}
+import lendcore.tools.runners.helpers.StackTrace
+import lendcore.components.common.{StackTrace, Time}
 import lendcore.components.ergo.{Client, Explorer, TxState}
 import lendcore.io.persistence.doobs.dbHandlers.{CreateLendReqDAO, DAO}
 import lendcore.io.persistence.doobs.models.{CreateLendReq, ProxyReq}

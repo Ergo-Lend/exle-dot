@@ -1,9 +1,8 @@
-package helpers
-
-import play.api.mvc.Result
-import play.api.mvc.Results.BadRequest
+package lendcore.components.errors
 
 import play.api.Logger
+import play.api.mvc.Result
+import play.api.mvc.Results.BadRequest
 
 trait ExceptionThrowable {
   // Exceptions

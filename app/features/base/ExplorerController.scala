@@ -1,9 +1,9 @@
 package features.base
 
 import features.getRequestBodyAsString
-import helpers.ExceptionThrowable
 import io.circe.Json
 import lendcore.components.ergo.{Client, Explorer}
+import lendcore.components.errors.ExceptionThrowable
 import play.api.Logger
 import play.api.libs.circe.Circe
 import play.api.mvc._

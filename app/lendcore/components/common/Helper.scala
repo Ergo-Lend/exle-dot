@@ -1,4 +1,4 @@
-package helpers
+package lendcore.components.common
 
 import config.Configs
 import org.ergoplatform.appkit.{ErgoType, ErgoValue, JavaHelpers}

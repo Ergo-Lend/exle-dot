@@ -1,4 +1,4 @@
-package helpers
+package lendcore.tools.runners.helpers
 
 import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoClient, ErgoId, ErgoProver, ErgoWallet, InputBox, NetworkType, Parameters, RestApiErgoClient, SecretString}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}

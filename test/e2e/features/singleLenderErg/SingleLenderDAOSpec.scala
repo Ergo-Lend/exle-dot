@@ -2,7 +2,7 @@
 //
 //import lendcore.components.ergo.TxState
 //import features.lend.dao.{CreateLendReqDAO}
-//import helpers.Time
+//import lendcore.components.common.Time
 //import org.scalatest.Ignore
 //import org.scalatest.concurrent.ScalaFutures
 //import org.scalatestplus.play.guice.GuiceOneAppPerSuite

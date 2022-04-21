@@ -5,7 +5,8 @@ import lendcore.components.errors.{connectionException, failedTxException, payme
 import features.lend.LendBoxExplorer
 import lendcore.core.SingleLender.Ergs.boxes.SingleLenderLendBox
 import lendcore.core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
-import helpers.{StackTrace, Time}
+import lendcore.tools.runners.helpers.Time
+import lendcore.components.common.{StackTrace, Time}
 import lendcore.components.ergo.{Client, TxState}
 import lendcore.io.persistence.doobs.dbHandlers.FundLendReqDAO
 import lendcore.io.persistence.doobs.models.FundLendReq

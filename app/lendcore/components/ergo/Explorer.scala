@@ -1,9 +1,9 @@
 package lendcore.components.ergo
 
 import config.Configs
-import helpers.StackTrace
 import io.circe.Json
 import io.circe.parser.parse
+import lendcore.components.common.StackTrace
 import lendcore.components.ergo.TxState.TxState
 import lendcore.components.errors.{connectionException, explorerException, parseException}
 import org.ergoplatform.ErgoAddress
