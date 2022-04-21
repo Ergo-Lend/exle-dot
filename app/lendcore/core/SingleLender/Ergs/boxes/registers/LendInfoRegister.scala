@@ -37,7 +37,7 @@ case class FundingInfoRegister(fundingGoal: Long,
     register(1) = deadlineHeight
     register(2) = interestRatePercent
     register(3) = repaymentHeightLength
-    register(4) = repaymentHeightLength
+    register(4) = creationHeight
 
     ergoValueOf(register)
   }
