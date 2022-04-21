@@ -19,13 +19,6 @@ resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repos
 val DoobieVersion = "1.0.0-RC1"
 val NewTypeVersion = "0.4.4"
 
-val doobieDependencies = Seq(
-  "org.tpolecat" %% "doobie-core"     % DoobieVersion,
-  "org.tpolecat" %% "doobie-postgres" % DoobieVersion,
-  "org.tpolecat" %% "doobie-hikari"   % DoobieVersion,
-  "io.estatico"  %% "newtype"         % NewTypeVersion
-)
-
 val ergoDevVer = "develop-dd40e4e5-SNAPSHOT"
 val ergoLatestVer = "4.0.6"
 val ergoDependencies = Seq(
@@ -43,6 +36,17 @@ val dbDependencies = Seq(
   "com.h2database" % "h2" % "1.4.200",
 )
 
+val doobieDependencies = Seq(
+  "org.tpolecat" %% "doobie-core"     % DoobieVersion,
+  "org.tpolecat" %% "doobie-postgres" % DoobieVersion,
+  "org.tpolecat" %% "doobie-hikari"   % DoobieVersion,
+  "io.estatico"  %% "newtype"         % NewTypeVersion
+)
+
+val cats = Seq(
+  "org.typelevel" %% "cats-core" % "2.3.0"
+)
+
 libraryDependencies ++= Seq(
   "org.playframework.anorm" %% "anorm" % "2.6.10",
   "com.typesafe.play" %% "play-slick" % "4.0.0",
@@ -53,6 +57,7 @@ libraryDependencies ++= Seq(
 
 libraryDependencies ++=
 //  doobieDependencies ++
+//      cats ++
       dbDependencies ++
       ergoDependencies ++
       circeDependencies

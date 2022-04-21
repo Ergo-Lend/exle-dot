@@ -1,8 +1,6 @@
 package lendcore.core.SingleLender.Ergs.boxes
 
 import config.Configs
-import features.lend.dao.FundRepaymentReqDAO
-import lendcore.tools.runners.helpers.StackTrace
 import lendcore.components.common.{StackTrace, Time}
 import lendcore.components.ergo.TxState
 import lendcore.components.errors.PaymentAddressException

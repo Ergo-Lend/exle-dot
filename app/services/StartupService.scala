@@ -27,31 +27,31 @@ class StartupService @Inject()(client: Client,
         repaymentFundingHandler,
         finalizeSingleLenderHandler)), "scheduler")
 
-//  system.scheduler.scheduleAtFixedRate(
-//    initialDelay = 2.seconds,
-//    interval = Configs.lendThreadInterval.seconds,
-//    receiver = jobs,
-//    message = JobsUtil.initiation
-//  )
-//
-//  system.scheduler.scheduleAtFixedRate(
-//    initialDelay = 2.seconds,
-//    interval = Configs.lendThreadInterval.seconds,
-//    receiver = jobs,
-//    message = JobsUtil.lendFund
-//  )
-//
-//  system.scheduler.scheduleAtFixedRate(
-//    initialDelay = 2.seconds,
-//    interval = Configs.lendThreadInterval.seconds,
-//    receiver = jobs,
-//    message = JobsUtil.repayment
-//  )
-//
-//  system.scheduler.scheduleAtFixedRate(
-//    initialDelay = 2.seconds,
-//    interval = Configs.lendThreadInterval.seconds,
-//    receiver = jobs,
-//    message = JobsUtil.lendFinalize
-//  )
+  system.scheduler.scheduleAtFixedRate(
+    initialDelay = 2.seconds,
+    interval = Configs.lendThreadInterval.seconds,
+    receiver = jobs,
+    message = JobsUtil.initiation
+  )
+
+  system.scheduler.scheduleAtFixedRate(
+    initialDelay = 2.seconds,
+    interval = Configs.lendThreadInterval.seconds,
+    receiver = jobs,
+    message = JobsUtil.lendFund
+  )
+
+  system.scheduler.scheduleAtFixedRate(
+    initialDelay = 2.seconds,
+    interval = Configs.lendThreadInterval.seconds,
+    receiver = jobs,
+    message = JobsUtil.repayment
+  )
+
+  system.scheduler.scheduleAtFixedRate(
+    initialDelay = 2.seconds,
+    interval = Configs.lendThreadInterval.seconds,
+    receiver = jobs,
+    message = JobsUtil.lendFinalize
+  )
 }
