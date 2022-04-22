@@ -8,8 +8,8 @@ object Helpers {
 
   def toId(hex: String): ErgoId = ErgoId.create(hex)
 
-  def trunc(str: String): String = {
-    str.take(6)+"..."+str.takeRight(6)
+  def trunc(str: String, limit: Int = 6): String = {
+    str.take(limit)+"..."+str.takeRight(limit)
   }
 
 }

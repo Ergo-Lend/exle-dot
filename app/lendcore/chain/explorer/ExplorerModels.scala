@@ -33,6 +33,7 @@ object Models {
   case class RegisterData(serialized: String, sigmaType: String, renderedValue: String){
     override def toString: String = s"Reg[$sigmaType]($renderedValue)"
   }
+
   case class Registers(R4: Option[RegisterData], R5: Option[RegisterData], R6: Option[RegisterData],
                        R7: Option[RegisterData], R8: Option[RegisterData], R9: Option[RegisterData]){
     override def toString: String = {
@@ -63,7 +64,7 @@ object Models {
          |    heightCreated: $heightCreated
          |    heightSettled: $heightSettled
          |    ergoTree: ${Helpers.trunc(ergoTreeHex)}
-         |    address: ${address}
+         |    address: ${Helpers.trunc(address.toString, 12)}
          |    assets: \n${assets.mkString("\n")}
          |    registers: \n$registers
          |    spendingTx: $spendingTxId

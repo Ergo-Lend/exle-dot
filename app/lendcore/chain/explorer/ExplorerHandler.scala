@@ -49,7 +49,7 @@ class ExplorerHandler(networkType: NetworkType) {
    * @param offset Number of transactions to offset
    * @param limit Max number of transactions in response
    */
-  def txsForAddress(addr: Address, offset: Int = 0, limit: Int = 10): Option[Seq[TransactionData]] = {
+  def getTxsForAddress(addr: Address, offset: Int = 0, limit: Int = 10): Option[Seq[TransactionData]] = {
     val opt = asOption[Items[TransactionInfo]](apiService.getApiV1AddressesP1Transactions(addr.toString, offset, limit).execute())
     TransactionData.fromOptionSeq(itemSeq[TransactionInfo](opt))
   }
@@ -60,7 +60,7 @@ class ExplorerHandler(networkType: NetworkType) {
    * @param offset Number of boxes to offset
    * @param limit Max number of boxes in response
    */
-  def boxesByTemplateHash(hash: String, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
+  def getBoxesByTemplateHash(hash: String, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
     Output.fromOptionSeq(
       outputSeq(asOption[ItemsA](apiService.getApiV1BoxesByergotreetemplatehashP1(hash, offset, limit).execute()))
     )
@@ -71,7 +71,7 @@ class ExplorerHandler(networkType: NetworkType) {
    * @param offset Number of boxes to offset
    * @param limit Max number of boxes in response
    */
-  def boxesByErgoTree(ergoTree: ErgoTree, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
+  def getBoxesByErgoTree(ergoTree: ErgoTree, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
     Output.fromOptionSeq(
       outputSeq(asOption[ItemsA](apiService.getApiV1BoxesByergotreeP1(ergoTree.bytesHex, offset, limit).execute()))
     )
@@ -82,7 +82,7 @@ class ExplorerHandler(networkType: NetworkType) {
    * @param offset Number of boxes to offset
    * @param limit Max number of boxes in response
    */
-  def boxesByErgoTreeHex(ergoTreeHex: String, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
+  def getBoxesByErgoTreeHex(ergoTreeHex: String, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
     Output.fromOptionSeq(
       outputSeq(asOption[ItemsA](apiService.getApiV1BoxesByergotreeP1(ergoTreeHex, offset, limit).execute()))
     )
@@ -93,7 +93,7 @@ class ExplorerHandler(networkType: NetworkType) {
    * @param offset Number of boxes to offset
    * @param limit Max number of boxes in response
    */
-  def boxesByAddress(address: Address, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
+  def getBoxesByAddress(address: Address, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
     Output.fromOptionSeq(
       outputSeq(asOption[ItemsA](apiService.getApiV1BoxesByaddressP1(address.toString, offset, limit).execute()))
     )
@@ -104,7 +104,7 @@ class ExplorerHandler(networkType: NetworkType) {
    * @param offset Number of boxes to offset
    * @param limit Max number of boxes in response
    */
-  def boxesByTokenId(tokenId: ErgoId, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
+  def getBoxesByTokenId(tokenId: ErgoId, offset: Int = 0, limit: Int = 10): Option[Seq[Output]] = {
     Output.fromOptionSeq(
       outputSeq(asOption[ItemsA](apiService.getApiV1BoxesUnspentBytokenidP1(tokenId.toString, offset, limit).execute()))
     )
