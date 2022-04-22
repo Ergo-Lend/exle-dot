@@ -19,7 +19,7 @@ resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repos
 val DoobieVersion = "1.0.0-RC1"
 val NewTypeVersion = "0.4.4"
 
-val ergoDevVer = "develop-dd40e4e5-SNAPSHOT"
+val ergoDevVer = "develop-d90135c5-SNAPSHOT"
 val ergoLatestVer = "4.0.6"
 val ergoDependencies = Seq(
   "org.scorexfoundation" %% "scrypto" % "2.1.10",
@@ -53,6 +53,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick" % "3.3.0",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.3.0",
   "org.scalaj" %% "scalaj-http" % "2.4.2",
+  "org.slf4j" % "slf4j-jdk14" % "1.7.36"
 )
 
 libraryDependencies ++=
