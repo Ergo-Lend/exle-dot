@@ -20,7 +20,7 @@ val DoobieVersion = "1.0.0-RC1"
 val NewTypeVersion = "0.4.4"
 
 val ergoDevVer = "develop-d90135c5-SNAPSHOT"
-val ergoLatestVer = "4.0.6"
+val ergoLatestVer = "develop-d90135c5-SNAPSHOT"
 val ergoDependencies = Seq(
   "org.scorexfoundation" %% "scrypto" % "2.1.10",
   "org.ergoplatform" %% "ergo-playground-env" % "0.0.0-86-400c8c4b-SNAPSHOT",
@@ -53,7 +53,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick" % "3.3.0",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.3.0",
   "org.scalaj" %% "scalaj-http" % "2.4.2",
-  "org.slf4j" % "slf4j-jdk14" % "1.7.36"
 )
 
 libraryDependencies ++=

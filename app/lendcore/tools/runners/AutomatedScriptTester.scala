@@ -4,9 +4,8 @@ import lendcore.components.ergo.TxState.TxState
 import features.lend.LendBoxExplorer
 import lendcore.components.ergo.{Client, ContractUtils, TxState}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoProver, ErgoToken, Parameters, SecretString, SignedTransaction}
+import org.ergoplatform.appkit.{Address, BlockchainContext, BoxOperations, ErgoContract, ErgoProver, ErgoToken, Parameters, SecretString, SignedTransaction}
 
-import java.util.stream.Collectors
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 object AutomatedScriptTester {
@@ -20,7 +19,7 @@ object AutomatedScriptTester {
 
     setOwnerAddress(Configs.config, Configs.nodeConfig)
 
-    val lendInitiationDetails = new LendInitiationDetails(
+    val lendInitiationDetails = LendInitiationDetails(
       name = "Fund Farmers in Nigeria",
       description = "We are looking to buy more cows",
       deadlineHeight = 694140,
@@ -33,12 +32,12 @@ object AutomatedScriptTester {
     val lendBoxId = "28ecd124dcfa7f4f5d13fbe69a290464ffc22557269c79acb54966598f5975be"
     val repaymentBoxId = "bf140cc7d6fa3ae697b9f026ee2cc52bce3b7ea7337fabe2d89c103a0784f667"
 
-    val lendInitiationRunner = new LendInitiationRunner(lendInitiationDetails)
+    val lendInitiationRunner = LendInitiationRunner(lendInitiationDetails)
     val fundLendRunner = new FundLendRunner(
       lendBoxId = lendBoxId,
       lenderAddress = ownerAddress.toString,
       explorer = explorer)
-    val fundRepaymentRunner = new FundRepaymentRunner(
+    val fundRepaymentRunner = FundRepaymentRunner(
       repaymentBoxId = repaymentBoxId,
       funderAddress = ownerAddress.toString,
       explorer = explorer)
@@ -113,7 +112,11 @@ object AutomatedScriptTester {
 
       val totalValue = amount + Parameters.MinFee
       val nullToken: java.util.List[ErgoToken] = List.empty[ErgoToken].asJava
-      val coveringBoxes = ctx.getCoveringBoxesFor(ownerAddress, totalValue, nullToken).getBoxes
+      val coveringBoxes =
+        BoxOperations
+          .createForSender(ownerAddress)
+          .withAmountToSpend(totalValue)
+          .loadTop(ctx)
 
       val outBox = txB.outBoxBuilder()
         .value(amount)
@@ -143,12 +146,12 @@ object AutomatedScriptTester {
       val txB = ctx.newTxBuilder()
 
       val totalValue = amount + Parameters.MinFee
-      val coveringBoxes = ctx.getCoveringBoxesFor(ownerAddress, totalValue, null)
-      val inputBoxes = List(coveringBoxes.getBoxes.get(0)).asJava
+      val coveringBoxes = BoxOperations.createForSender(ownerAddress).withAmountToSpend(totalValue).loadTop(ctx)
+      val inputBoxes = coveringBoxes
 
       val outBox = txB.outBoxBuilder()
         .value(amount)
-        .contract(ContractUtils.sendToPK(ctx, toAddress))
+        .contract(ContractUtils.sendToPK(toAddress))
         .build()
 
       val tx = txB.boxesToSpend(inputBoxes)

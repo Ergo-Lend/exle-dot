@@ -50,7 +50,7 @@ object Spender {
       val refundBox = txB.outBoxBuilder()
         .value(refundAmount)
         .contract(
-          new ErgoTreeContract(refundAddress.getErgoAddress.script)
+          new ErgoTreeContract(refundAddress.getErgoAddress.script, NetworkType.MAINNET)
         )
         .build()
 

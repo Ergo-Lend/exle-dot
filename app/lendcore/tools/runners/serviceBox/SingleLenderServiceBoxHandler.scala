@@ -6,7 +6,7 @@ import lendcore.core.SingleLender.Ergs.boxes.SingleLenderServiceBoxContract
 import lendcore.core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import lendcore.components.ergo.ContractUtils
 import lendcore.core.SingleLender.Ergs.LendServiceTokens
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{Address, BlockchainContext, BoxOperations, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
 
 import java.util.stream.Collectors
@@ -40,7 +40,7 @@ object SingleLenderServiceBoxHandler {
     val txJson: String = client.execute((ctx: BlockchainContext) => {
       val runTx = "merge"
 
-      System.out.println(s"Running ${runTx} tx")
+      System.out.println(s"Running $runTx tx")
 
       val signedTx: SignedTransaction = runTx match {
         case "create" => createNFTBox(ctx, conf, nodeConf)
@@ -98,29 +98,29 @@ object SingleLenderServiceBoxHandler {
     }
 
     val tokenBox: OutBox = tokenCreate match {
-      case "service" => {
+      case "service" =>
         txB.outBoxBuilder()
           .value(Configs.minBoxErg)
           .mintToken(token, nftName, nftDesc, 0)
-          .contract(ContractUtils.sendToPK(ctx, ownerAddress))
+          .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
-      }
 
-      case "lend" => {
+
+      case "lend" =>
         txB.outBoxBuilder()
           .value(Configs.minBoxErg)
           .mintToken(token, lendTokenName, lendTokenDesc, 0)
-          .contract(ContractUtils.sendToPK(ctx, ownerAddress))
+          .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
-      }
 
-      case "repayment" => {
+
+      case "repayment" =>
         txB.outBoxBuilder()
           .value(Configs.minBoxErg)
           .mintToken(token, repaymentTokenName, repaymentTokenDesc, 0)
-          .contract(ContractUtils.sendToPK(ctx, ownerAddress))
+          .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
-      }
+
     }
     val inputBoxes = List(directBox.get(0)).asJava
 
@@ -147,14 +147,13 @@ object SingleLenderServiceBoxHandler {
       Configs.networkType,
       SecretString.create(nodeConfig.getWallet.getMnemonic),
       SecretString.create(""))
-    val ownerAddressString: String = ownerAddress.toString
 
-    val creationInfo: CreationInfoRegister = new CreationInfoRegister(creationHeight = ctx.getHeight)
-    val serviceInfo: ServiceBoxInfoRegister = new ServiceBoxInfoRegister(name = "ErgoLend", description = "A Lending Platform on Ergo")
+    val creationInfo: CreationInfoRegister = CreationInfoRegister(creationHeight = ctx.getHeight)
+    val serviceInfo: ServiceBoxInfoRegister = ServiceBoxInfoRegister(name = "ErgoLend", description = "A Lending Platform on Ergo")
     val boxInfo: StringRegister = new StringRegister("SingleLenderServiceBox")
     val ergoLendPubKeyRegister: SingleAddressRegister = new SingleAddressRegister(Configs.serviceOwner.toString)
     val profitSharingPercentageRegister: ProfitSharingRegister =
-      new ProfitSharingRegister(profitSharingPercentage = Configs.profitSharingPercentage, serviceFeeAmount = Configs.serviceFee)
+      ProfitSharingRegister(profitSharingPercentage = Configs.profitSharingPercentage, serviceFeeAmount = Configs.serviceFee)
 
     val prover: ErgoProver = ctx.newProverBuilder().withMnemonic(
       SecretString.create(nodeConfig.getWallet.getMnemonic),
@@ -246,12 +245,15 @@ object SingleLenderServiceBoxHandler {
     val txB = ctx.newTxBuilder()
     val serviceBox = spendingBoxes.get(0)
 
-    val coveringBoxes = ctx.getCoveringBoxesFor(ownerAddress, Parameters.MinFee, null).getBoxes.get(0)
-    val inputBoxes = List(serviceBox, coveringBoxes).asJava
+    val boxOperations = BoxOperations.createForSender(ownerAddress)
+    val coveringBoxes = boxOperations.withAmountToSpend(Parameters.MinFee).loadTop(ctx)
+
+    val inputBoxes = List(serviceBox).asJava
+    inputBoxes.addAll(coveringBoxes)
 
     val serviceBoxRedeemed = txB.outBoxBuilder
       .value(serviceBox.getValue)
-      .contract(ContractUtils.sendToPK(ctx, ownerAddress))
+      .contract(ContractUtils.sendToPK(ownerAddress))
       .tokens(
         serviceBox.getTokens.get(0),
         serviceBox.getTokens.get(1),

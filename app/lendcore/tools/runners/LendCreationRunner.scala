@@ -13,19 +13,6 @@ import play.api.libs.json.JsResult.Exception
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 
-object Implicits {
-  implicit class CaseClassToString(c: AnyRef) {
-    def toStringWithFields: String = {
-      val fields = (Map[String, Any]() /: c.getClass.getDeclaredFields) { (a, f) =>
-        f.setAccessible(true)
-        a + (f.getName -> f.get(c))
-      }
-
-      s"${c.getClass.getName}(${fields.mkString(", ")})"
-    }
-  }
-}
-
 case class LendInitiationDetails(val name: String = "Test Lend 2.0",
                                  val description: String = "A test Lending box",
                                  val goal: Long = Parameters.OneErg / 100,

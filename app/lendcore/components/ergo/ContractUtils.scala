@@ -1,7 +1,7 @@
 package lendcore.components.ergo
 
 import org.ergoplatform.appkit.impl.ErgoTreeContract
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, NetworkType}
 import scorex.crypto.hash.Digest32
 
 object ContractUtils {
@@ -22,8 +22,8 @@ object ContractUtils {
    * @param recipient
    * @return
    */
-  def sendToPK(ctx: BlockchainContext, recipient: Address): ErgoContract = {
-    val contract = new ErgoTreeContract(recipient.getErgoAddress.script)
+  def sendToPK(recipient: Address, networkType: NetworkType = NetworkType.MAINNET): ErgoContract = {
+    val contract = new ErgoTreeContract(recipient.getErgoAddress.script, networkType)
 
     contract
   }
