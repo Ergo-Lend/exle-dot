@@ -18,7 +18,7 @@ case class FundsToAddressBox(val value: Long, val address: Address) {
   def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     val outputBox = txB.outBoxBuilder()
       .value(value)
-      .contract(ContractUtils.sendToPK(ctx, address))
+      .contract(ContractUtils.sendToPK(address))
       .build()
 
     outputBox

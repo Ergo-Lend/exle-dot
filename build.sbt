@@ -19,8 +19,8 @@ resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repos
 val DoobieVersion = "1.0.0-RC1"
 val NewTypeVersion = "0.4.4"
 
-val ergoDevVer = "develop-dd40e4e5-SNAPSHOT"
-val ergoLatestVer = "4.0.6"
+val ergoDevVer = "develop-d90135c5-SNAPSHOT"
+val ergoLatestVer = "develop-d90135c5-SNAPSHOT"
 val ergoDependencies = Seq(
   "org.scorexfoundation" %% "scrypto" % "2.1.10",
   "org.ergoplatform" %% "ergo-playground-env" % "0.0.0-86-400c8c4b-SNAPSHOT",
