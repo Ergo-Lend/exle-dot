@@ -12,7 +12,9 @@ object ExplorerPlayground {
     if(lendBoxes.isDefined) {
       val boxes = lendBoxes.get
       println(boxes.length)
-      boxes.toList.map(output => println(output))
+      boxes.toList.map(output => {
+        println(output)
+      })
     }
 
     println("done")
