@@ -1,8 +1,8 @@
 //package e2e.features.singleLenderErg
 //
-//import lendcore.components.ergo.TxState
+//import lendcore.ergo.TxState
 //import features.lend.dao.{CreateLendReqDAO}
-//import lendcore.components.common.Time
+//import lendcore.common.Time
 //import org.scalatest.Ignore
 //import org.scalatest.concurrent.ScalaFutures
 //import org.scalatestplus.play.guice.GuiceOneAppPerSuite

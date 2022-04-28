@@ -1,9 +1,10 @@
 package features.base
 
+import client.Client
 import features.getRequestBodyAsString
 import io.circe.Json
-import lendcore.components.ergo.{Client, Explorer}
-import lendcore.components.errors.ExceptionThrowable
+import errors.ExceptionThrowable
+import explorer.Explorer
 import play.api.Logger
 import play.api.libs.circe.Circe
 import play.api.mvc._
@@ -49,7 +50,7 @@ class ExplorerController @Inject()(client: Client, val controllerComponents: Con
     implicit request => {
       try {
         val txId: String = getRequestBodyAsString(request, "txId")
-        val confirmationNumber = getConfirmationNumber(txId)
+        val confirmationNumber: Long = getConfirmationNumber(txId)
         val result = Json.fromFields(List(
           ("confirmationNumber", Json.fromLong(confirmationNumber))
         ))

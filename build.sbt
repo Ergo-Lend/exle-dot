@@ -1,66 +1,89 @@
-name := """ergo-dot"""
-organization := "dot"
+import dependencies.{DependencyInjection, _}
+
+name := """exle-dot"""
+organization := "io.exle"
 
 version := "1.0"
+scalaVersion := "2.12.15"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
-//lazy val core = Project(id = "lendcore", base = file("lendcore"))
-//lazy val root = Project(id = "lend-service", base = file(".")).enablePlugins(PlayScala).dependsOn(core)
+lazy val NexusReleases  = "Sonatype Releases" at "https://s01.oss.sonatype.org/content/repositories/releases"
+lazy val NexusSnapshots = "Sonatype Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
-scalaVersion := "2.12.10"
-
-libraryDependencies += guice
-libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
-
-resolvers ++= Seq("Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/",
-  "SonaType" at "https://oss.sonatype.org/content/groups/public",
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
-
-val DoobieVersion = "1.0.0-RC1"
-val NewTypeVersion = "0.4.4"
-
-val ergoDevVer = "develop-d90135c5-SNAPSHOT"
-val ergoLatestVer = "develop-d90135c5-SNAPSHOT"
-val ergoDependencies = Seq(
-  "org.scorexfoundation" %% "scrypto" % "2.1.10",
-  "org.ergoplatform" %% "ergo-playground-env" % "0.0.0-86-400c8c4b-SNAPSHOT",
-  "org.ergoplatform" %% "ergo-appkit" % ergoLatestVer,
+lazy val commonSettings = List(
+  scalacOptions ++= commonScalacOptions,
+  scalaVersion := "2.12.15",
+  organization := "io.exle",
+  version := "0.1",
+  resolvers ++= Seq(
+    Resolver.sonatypeRepo("public"),
+    Resolver.sonatypeRepo("snapshots"),
+    NexusReleases,
+    NexusSnapshots
+  ),
+  libraryDependencies ++= dependencies.Testing
 )
 
-val circeDependencies = Seq(
-  "com.dripower" %% "play-circe" % "2712.0")
+lazy val allConfigDependency = "compile->compile;test->test"
 
-val dbDependencies = Seq(
-  jdbc,
-  "org.postgresql" % "postgresql" % "42.2.24",
-  "com.h2database" % "h2" % "1.4.200",
+lazy val root = (project in file("."))
+  .enablePlugins(PlayScala)
+  .withId("lendbackend")
+  .settings(commonSettings)
+  .settings(moduleName := "lendbackend", name:= "LendBackend")
+  .dependsOn(core, chain)
+
+lazy val core = utils
+  .mkModule("exle-core", "ExleCore")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+      Circe ++
+      PostgresDB ++
+      PlayApi ++
+      HttpDep ++
+      Testing ++
+      DependencyInjection
+  )
+  .dependsOn(Seq(chain, common).map(_ % allConfigDependency): _*)
+
+lazy val chain = utils
+  .mkModule("exle-chain", "ExleChain")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing ++
+        DependencyInjection
+  )
+  .dependsOn(common)
+
+lazy val common = utils
+  .mkModule("exle-common", "ExleCommon")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing ++
+        HttpDep ++
+        DependencyInjection
+  )
+
+lazy val commonScalacOptions = List(
+  "-deprecation",
+  "-encoding",
+  "UTF-8",
+  "-language:higherKinds",
+  "-language:postfixOps",
+  "-language:implicitConversions",
+  "-feature",
+  "-unchecked",
+  "-Xfuture",
+  "-Yno-adapted-args",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard",
+  "-Ypartial-unification"
 )
-
-val doobieDependencies = Seq(
-  "org.tpolecat" %% "doobie-core"     % DoobieVersion,
-  "org.tpolecat" %% "doobie-postgres" % DoobieVersion,
-  "org.tpolecat" %% "doobie-hikari"   % DoobieVersion,
-  "io.estatico"  %% "newtype"         % NewTypeVersion
-)
-
-val cats = Seq(
-  "org.typelevel" %% "cats-core" % "2.3.0"
-)
-
-libraryDependencies ++= Seq(
-  "org.playframework.anorm" %% "anorm" % "2.6.10",
-  "com.typesafe.play" %% "play-slick" % "4.0.0",
-  "com.typesafe.slick" %% "slick" % "3.3.0",
-  "com.typesafe.slick" %% "slick-hikaricp" % "3.3.0",
-  "org.scalaj" %% "scalaj-http" % "2.4.2",
-)
-
-libraryDependencies ++=
-//  doobieDependencies ++
-//      cats ++
-      dbDependencies ++
-      ergoDependencies ++
-      circeDependencies
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

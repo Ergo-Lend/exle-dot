@@ -1,12 +1,12 @@
 package e2e.features.singleLenderErg
 
 import config.Configs
-import lendcore.contracts.SingleLender.Ergs.proxyContracts.proxyContracts.createSingleLenderLendBoxProxyScript
-import lendcore.core.SingleLender.Ergs.LendServiceTokens
+import contracts.SingleLender.Ergs.proxyContracts.proxyContracts.createSingleLenderLendBoxProxyScript
 import org.ergoplatform.ErgoAddressEncoder
 import org.ergoplatform.appkit.{ConstantsBuilder, ErgoClient, ErgoToken, RestApiErgoClient}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import tokens.LendServiceTokens
 
 class SingleLenderErgContractSpec extends AnyWordSpec with Matchers {
   val ergoClient: ErgoClient = RestApiErgoClient.create(

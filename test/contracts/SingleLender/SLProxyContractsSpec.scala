@@ -2,15 +2,15 @@ package contracts.SingleLender
 
 import config.Configs
 import contracts.{client, dummyAddress, dummyProver, dummyTxId}
-import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import lendcore.core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
-import lendcore.core.SingleLender.Ergs.LendServiceTokens
-import lendcore.contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
+import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
+import contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
 import org.ergoplatform.appkit.{Address, ErgoContract, OutBox, Parameters, SignedTransaction, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import sigmastate.lang.exceptions.InterpreterException
 import special.collection.Coll
+import tokens.LendServiceTokens
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
@@ -523,7 +523,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
               .getOutputServiceBox(ctx, txB)
             val repaymentBox = new SingleLenderRepaymentBox(
               wrappedLendBox,
-              ctx.getHeight + 10
+              (ctx.getHeight + 10).toLong
             ).getOutputBox(ctx, txB)
             val borrowerFunds = new FundsToAddressBox(
               wrappedLendBox.fundingInfoRegister.fundingGoal,
@@ -567,7 +567,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
               .getOutputServiceBox(ctx, txB)
             val repaymentBox = new SingleLenderRepaymentBox(
               wrappedLendBox,
-              ctx.getHeight + 10
+              (ctx.getHeight + 10).toLong
             ).getOutputBox(ctx, txB)
             val borrowerFunds = new FundsToAddressBox(
               wrappedLendBox.fundingInfoRegister.fundingGoal,
@@ -597,7 +597,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
 
             // box funded
             val wrappedServiceBox = buildGenesisServiceBox()
-            val wrappedLendBox = createWrappedLendBox(deadlineHeightLength = ctx.getHeight - 100).fundBox(dummyAddress.toString)
+            val wrappedLendBox = createWrappedLendBox(deadlineHeightLength = (ctx.getHeight - 100).toLong).fundBox(dummyAddress.toString)
 
             val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
               .convertToInputWith(dummyTxId, 0)
@@ -609,7 +609,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
               .getOutputServiceBox(ctx, txB)
             val repaymentBox = new SingleLenderRepaymentBox(
               wrappedLendBox,
-              ctx.getHeight + 10
+              (ctx.getHeight + 10).toLong
             ).getOutputBox(ctx, txB)
             val borrowerFunds = new FundsToAddressBox(
               wrappedLendBox.fundingInfoRegister.fundingGoal,
@@ -1043,7 +1043,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             val txB = ctx.newTxBuilder()
 
             val wrappedServiceBox = buildGenesisServiceBox()
-            val wrappedRepaymentBox = createRawWrappedRepaymentBox(interestRate = 0, fundedRepaymentHeight = (ctx.getHeight - 1000)).fundBox(0.5e9.toLong)
+            val wrappedRepaymentBox = createRawWrappedRepaymentBox(interestRate = 0, fundedRepaymentHeight = (ctx.getHeight - 1000).toLong).fundBox(0.5e9.toLong)
 
             val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
               .convertToInputWith(dummyTxId, 0)
@@ -1082,7 +1082,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             val txB = ctx.newTxBuilder()
 
             val wrappedServiceBox = buildGenesisServiceBox()
-            val wrappedRepaymentBox = createRawWrappedRepaymentBox(interestRate = 0, fundedRepaymentHeight = (ctx.getHeight - 1000))
+            val wrappedRepaymentBox = createRawWrappedRepaymentBox(interestRate = 0, fundedRepaymentHeight = (ctx.getHeight - 1000).toLong)
 
             val inputServiceBox = wrappedServiceBox.getOutputServiceBox(ctx, txB)
               .convertToInputWith(dummyTxId, 0)

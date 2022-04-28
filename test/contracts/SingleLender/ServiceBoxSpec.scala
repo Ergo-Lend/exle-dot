@@ -1,10 +1,10 @@
 package contracts.SingleLender
 
 import contracts.{client, dummyTxId}
-import lendcore.core.SingleLender.Ergs.boxes.LendServiceBox
-import lendcore.core.SingleLender.Ergs.LendServiceTokens
+import core.SingleLender.Ergs.boxes.LendServiceBox
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import tokens.LendServiceTokens
 
 class ServiceBoxSpec extends AnyWordSpec with Matchers {
   val serviceBox: LendServiceBox = buildGenesisServiceBox()

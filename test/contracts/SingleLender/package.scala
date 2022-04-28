@@ -1,11 +1,11 @@
 package contracts
 
-import lendcore.components.boxes.registers.RegisterTypes.StringRegister
+import boxes.registers.RegisterTypes.StringRegister
 import config.Configs
-import lendcore.core.SingleLender.Ergs.LendServiceTokens
-import lendcore.core.SingleLender.Ergs.boxes.{LendServiceBox, SingleLenderLendBox, SingleLenderLendBoxContract, SingleLenderRepaymentBox}
-import lendcore.core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, CreationInfoRegister, FundingInfoRegister, LendingProjectDetailsRegister, ProfitSharingRegister, RepaymentDetailsRegister, ServiceBoxInfoRegister, SingleAddressRegister, SingleLenderRegister}
+import core.SingleLender.Ergs.boxes.{LendServiceBox, SingleLenderLendBox, SingleLenderLendBoxContract, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, CreationInfoRegister, FundingInfoRegister, LendingProjectDetailsRegister, ProfitSharingRegister, RepaymentDetailsRegister, ServiceBoxInfoRegister, SingleAddressRegister, SingleLenderRegister}
 import org.ergoplatform.appkit.{Address, ErgoToken, OutBox, Parameters}
+import tokens.LendServiceTokens
 
 /**
  * We need
@@ -15,9 +15,9 @@ import org.ergoplatform.appkit.{Address, ErgoToken, OutBox, Parameters}
  */
 package object SingleLender {
   val goal: Long = 1e9.toLong
-  val interestRate = 100
-  val repaymentHeightLength = 100
-  val deadlineHeightLength = 100
+  val interestRate: Long = 100L
+  val repaymentHeightLength: Long = 100L
+  val deadlineHeightLength: Long = 100L
   val loanName = "Test Loan"
   val loanDescription = "Test Loan Description"
 
@@ -130,7 +130,7 @@ package object SingleLender {
     client.getClient.execute {
       ctx => {
         val wrappedLendBox = createWrappedLendBox(goal = fundingGoal, interestRate = interestRate).fundBox(lendersAddress.toString)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(wrappedLendBox, ctx.getHeight + 100)
+        val wrappedRepaymentBox = new SingleLenderRepaymentBox(wrappedLendBox, (ctx.getHeight + 100).toLong)
 
         wrappedRepaymentBox
       }
