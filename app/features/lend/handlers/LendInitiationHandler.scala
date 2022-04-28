@@ -1,16 +1,16 @@
 package features.lend.handlers
 
+import client.Client
+import common.{StackTrace, Time}
+import ergo.TxState
+import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import config.Configs
-import lendcore.components.errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
-import features.lend.LendBoxExplorer
-import lendcore.core.SingleLender.Ergs.boxes.SingleLenderLendBox
-import lendcore.core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
-import lendcore.tools.runners.ExplorerRunner.walletAddress
-import lendcore.tools.runners.LendCreationRunner.paymentAddressString
-import lendcore.components.common.{StackTrace, Time}
-import lendcore.components.ergo.{Client, Explorer, TxState}
-import lendcore.io.persistence.doobs.dbHandlers.{CreateLendReqDAO, DAO}
-import lendcore.io.persistence.doobs.models.{CreateLendReq, ProxyReq}
+import core.SingleLender.Ergs.LendBoxExplorer
+import core.SingleLender.Ergs.boxes.SingleLenderLendBox
+import core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
+import explorer.Explorer
+import io.persistence.doobs.dbHandlers.{CreateLendReqDAO, DAO}
+import io.persistence.doobs.models.{CreateLendReq, ProxyReq}
 import org.ergoplatform.appkit.{Address, CoveringBoxes, InputBox, Parameters}
 import play.api.Logger
 
@@ -117,13 +117,13 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
   def refundCreateLendProxy(req: CreateLendReq): String = {
     client.getClient.execute(ctx => {
       val paymentBoxList = getPaymentBoxes(req).getBoxes.asScala
-      val refundTx = new RefundProxyContractTx(paymentBoxList, walletAddress)
+      val refundTx = new RefundProxyContractTx(paymentBoxList, req.paymentAddress)
 
       val signedTx = refundTx.runTx(ctx)
 
       val refundTxId = ctx.sendTransaction(signedTx)
 
-      if (refundTxId == null) throw failedTxException(s"Refund failed for ${paymentAddressString}")
+      if (refundTxId == null) throw failedTxException(s"Refund failed for ${req.paymentAddress}")
       return refundTxId
     })
   }

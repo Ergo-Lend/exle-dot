@@ -1,12 +1,14 @@
 package features.lend
 
+import client.Client
+import common.ErgoValidator
+import ergo.{BoxState, ErgUtils}
+import errors.ExceptionThrowable
 import config.Configs
-import lendcore.core.SingleLender.Ergs.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.LendBoxExplorer
+import core.SingleLender.Ergs.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
 import features.{getRequestBodyAsDouble, getRequestBodyAsLong, getRequestBodyAsString}
 import io.circe.Json
-import lendcore.components.common.ErgoValidator
-import lendcore.components.ergo.{BoxState, Client, ErgUtils}
-import lendcore.components.errors.ExceptionThrowable
 import play.api.Logger
 import play.api.mvc._
 import play.api.libs.circe.Circe
@@ -207,7 +209,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           repaymentHeightLength = repaymentHeight
         )
         val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
@@ -242,7 +244,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           fundAmount = amount
         )
 
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
@@ -279,7 +281,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           fundAmount = amount
         )
 
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
@@ -314,7 +316,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           fundAmount = fundAmount
         )
 
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
@@ -351,7 +353,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           writeToDb = false
         )
 
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
@@ -389,7 +391,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           writeToDb = false
         )
 
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
@@ -425,7 +427,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           writeToDb = false
         )
 
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),
@@ -477,7 +479,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
 
         val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
         val paymentAmountInErgs = ErgUtils.nanoErgsToErgs(paymentAmountInNanoErgs)
-        val delay = Configs.creationDelay
+        val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
           ("deadline", Json.fromLong(delay)),

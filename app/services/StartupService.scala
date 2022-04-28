@@ -1,10 +1,10 @@
 package services
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import client.Client
 import config.Configs
 import features.lend.{JobsUtil, LendJobs}
 import features.lend.handlers.{FinalizeSingleLenderHandler, LendFundingHandler, LendInitiationHandler, RepaymentFundingHandler}
-import lendcore.components.ergo.Client
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext

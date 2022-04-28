@@ -1,11 +1,5 @@
 logs
-target
 ergo_config.json
-CreateLendReqInfo.txt
-FundLendReq.txt
-LendInitiation.txt
-LendInitiationRefund.txt
-RepaymentProxyRefund.txt
 /.bsp
 /.idea
 /.idea_modules
@@ -13,8 +7,19 @@ RepaymentProxyRefund.txt
 /.project
 /.settings
 /RUNNING_PID
-.env
 logfile
+*.log
+
+# targets
+target
+/modules/*/target/
+/target/
+/project/target/
+/project/project/target
+
+# env
+.env
+config.env
 
 # DB Stuff
 data
