@@ -5,11 +5,11 @@ import config.Configs
 import core.SingleLender.Ergs.boxes.SingleLenderServiceBoxContract.getServiceBoxContract
 import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import ergo.ContractUtils
-import contracts.SingleLender.Ergs.SingleLender.singleLenderLendServiceBoxScript
+import contracts.ExleContracts
+import core.tokens.LendServiceTokens
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
 import special.collection.Coll
-import tokens.LendServiceTokens
 
 /**
  * ServiceBox
@@ -225,15 +225,14 @@ object SingleLenderServiceBoxContract {
   def getServiceBoxContract(ctx: BlockchainContext): ErgoContract = {
     val lendBoxHash = ContractUtils.getContractScriptHash(SingleLenderLendBoxContract.getContract(ctx))
     val repaymentBoxHash = ContractUtils.getContractScriptHash(SingleLenderRepaymentBoxContract.getContract(ctx))
+    val sleServiceBoxGuardScript = ExleContracts.SLEServiceBoxGuardScript.contractScript
+
     ctx.compileContract(ConstantsBuilder.create()
-      .item("ownerPk", serviceOwner.getPublicKey)
-      .item("serviceNFT", LendServiceTokens.nft.getBytes)
-      .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
-      .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
-      .item("lendBoxHash", lendBoxHash)
-      .item("repaymentBoxHash", repaymentBoxHash)
-      .item("minFee", Parameters.MinFee)
-      .build(), singleLenderLendServiceBoxScript)
+      .item("_OwnerPk", serviceOwner.getPublicKey)
+      .item("_LendBoxHash", lendBoxHash)
+      .item("_RepaymentBoxHash", repaymentBoxHash)
+      .item("_MinFee", Parameters.MinFee)
+      .build(), sleServiceBoxGuardScript)
   }
 }
 

@@ -1,4 +1,4 @@
-package client
+package node
 
 abstract class ChainClient {
 

@@ -1,10 +1,10 @@
-package contracts.SingleLender
+package contracts.SingleLender.Ergs
 
 import config.Configs
-import contracts.{client, dummyAddress, dummyProver, dummyTxId}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox}
-import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
+import contracts._
+import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox}
 import org.ergoplatform.appkit.{ErgoContract, Parameters, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -55,7 +55,7 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
             val outputServiceBox = outputBoxes.get(0).convertToInputWith(dummyTxId, 0)
             val outputLenderBox = outputBoxes.get(1).convertToInputWith(dummyTxId, 0)
 
-            assert(totalInputVal - totalOutputVal == Parameters.MinFee, "Input, output value inbalance")
+            assert(totalInputVal - totalOutputVal == Parameters.MinFee, "Input, output value in-balance")
             assert(inputServiceBox.getTokens.get(2).getValue == outputServiceBox.getTokens.get(2).getValue - 1)
             assert(outputLenderBox.getValue >= wrappedRepaymentBox.fundingInfoRegister.fundingGoal)
             assert(Configs.addressEncoder.fromProposition(outputLenderBox.getErgoTree).get == dummyAddress.getErgoAddress)
@@ -138,14 +138,14 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
 
           // Output Boxes
           val outputServiceBox = serviceBox.createLend().getOutputServiceBox(ctx, txB)
-          val fundingInfoRegister = new FundingInfoRegister(
+          val fundingInfoRegister = FundingInfoRegister(
             fundingGoal = fundingGoal,
             deadlineHeight = ctx.getHeight + deadlineHeight,
             interestRatePercent = interestRate,
             repaymentHeightLength = repaymentHeight,
             creationHeight = client.getHeight
           )
-          val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(
+          val lendingProjectDetailsRegister = LendingProjectDetailsRegister(
             projectName = loanName,
             description = loanDescription,
           )
@@ -158,7 +158,7 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
             singleLenderRegister = SingleLenderRegister.emptyRegister
           ).getOutputBox(ctx, txB)
 
-          val outputOwnerFeeBox = new FundsToAddressBox(
+          val outputOwnerFeeBox = FundsToAddressBox(
             value = Configs.serviceFee,
             address = Configs.serviceOwner).getOutputBox(ctx, txB)
 

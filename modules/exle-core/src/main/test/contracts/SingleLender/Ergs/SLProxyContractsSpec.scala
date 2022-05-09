@@ -1,16 +1,16 @@
-package contracts.SingleLender
+package contracts.SingleLender.Ergs
 
 import config.Configs
-import contracts.{client, dummyAddress, dummyProver, dummyTxId}
+import contracts._
+import contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
-import contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
-import org.ergoplatform.appkit.{Address, ErgoContract, OutBox, Parameters, SignedTransaction, UnsignedTransaction}
+import core.tokens.LendServiceTokens
+import org.ergoplatform.appkit._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import sigmastate.lang.exceptions.InterpreterException
 import special.collection.Coll
-import tokens.LendServiceTokens
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 

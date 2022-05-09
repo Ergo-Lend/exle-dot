@@ -1,4 +1,4 @@
-package client
+package node
 
 import config.Configs
 import errors.connectionException

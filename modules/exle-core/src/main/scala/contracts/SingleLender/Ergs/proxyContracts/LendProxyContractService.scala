@@ -1,11 +1,12 @@
 package contracts.SingleLender.Ergs.proxyContracts
 
-import client.Client
+import node.Client
 import config.Configs
 import contracts.SingleLender.Ergs.proxyContracts.proxyContracts.{createSingleLenderLendBoxProxyScript, fundSingleLenderLendBoxProxyScript, repaySingleLenderLoanProxyScript}
+import contracts.{ExleContracts}
+import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
 import play.api.libs.json.JsResult.Exception
-import tokens.LendServiceTokens
 
 import javax.inject.Inject
 
@@ -29,21 +30,23 @@ class LendProxyContractService @Inject()(client: Client) {
                                  repaymentHeightLength: Long): ErgoContract = {
     try {
       client.getClient.execute((ctx: BlockchainContext) => {
-        val serviceNftToken = ErgoId.create(LendServiceTokens.nftString).getBytes
-        val lendToken = ErgoId.create(LendServiceTokens.lendTokenString).getBytes
+        val serviceNftToken = ErgoId.create(LendServiceTokens.nft.toString).getBytes
+        val lendToken = ErgoId.create(LendServiceTokens.lendToken.toString).getBytes
         val borrowerPk = Address.create(pk).getErgoAddress.script.bytes
 
+        val createLendBoxScript = ExleContracts.SLECreateLendBoxProxyContract.contractScript
+
         val createLendingBoxProxy = ctx.compileContract(ConstantsBuilder.create()
-          .item("borrowerPk", borrowerPk)
-          .item("minFee", Parameters.MinFee)
-          .item("refundHeightThreshold", ctx.getHeight + ((Configs.creationDelay / 60 / 2) + 1).toLong)
-          .item("goal", goal)
-          .item("deadlineHeight", deadlineHeight)
-          .item("interestRate", interestRate)
-          .item("repaymentHeightLength", repaymentHeightLength)
-          .item("serviceNFT", serviceNftToken)
-          .item("lendToken", lendToken)
-          .build(), createSingleLenderLendBoxProxyScript)
+          .item("_BorrowerPk", borrowerPk)
+          .item("_MinFee", Parameters.MinFee)
+          .item("_RefundHeightThreshold", ctx.getHeight + ((Configs.creationDelay / 60 / 2) + 1).toLong)
+          .item("_Goal", goal)
+          .item("_DeadlineHeight", deadlineHeight)
+          .item("_InterestRate", interestRate)
+          .item("_RepaymentHeightLength", repaymentHeightLength)
+          .item("_SLEServiceNFTId", serviceNftToken)
+          .item("_SLELendTokenId", lendToken)
+          .build(), createLendBoxScript)
 
         createLendingBoxProxy
       })
@@ -62,13 +65,14 @@ class LendProxyContractService @Inject()(client: Client) {
                                   lenderAddress: String): ErgoContract = {
     try {
       client.getClient.execute((ctx: BlockchainContext) => {
+        val fundLendProxyContractScript = ExleContracts.SLEFundLendBoxProxyContract.contractScript
         val fundLendBoxProxy = ctx.compileContract(
           ConstantsBuilder.create()
-            .item("boxIdToFund", ErgoId.create(lendId).getBytes)
-            .item("lenderPk", Address.create(lenderAddress).getErgoAddress.script.bytes)
-            .item("minFee", Parameters.MinFee)
-            .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
-            .build(), fundSingleLenderLendBoxProxyScript)
+            .item("_BoxIdToFund", ErgoId.create(lendId).getBytes)
+            .item("_LenderPk", Address.create(lenderAddress).getErgoAddress.script.bytes)
+            .item("_MinFee", Parameters.MinFee)
+            .item("_SLELendTokenId", LendServiceTokens.lendToken.getBytes)
+            .build(), fundLendProxyContractScript)
 
         fundLendBoxProxy
       })
@@ -86,13 +90,15 @@ class LendProxyContractService @Inject()(client: Client) {
   def getFundRepaymentBoxProxyContract(repaymentBoxId: String,
                                       funderPk: String): ErgoContract = {
     client.getClient.execute((ctx: BlockchainContext) => {
+      val repaymentProxyContractScript = ExleContracts.SLEFundRepaymentBoxProxyContract.contractScript
+
       val repaymentBoxProxy = ctx.compileContract(
         ConstantsBuilder.create()
-          .item("boxIdToFund", ErgoId.create(repaymentBoxId).getBytes)
-          .item("funderPk", Address.create(funderPk).getErgoAddress.script.bytes)
-          .item("minFee", Parameters.MinFee)
-          .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
-          .build(), repaySingleLenderLoanProxyScript)
+          .item("_BoxIdToFund", ErgoId.create(repaymentBoxId).getBytes)
+          .item("_FunderPk", Address.create(funderPk).getErgoAddress.script.bytes)
+          .item("_MinFee", Parameters.MinFee)
+          .item("_SLERepaymentTokenId", LendServiceTokens.repaymentToken.getBytes)
+          .build(), repaymentProxyContractScript)
 
       repaymentBoxProxy
     })

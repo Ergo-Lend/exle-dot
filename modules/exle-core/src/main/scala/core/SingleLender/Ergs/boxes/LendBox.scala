@@ -1,11 +1,11 @@
 package core.SingleLender.Ergs.boxes
 
 import config.Configs
-import contracts.SingleLender.Ergs.SingleLender.singleLenderLendBoxScript
+import contracts.{ExleContracts}
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
 import special.collection.Coll
-import tokens.LendServiceTokens
 
 /**
  * Depending on what we're doing with it, we may need to add lender tree
@@ -140,7 +140,7 @@ case class SingleLenderLendBox(value: Long,
    * @return
    */
   def getFundingTotalErgs: Long = {
-    val repaymentBoxCreation = Configs.minBoxErg
+    val repaymentBoxCreation = Parameters.MinFee
     val proxyContractTxFee = Parameters.MinFee
     val lendBoxFundedTxFee = Parameters.MinFee
     val totalFundValue = fundingInfoRegister.fundingGoal +
@@ -176,7 +176,7 @@ object SingleLenderLendBox {
   }
 
   def getLendBoxInitiationPayment: Long = {
-    val lendBoxCreation = Configs.minBoxErg
+    val lendBoxCreation = Parameters.MinFee
     val lendInitiationTxFee = Parameters.MinFee
 
     val totalPayment = lendBoxCreation + lendInitiationTxFee + Configs.serviceFee
@@ -187,13 +187,15 @@ object SingleLenderLendBox {
 
 object SingleLenderLendBoxContract extends Contract {
   override def getContract(ctx: BlockchainContext): ErgoContract = {
+    val sleLendBoxGuardScript: String = ExleContracts.SLELendBoxGuardScript.contractScript
+
     ctx.compileContract(ConstantsBuilder.create()
-      .item("minFee", Configs.fee)
-      .item("minBoxAmount", Configs.minBoxErg)
-      .item("serviceNFT", LendServiceTokens.nft.getBytes)
-      .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
-      .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
-      .build(), singleLenderLendBoxScript)
+      .item("_MinFee", Parameters.MinFee)
+      .item("_MinBoxAmount", Parameters.MinFee)
+      .item("_SLEServiceNFTId", LendServiceTokens.nft.getBytes)
+      .item("_SLELendTokenId", LendServiceTokens.lendToken.getBytes)
+      .item("_SLERepaymentTokenId", LendServiceTokens.repaymentToken.getBytes)
+      .build(), sleLendBoxGuardScript)
   }
 }
 

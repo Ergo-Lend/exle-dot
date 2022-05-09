@@ -13,9 +13,6 @@ object Configs extends ConfigHelper {
   lazy val explorerUrl: String = readKey("explorer.url").replaceAll("/$", "")
   lazy val explorerFront: String = readKey("explorer.front").replaceAll("/$", "")
 
-  lazy val fee: Long = Parameters.MinFee
-  lazy val minBoxErg: Long = readKey("box.min").toLong
-  lazy val infBoxVal: Long = readKey("box.infBoxVal").toLong
   lazy val serviceOwner: Address = Address.create(readKey("service.owner"))
   lazy val serviceFeeAddress: Address = Address.create(readKey("service.feeAddress"))
   lazy val serviceFee: Long = readKey("service.fee").toLong
@@ -32,8 +29,14 @@ object Configs extends ConfigHelper {
   lazy val recaptchaPubKey: String = readKey("recaptcha.pubKey", default = "not-set")
 
   object lendServiceTokens {
-    lazy val nft: String = readKey("lend.token.nft")
-    lazy val lendToken: String = readKey("lend.token.lendToken")
-    lazy val repaymentToken: String = readKey("lend.token.repaymentToken")
+    lazy val nft: String = readKey("lend.token.service")
+    lazy val lendToken: String = readKey("lend.token.lend")
+    lazy val repaymentToken: String = readKey("lend.token.repayment")
+  }
+
+  object sltTokens {
+    lazy val service: String = readKey("slt.token.service")
+    lazy val lend: String = readKey("slt.token.lend")
+    lazy val repayment: String = readKey("slt.token.repayment")
   }
 }

@@ -1,8 +1,8 @@
 package features.lend.handlers
 
-import client.Client
+import node.Client
 import common.{StackTrace, Time}
-import ergo.TxState
+import ergo.{ErgCommons, TxState}
 import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
@@ -49,7 +49,7 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
 
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
-        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
+        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, ErgCommons.InfiniteBoxValue)
         val covered = unSpentPaymentBoxes.getCoveredAmount >= SingleLenderLendBox.getLendBoxInitiationPayment
         val isScriptReducedToFalse = req.state == TxState.ScriptFalsed.id
         if (covered && !isScriptReducedToFalse) {

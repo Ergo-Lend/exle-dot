@@ -27,4 +27,7 @@ object versions {
   // Test
   val ScalaTestVersion          = "3.2.2"
   val ScalaTestPlusPlayVersion  = "5.1.0"
+
+  // Commons
+  val EnumeratumVersion         = "1.7.0"
 }

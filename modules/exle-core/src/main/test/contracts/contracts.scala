@@ -1,4 +1,4 @@
-import client.Client
+import node.Client
 import org.ergoplatform.appkit.impl.ErgoTreeContract
 import org.ergoplatform.appkit.{Address, ErgoProver, InputBox, NetworkType}
 
@@ -10,7 +10,7 @@ package object contracts {
   val networkType = NetworkType.TESTNET
 
   def dummyProver: ErgoProver = {
-    client.getClient.execute{
+    client.getClient.execute {
       ctx =>
         val prover = ctx.newProverBuilder()
           .withDLogSecret(BigInt.apply(0).bigInteger)

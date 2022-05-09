@@ -4,10 +4,10 @@ import boxes.registers.RegisterTypes.StringRegister
 import config.Configs
 import core.SingleLender.Ergs.boxes.SingleLenderServiceBoxContract
 import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
-import ergo.ContractUtils
+import core.tokens.LendServiceTokens
+import ergo.{ContractUtils, ErgCommons}
 import org.ergoplatform.appkit.{Address, BlockchainContext, BoxOperations, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
-import tokens.LendServiceTokens
 
 import java.util.stream.Collectors
 import scala.collection.JavaConverters.seqAsJavaListConverter
@@ -100,7 +100,7 @@ object SingleLenderServiceBoxHandler {
     val tokenBox: OutBox = tokenCreate match {
       case "service" =>
         txB.outBoxBuilder()
-          .value(Configs.minBoxErg)
+          .value(ErgCommons.MinBoxFee)
           .mintToken(token, nftName, nftDesc, 0)
           .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
@@ -108,7 +108,7 @@ object SingleLenderServiceBoxHandler {
 
       case "lend" =>
         txB.outBoxBuilder()
-          .value(Configs.minBoxErg)
+          .value(ErgCommons.MinBoxFee)
           .mintToken(token, lendTokenName, lendTokenDesc, 0)
           .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
@@ -116,7 +116,7 @@ object SingleLenderServiceBoxHandler {
 
       case "repayment" =>
         txB.outBoxBuilder()
-          .value(Configs.minBoxErg)
+          .value(ErgCommons.MinBoxFee)
           .mintToken(token, repaymentTokenName, repaymentTokenDesc, 0)
           .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
@@ -137,9 +137,9 @@ object SingleLenderServiceBoxHandler {
   }
 
   def mergeCreateServiceBox(ctx: BlockchainContext, config: ErgoToolConfig, nodeConfig: ErgoNodeConfig): SignedTransaction = {
-    val serviceNftBoxId: String = LendServiceTokens.nftString
-    val lendTokenId: String = LendServiceTokens.lendTokenString
-    val repaymentTokenId: String = LendServiceTokens.repaymentTokenString
+    val serviceNftBoxId: String = LendServiceTokens.nft.toString
+    val lendTokenId: String = LendServiceTokens.lendToken.toString
+    val repaymentTokenId: String = LendServiceTokens.repaymentToken.toString
 
     val addressIndex: Int = config.getParameters.get("addressIndex").toInt
     val ownerAddress: Address = Address.createEip3Address(
@@ -187,7 +187,7 @@ object SingleLenderServiceBoxHandler {
 //      spendingBoxesWithLendTokensBoxes.get(0),
 //      spendingBoxesWithRepaymentTokensBoxes.get(0)).asJava
 
-    val amountToSend: Long = Configs.minBoxErg
+    val amountToSend: Long = ErgCommons.MinBoxFee
 
     val txB = ctx.newTxBuilder()
 

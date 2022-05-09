@@ -25,7 +25,7 @@ object proxyContracts {
    *
    * Input Variables:
    * - refundHeightThreshold
-   * - serviceNFT,
+   * - serviceNFT
    * - lendToken
    * - goal
    * - deadlineHeight
@@ -40,8 +40,8 @@ object proxyContracts {
        | if (OUTPUTS.size != 2) {
        |    val isLenderPkDefined = OUTPUTS(1).R7[GroupElement].isDefined
        |    sigmaProp(
-       |      OUTPUTS(0).tokens(0)._1 == serviceNFT &&
-       |      OUTPUTS(1).tokens(0)._1 == lendToken &&
+       |      OUTPUTS(0).core.SingleLender.Ergs.tokens(0)._1 == serviceNFT &&
+       |      OUTPUTS(1).core.SingleLender.Ergs.tokens(0)._1 == lendToken &&
        |      OUTPUTS(1).R4[Coll[Long]].get(0) == goal &&
        |      OUTPUTS(1).R4[Coll[Long]].get(1) == deadlineHeight &&
        |      OUTPUTS(1).R4[Coll[Long]].get(2) == interestRate &&
@@ -121,7 +121,7 @@ object proxyContracts {
        |          outputLendBox.value == newFundedValue,
        |          outputLendBox.value >= fundingGoal,
        |          outputLendBoxLenderPk.get == lenderPk,
-       |          inputLendBox.tokens(0)._1 == serviceLendToken,
+       |          inputLendBox.core.SingleLender.Ergs.tokens(0)._1 == serviceLendToken,
        |        ))
        |      }
        |
@@ -211,7 +211,7 @@ object proxyContracts {
        |      val repaymentCheck = {
        |        allOf(Coll(
        |          fundable,
-       |          inputRepaymentBox.tokens(0)._1 == serviceRepaymentToken
+       |          inputRepaymentBox.core.SingleLender.Ergs.tokens(0)._1 == serviceRepaymentToken
        |        ))
        |      }
        |

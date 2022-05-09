@@ -1,8 +1,8 @@
 package features.lend.handlers
 
-import client.Client
+import node.Client
 import common.{StackTrace, Time}
-import ergo.TxState
+import ergo.{ErgCommons, TxState}
 import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
@@ -48,7 +48,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
 
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
-        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
+        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, ErgCommons.InfiniteBoxValue)
         val covered = unSpentPaymentBoxes.getCoveredAmount >= req.ergAmount
         val deadlinePassed = client.getHeight > wrappedLendBox.fundingInfoRegister.deadlineHeight
         if (covered && !deadlinePassed) {
@@ -59,6 +59,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
           val refundTxId = refundProxyContract(req)
           if (refundTxId.nonEmpty) {
             fundLendReqDAO.deleteById(req.id)
+            return
           }
         }
       } catch {
@@ -71,6 +72,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     } else {
       logger.info(s"will remove fund Lend request: ${req.id} with state: ${req.state}")
       fundLendReqDAO.deleteById(req.id)
+      return
     }
   }
 

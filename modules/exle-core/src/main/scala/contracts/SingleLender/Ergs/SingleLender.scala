@@ -107,15 +107,15 @@ object SingleLender {
        |  val selfValue = SELF.value
        |
        |  val lendBoxVerification = allOf(Coll(
-       |    SELF.tokens(0)._1 == serviceLendToken,
-       |    SELF.tokens(0)._2 == 1))
+       |    SELF.core.SingleLender.Ergs.tokens(0)._1 == serviceLendToken,
+       |    SELF.core.SingleLender.Ergs.tokens(0)._2 == 1))
        |
        |  val lendBoxLenderPk = SELF.R7[Coll[Byte]]
        |  val isLenderEmpty = !lendBoxLenderPk.isDefined
        |  val lendBoxSuccessfullyFunded = selfValue == (fundingGoal + (minFee * 2))
        |  if (lendBoxSuccessfullyFunded && !isLenderEmpty) {
        |
-       |    val serviceBoxCheck = INPUTS(0).tokens(0)._1 == serviceNFT
+       |    val serviceBoxCheck = INPUTS(0).core.SingleLender.Ergs.tokens(0)._1 == serviceNFT
        |
        |    // Scenario 3: ** FUNDED **
        |    // Checks:
@@ -125,8 +125,8 @@ object SingleLender {
        |
        |
        |    val repaymentBox = OUTPUTS(1)
-       |    val repaymentBoxToken = repaymentBox.tokens(0)._1
-       |    val repaymentBoxTokenCount = repaymentBox.tokens(0)._2
+       |    val repaymentBoxToken = repaymentBox.core.SingleLender.Ergs.tokens(0)._1
+       |    val repaymentBoxTokenCount = repaymentBox.core.SingleLender.Ergs.tokens(0)._2
        |    val repaymentBoxFundingInfo = repaymentBox.R4[Coll[Long]]
        |    val repaymentBoxProjectDetails = repaymentBox.R5[Coll[Coll[Byte]]]
        |    val repaymentBoxBorrowerPk = repaymentBox.R6[Coll[Byte]]
@@ -183,7 +183,7 @@ object SingleLender {
        |    // there's no refund.
        |    val deadlinePassed = HEIGHT > deadlineHeight
        |    if (deadlinePassed) {
-       |      val serviceBoxCheck = INPUTS(0).tokens(0)._1 == serviceNFT
+       |      val serviceBoxCheck = INPUTS(0).core.SingleLender.Ergs.tokens(0)._1 == serviceNFT
        |
        |      // Scenario 4: ** DEADLINE PASSED: REFUND **
        |      // Inputs: ServiceBox, LendBox
@@ -198,7 +198,7 @@ object SingleLender {
        |
        |      // Scenario 4: ** Mistakenly funded during creation **
        |      //   Refund to Borrower
-       |      val serviceBoxCheck = INPUTS(0).tokens(0)._1 == serviceNFT
+       |      val serviceBoxCheck = INPUTS(0).core.SingleLender.Ergs.tokens(0)._1 == serviceNFT
        |
        |      if (serviceBoxCheck && isLenderEmpty) {
        |        val outputRefundBox = OUTPUTS(1)
@@ -278,9 +278,9 @@ object SingleLender {
    */
   lazy val singleLenderRepaymentBoxScript: String =
     s"""{
-       |  val repaymentBoxVerification = SELF.tokens(0)._1 == serviceRepaymentToken
+       |  val repaymentBoxVerification = SELF.core.SingleLender.Ergs.tokens(0)._1 == serviceRepaymentToken
        |  val serviceBox = INPUTS(0)
-       |  val serviceBoxVerification = INPUTS(0).tokens(0)._1 == serviceBoxNFT
+       |  val serviceBoxVerification = INPUTS(0).core.SingleLender.Ergs.tokens(0)._1 == serviceBoxNFT
        |
        |  // If 1st Output's propositionBytes is the same, then its a repayment box
        |  // INPUTS(0) and OUTPUTS(0) can be true during fund success
@@ -466,7 +466,6 @@ object SingleLender {
    * - repaymentBoxHash
    * - minFee
    */
-  lazy val singleLenderLendServiceBoxScript2: String = "{sigmaProp(true)}"
   lazy val singleLenderLendServiceBoxScript: String =
     s"""{
        |  // Service Checks
@@ -475,18 +474,18 @@ object SingleLender {
        |
        |  val serviceCheck = allOf(Coll(
        |      OUTPUTS(0).propositionBytes == SELF.propositionBytes,
-       |      OUTPUTS(0).tokens(0)._1 == SELF.tokens(0)._1,
-       |      OUTPUTS(0).tokens(1)._1 == SELF.tokens(1)._1,
-       |      OUTPUTS(0).tokens(2)._1 == SELF.tokens(2)._1,
+       |      OUTPUTS(0).core.SingleLender.Ergs.tokens(0)._1 == SELF.core.SingleLender.Ergs.tokens(0)._1,
+       |      OUTPUTS(0).core.SingleLender.Ergs.tokens(1)._1 == SELF.core.SingleLender.Ergs.tokens(1)._1,
+       |      OUTPUTS(0).core.SingleLender.Ergs.tokens(2)._1 == SELF.core.SingleLender.Ergs.tokens(2)._1,
        |      OUTPUTS(0).value == SELF.value
        |    ))
        |
        |  // Mutating a box
        |  // --------------
-       |  // When the tokens in both service box in Input and Output is the
+       |  // When the core.SingleLender.Ergs.tokens in both service box in Input and Output is the
        |  // same, we can mutate it.
-       |  if (OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 &&
-       |    OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2) {
+       |  if (OUTPUTS(0).core.SingleLender.Ergs.tokens(1)._2 == SELF.core.SingleLender.Ergs.tokens(1)._2 &&
+       |    OUTPUTS(0).core.SingleLender.Ergs.tokens(2)._2 == SELF.core.SingleLender.Ergs.tokens(2)._2) {
        |      ownerPk
        |  } else {
        |    val spendingServiceBoxCreationInfo = SELF.R4[Coll[Long]].get
@@ -516,8 +515,8 @@ object SingleLender {
        |
        |    // Lend Initiation
        |    // Service, Proxy -> Service, LendBox
-       |    if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 - 1) &&
-       |      OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2) {
+       |    if ((OUTPUTS(0).core.SingleLender.Ergs.tokens(1)._2 == SELF.core.SingleLender.Ergs.tokens(1)._2 - 1) &&
+       |      OUTPUTS(0).core.SingleLender.Ergs.tokens(2)._2 == SELF.core.SingleLender.Ergs.tokens(2)._2) {
        |      val serviceFee = spendingServiceBoxProfitSharing.get(1)
        |      val serviceFeeBox = OUTPUTS(2)
        |
@@ -551,8 +550,8 @@ object SingleLender {
        |    } else {
        |      // Lend Success
        |      // Service, LendBox -> Service, RepaymentBox, BorrowerLoanedFunds
-       |      if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 + 1) &&
-       |      OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2 - 1) {
+       |      if ((OUTPUTS(0).core.SingleLender.Ergs.tokens(1)._2 == SELF.core.SingleLender.Ergs.tokens(1)._2 + 1) &&
+       |      OUTPUTS(0).core.SingleLender.Ergs.tokens(2)._2 == SELF.core.SingleLender.Ergs.tokens(2)._2 - 1) {
        |
        |        sigmaProp(allOf(Coll(
        |          blake2b256(OUTPUTS(1).propositionBytes) == repaymentBoxHash,
@@ -561,8 +560,8 @@ object SingleLender {
        |      } else {
        |        // ** Repayment Success **
        |        // Service, Repayment -> Service, ProfitSharing, LenderRepaidFunds
-       |        if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2) &&
-       |          OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2 + 1) {
+       |        if ((OUTPUTS(0).core.SingleLender.Ergs.tokens(1)._2 == SELF.core.SingleLender.Ergs.tokens(1)._2) &&
+       |          OUTPUTS(0).core.SingleLender.Ergs.tokens(2)._2 == SELF.core.SingleLender.Ergs.tokens(2)._2 + 1) {
        |          // Profit Sharing
        |          val profitSharingBox = OUTPUTS(2)
        |          val lendersBox = OUTPUTS(1)
@@ -620,8 +619,8 @@ object SingleLender {
        |
        |        } else {
        |          // Refund Lend Box
-       |          if ((OUTPUTS(0).tokens(1)._2 == SELF.tokens(1)._2 + 1) &&
-       |           OUTPUTS(0).tokens(2)._2 == SELF.tokens(2)._2) {
+       |          if ((OUTPUTS(0).core.SingleLender.Ergs.tokens(1)._2 == SELF.core.SingleLender.Ergs.tokens(1)._2 + 1) &&
+       |           OUTPUTS(0).core.SingleLender.Ergs.tokens(2)._2 == SELF.core.SingleLender.Ergs.tokens(2)._2) {
        |            sigmaProp(serviceFullCheck)
        |          } else {
        |            sigmaProp(false)

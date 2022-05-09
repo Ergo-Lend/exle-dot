@@ -1,6 +1,6 @@
 package features.base
 
-import client.Client
+import node.Client
 import features.getRequestBodyAsString
 import io.circe.Json
 import errors.ExceptionThrowable

@@ -4,6 +4,7 @@ import config.Configs
 import errors.{paymentBoxInfoNotFoundException, proveException}
 import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderFundLendPaymentBox, SingleLenderInitiationPaymentBox, SingleLenderLendBox, SingleLenderRepaymentBox}
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import ergo.ErgCommons
 import io.persistence.doobs.models.{CreateLendReq, FundLendReq}
 import org.ergoplatform.appkit.{BlockchainContext, InputBox, Parameters, SignedTransaction}
 
@@ -137,7 +138,7 @@ class SingleLenderLendBoxFundedTx(val serviceBox: InputBox, var lendBox: InputBo
   }
 
   def getBorrowersFundedBoxValue(inputLendBox: SingleLenderLendBox): Long = {
-    inputLendBox.value - Configs.minBoxErg - Parameters.MinFee
+    inputLendBox.value - ErgCommons.MinBoxFee - Parameters.MinFee
   }
 
   /**
@@ -209,7 +210,7 @@ class SingleLenderRefundLendBoxTx(val serviceBox: InputBox, var lendBox: InputBo
 
     // Change is send back to lender
     val lendInitiationTx = txB.boxesToSpend(inputBoxes)
-      .fee(Configs.fee)
+      .fee(ErgCommons.MinMinerFee)
       .outputs(outputServiceBox)
       .sendChangeTo(wrappedInputLendingBox.getBorrowersAddress.getErgoAddress)
       .build()

@@ -43,4 +43,9 @@ object dependencies {
   val DependencyInjection: List[ModuleID] = List(
     guice
   )
+
+  // Commons
+  val Enumeratum: List[ModuleID] = List(
+    "com.beachape" %% "enumeratum" % EnumeratumVersion
+  )
 }

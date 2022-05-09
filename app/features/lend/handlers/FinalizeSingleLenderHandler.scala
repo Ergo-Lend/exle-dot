@@ -1,6 +1,6 @@
 package features.lend.handlers
 
-import client.Client
+import node.Client
 import common.StackTrace
 import errors.{connectionException, failedTxException}
 import config.Configs

@@ -4,11 +4,12 @@ import config.Configs
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LenderRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
 import ergo.Addresses
 import contracts.SingleLender.Ergs.SingleLender.singleLenderRepaymentBoxScript
+import contracts.{ExleContracts}
+import core.tokens.LendServiceTokens
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
 import scorex.crypto.hash.Digest32
 import special.collection.Coll
-import tokens.LendServiceTokens
 
 /**
  * RepaymentBox: Single Lender
@@ -79,7 +80,7 @@ class SingleLenderRepaymentBox(
   override def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
     var boxValue = value
     if (boxValue == 0L) {
-      boxValue = Configs.minBoxErg
+      boxValue = Parameters.MinFee
     }
 
     //@todo add tokens
@@ -167,12 +168,13 @@ class SingleLenderRepaymentBox(
 
 object SingleLenderRepaymentBoxContract extends Contract {
   def getContract(ctx: BlockchainContext): ErgoContract = {
+    val sleRepaymentBoxScript: String = ExleContracts.SLERepaymentBoxGuardScript.contractScript
+
     ctx.compileContract(ConstantsBuilder.create()
-      .item("minFee", Parameters.MinFee)
-      .item("serviceBoxNFT", LendServiceTokens.nft.getBytes)
-      .item("serviceRepaymentToken", LendServiceTokens.repaymentToken.getBytes)
-      .item("serviceLendToken", LendServiceTokens.lendToken.getBytes)
-      .build(), singleLenderRepaymentBoxScript)
+      .item("_MinFee", Parameters.MinFee)
+      .item("_SLEServiceBoxNFTId", LendServiceTokens.nft.getBytes)
+      .item("_SLERepaymentTokenId", LendServiceTokens.repaymentToken.getBytes)
+      .build(), sleRepaymentBoxScript)
   }
 }
 

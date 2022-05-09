@@ -1,17 +1,17 @@
 package core.SingleLender.Ergs
 
-import client.Client
+import node.Client
 import common.StackTrace
 import config.Configs
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
 import core.SingleLender.Ergs.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
+import core.tokens.LendServiceTokens
 import errors.{connectionException, explorerException, parseException}
 import explorer.Explorer
 import io.circe.{Json => ciJson}
 import org.ergoplatform.appkit._
 import play.api.Logger
 import special.collection.Coll
-import tokens.LendServiceTokens
 
 import javax.inject.Inject
 
@@ -21,7 +21,7 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
   def getServiceBox: InputBox = {
     try {
       client.getClient.execute((ctx: BlockchainContext) => {
-        val serviceBoxciJson = getUnspentTokenBoxes(LendServiceTokens.nftString, 0, 100)
+        val serviceBoxciJson = getUnspentTokenBoxes(LendServiceTokens.nft.toString, 0, 100)
         val serviceBoxId = serviceBoxciJson.hcursor.downField("items").as[List[ciJson]].getOrElse(throw parseException())
           .head.hcursor.downField("boxId").as[String].getOrElse("")
         var serviceBox = ctx.getBoxesById(serviceBoxId).head
@@ -101,8 +101,8 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
 
   def getLendBoxes(offset: Int, limit: Int): List[SingleLenderLendBox] = {
     try {
-      val boxes = getUnspentTokenBoxes(LendServiceTokens.lendTokenString, offset, limit)
-      val lendBoxes = getJsonBoxesViaId(boxes, LendServiceTokens.lendTokenString).map(jsonToWrappedLendBox(_))
+      val boxes = getUnspentTokenBoxes(LendServiceTokens.lendToken.toString, offset, limit)
+      val lendBoxes = getJsonBoxesViaId(boxes, LendServiceTokens.lendToken.toString).map(jsonToWrappedLendBox(_))
 
       lendBoxes.toList
     } catch {
@@ -119,8 +119,8 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
 
   def getRepaymentBoxes(offset: Int, limit: Int): List[SingleLenderRepaymentBox] = {
     try {
-      val boxes = getUnspentTokenBoxes(LendServiceTokens.repaymentTokenString, offset, limit)
-      val repaymentBoxes = getJsonBoxesViaId(boxes, LendServiceTokens.repaymentTokenString).map(jsonToWrappedRepaymentBox(_))
+      val boxes = getUnspentTokenBoxes(LendServiceTokens.repaymentToken.toString, offset, limit)
+      val repaymentBoxes = getJsonBoxesViaId(boxes, LendServiceTokens.repaymentToken.toString).map(jsonToWrappedRepaymentBox(_))
 
       repaymentBoxes.toList
     } catch {

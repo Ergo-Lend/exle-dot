@@ -1,11 +1,12 @@
-package contracts
+package contracts.SingleLender
 
 import boxes.registers.RegisterTypes.StringRegister
 import config.Configs
+import contracts._
+import core.SingleLender.Ergs.boxes.registers._
 import core.SingleLender.Ergs.boxes.{LendServiceBox, SingleLenderLendBox, SingleLenderLendBoxContract, SingleLenderRepaymentBox}
-import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, CreationInfoRegister, FundingInfoRegister, LendingProjectDetailsRegister, ProfitSharingRegister, RepaymentDetailsRegister, ServiceBoxInfoRegister, SingleAddressRegister, SingleLenderRegister}
+import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit.{Address, ErgoToken, OutBox, Parameters}
-import tokens.LendServiceTokens
 
 /**
  * We need
@@ -13,7 +14,7 @@ import tokens.LendServiceTokens
  * 2. Lend Boxes
  * 3. Repayment Boxes
  */
-package object SingleLender {
+package object Ergs {
   val goal: Long = 1e9.toLong
   val interestRate: Long = 100L
   val repaymentHeightLength: Long = 100L

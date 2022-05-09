@@ -1,8 +1,8 @@
 package features.lend
 
-import client.Client
+import node.Client
 import common.ErgoValidator
-import ergo.{BoxState, ErgUtils}
+import ergo.{BoxState, ErgCommons}
 import errors.ExceptionThrowable
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
@@ -103,7 +103,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     val borrowerRegister = wrappedLendBox.borrowerRegister
     val lenderRegister = wrappedLendBox.singleLenderRegister
 
-    val fundingGoalInErgs = ErgUtils.nanoErgsToErgs(fundingInfoRegister.fundingGoal)
+    val fundingGoalInErgs = ErgCommons.nanoErgsToErgs(fundingInfoRegister.fundingGoal)
     val fullyFunded: Boolean = wrappedLendBox.value >= fundingInfoRegister.fundingGoal
 
     Json.fromFields(List(
@@ -130,8 +130,8 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     val lenderRegister = wrappedRepaymentBox.singleLenderRegister
     val repaymentDetailsRegister = wrappedRepaymentBox.repaymentDetailsRegister
 
-    val fundingGoalInErgs = ErgUtils.nanoErgsToErgs(fundingInfoRegister.fundingGoal)
-    val repaymentAmountInErgs = ErgUtils.nanoErgsToErgs(repaymentDetailsRegister.repaymentAmount)
+    val fundingGoalInErgs = ErgCommons.nanoErgsToErgs(fundingInfoRegister.fundingGoal)
+    val repaymentAmountInErgs = ErgCommons.nanoErgsToErgs(repaymentDetailsRegister.repaymentAmount)
     val fullyFunded = wrappedRepaymentBox.value >= repaymentDetailsRegister.repaymentAmount
 
     // test
@@ -236,7 +236,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val lendBox = explorer.getLendBox(lendBoxId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
         val amount = wrappedLendBox.getFundingTotalErgs
-        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
+        val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
           lendBoxId = lendBoxId,
@@ -273,7 +273,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
         val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
         val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
-        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
+        val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
           repaymentBoxId = repaymentBoxId,
@@ -344,7 +344,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val lendBox = explorer.getLendBox(lendBoxId)
         val wrappedLendBox = new SingleLenderLendBox(lendBox)
         val amount = wrappedLendBox.getFundingTotalErgs
-        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
+        val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
           lendBoxId = lendBoxId,
@@ -382,7 +382,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
         val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
         val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
-        val amountInErgs = ErgUtils.nanoErgsToErgs(amount)
+        val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
           repaymentBoxId = repaymentBoxId,
@@ -478,7 +478,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         )
 
         val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
-        val paymentAmountInErgs = ErgUtils.nanoErgsToErgs(paymentAmountInNanoErgs)
+        val paymentAmountInErgs = ErgCommons.nanoErgsToErgs(paymentAmountInNanoErgs)
         val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
