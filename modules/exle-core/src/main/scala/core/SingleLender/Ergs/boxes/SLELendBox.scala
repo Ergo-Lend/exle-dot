@@ -168,7 +168,7 @@ case class SLELendBox(value: Long,
 object SLELendBox {
   def createViaPaymentBox(paymentBox: SingleLenderInitiationPaymentBox): SLELendBox = {
     val lendBoxInitialValue = paymentBox.value - Parameters.MinFee - Configs.serviceFee
-    return new SLELendBox(
+    new SLELendBox(
       lendBoxInitialValue,
       paymentBox.fundingInfoRegister,
       paymentBox.lendingProjectDetailsRegister,
@@ -182,6 +182,6 @@ object SLELendBox {
 
     val totalPayment = lendBoxCreation + lendInitiationTxFee + Configs.serviceFee
 
-    return totalPayment
+    totalPayment
   }
 }
