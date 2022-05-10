@@ -2,15 +2,11 @@ package core.SingleLender.Ergs.boxes
 
 import boxes.Box
 import boxes.registers.RegisterTypes.{CollByteRegister, LongRegister, StringRegister}
-import config.Configs
-import core.SingleLender.Ergs.boxes.SLEServiceBoxContract.getServiceBoxContract
 import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
-import ergo.ContractUtils
-import contracts.ExleContracts
-import contracts.SingleLender.Ergs.{SLELendBoxContract, SLERepaymentBoxContract}
+import contracts.SingleLender.Ergs.SLEServiceBoxContract
 import core.tokens.LendServiceTokens
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
 import special.collection.Coll
 
 /**
@@ -67,7 +63,7 @@ class SLEServiceBox(val value: Long,
   }
 
   override def getOutputServiceBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
-    val serviceBoxContract = getServiceBoxContract(ctx)
+    val serviceBoxContract = SLEServiceBoxContract.getContract(ctx)
 
     val lendServiceNft = new ErgoToken(LendServiceTokens.nft, 1)
     val lendServiceTokens = new ErgoToken(LendServiceTokens.lendToken, lendTokenAmount)
@@ -219,22 +215,6 @@ class SLEServiceBox(val value: Long,
     val incrementedSLEServiceBox = this.incrementLendToken()
 
     incrementedSLEServiceBox
-  }
-}
-
-object SLEServiceBoxContract {
-  val serviceOwner: Address = Configs.serviceOwner
-  def getServiceBoxContract(ctx: BlockchainContext): ErgoContract = {
-    val lendBoxHash = ContractUtils.getContractScriptHash(SLELendBoxContract.getContract(ctx))
-    val repaymentBoxHash = ContractUtils.getContractScriptHash(SLERepaymentBoxContract.getContract(ctx))
-    val sleServiceBoxGuardScript = ExleContracts.SLEServiceBoxGuardScript.contractScript
-
-    ctx.compileContract(ConstantsBuilder.create()
-      .item("_OwnerPk", serviceOwner.getPublicKey)
-      .item("_LendBoxHash", lendBoxHash)
-      .item("_RepaymentBoxHash", repaymentBoxHash)
-      .item("_MinFee", Parameters.MinFee)
-      .build(), sleServiceBoxGuardScript)
   }
 }
 

@@ -2,7 +2,7 @@ package tools.runners.serviceBox
 
 import boxes.registers.RegisterTypes.StringRegister
 import config.Configs
-import core.SingleLender.Ergs.boxes.SLEServiceBoxContract
+import contracts.SingleLender.Ergs.SLEServiceBoxContract
 import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import core.tokens.LendServiceTokens
 import ergo.{ContractUtils, ErgCommons}
@@ -191,7 +191,7 @@ object SLEServiceBoxHandler {
 
     val txB = ctx.newTxBuilder()
 
-    val serviceBoxContract = SLEServiceBoxContract.getServiceBoxContract(ctx)
+    val serviceBoxContract = SLEServiceBoxContract.getContract(ctx)
 
     val serviceBox = txB.outBoxBuilder
       .value(amountToSend)
