@@ -1,11 +1,13 @@
 package core.SingleLender.Ergs.boxes
 
-import boxes.registers.RegisterTypes.{CollByteRegister, LongRegister, NumberRegister, StringRegister}
+import boxes.Box
+import boxes.registers.RegisterTypes.{CollByteRegister, LongRegister, StringRegister}
 import config.Configs
-import core.SingleLender.Ergs.boxes.SingleLenderServiceBoxContract.getServiceBoxContract
+import core.SingleLender.Ergs.boxes.SLEServiceBoxContract.getServiceBoxContract
 import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import ergo.ContractUtils
 import contracts.ExleContracts
+import contracts.SingleLender.Ergs.{SLELendBoxContract, SLERepaymentBoxContract}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
@@ -31,11 +33,11 @@ import special.collection.Coll
  *
  * R4: Coll[Long] -> Creation height, Version
  * R5: Coll[Coll[Byte]] -> ErgoLend, SingleLender allows one lender to trade
- * R6: Coll[Byte] -> SingleLenderServiceBox
+ * R6: Coll[Byte] -> SLEServiceBox
  * R7: Coll[Byte] -> OwnerAddress
  * R8: Coll[Long] -> ProfitSharing Percentage
  */
-class LendServiceBox(val value: Long,
+class SLEServiceBox(val value: Long,
                      val lendTokenAmount: Long,
                      val repaymentTokenAmount: Long,
                      val creationInfo: CreationInfoRegister,
@@ -92,7 +94,7 @@ class LendServiceBox(val value: Long,
 
   /**
    *
-   * @param amount
+   * @param amountForProfitSplit
    * @param ctx
    * @param txB
    * @return
@@ -106,8 +108,8 @@ class LendServiceBox(val value: Long,
     ownerProfitSharingBox.getOutputBox(ctx, txB)
   }
 
-  def negateLendToken(): LendServiceBox = {
-    return new LendServiceBox(
+  def negateLendToken(): SLEServiceBox = {
+    new SLEServiceBox(
       value = value,
       lendTokenAmount = lendTokenAmount - 1,
       repaymentTokenAmount = repaymentTokenAmount,
@@ -118,8 +120,8 @@ class LendServiceBox(val value: Long,
       profitSharingPercentage = profitSharingPercentage)
   }
 
-  def incrementLendToken(): LendServiceBox = {
-    new LendServiceBox(
+  def incrementLendToken(): SLEServiceBox = {
+    new SLEServiceBox(
       value = value,
       lendTokenAmount = lendTokenAmount + 1,
       repaymentTokenAmount = repaymentTokenAmount,
@@ -130,8 +132,8 @@ class LendServiceBox(val value: Long,
       profitSharingPercentage = profitSharingPercentage)
   }
 
-  def negateRepaymentToken(): LendServiceBox = {
-    return new LendServiceBox(
+  def negateRepaymentToken(): SLEServiceBox = {
+    new SLEServiceBox(
       value = value,
       lendTokenAmount = lendTokenAmount,
       repaymentTokenAmount = repaymentTokenAmount - 1,
@@ -142,8 +144,8 @@ class LendServiceBox(val value: Long,
       profitSharingPercentage = profitSharingPercentage)
   }
 
-  def incrementRepaymentToken(): LendServiceBox = {
-    return new LendServiceBox(
+  def incrementRepaymentToken(): SLEServiceBox = {
+    new SLEServiceBox(
       value = value,
       lendTokenAmount = lendTokenAmount,
       repaymentTokenAmount = repaymentTokenAmount + 1,
@@ -154,8 +156,8 @@ class LendServiceBox(val value: Long,
       profitSharingPercentage = profitSharingPercentage)
   }
 
-  def exchangeLendRepaymentToken(): LendServiceBox = {
-    return new LendServiceBox(
+  def exchangeLendRepaymentToken(): SLEServiceBox = {
+    new SLEServiceBox(
       value = value,
       lendTokenAmount = lendTokenAmount + 1,
       repaymentTokenAmount = repaymentTokenAmount - 1,
@@ -173,7 +175,7 @@ class LendServiceBox(val value: Long,
    * @param txB
    * @return
    */
-  def consumeRepaymentBox(repaymentBox: SingleLenderRepaymentBox, ctx: BlockchainContext, txB: UnsignedTransactionBuilder): List[OutBox] = {
+  def consumeRepaymentBox(repaymentBox: SLERepaymentBox, ctx: BlockchainContext, txB: UnsignedTransactionBuilder): List[OutBox] = {
     val incrementedServiceBox = this.incrementRepaymentToken().getOutputServiceBox(ctx, txB)
 
     val repaymentInterest = repaymentBox.getRepaymentInterest
@@ -201,30 +203,30 @@ class LendServiceBox(val value: Long,
     outputBoxList
   }
 
-  def fundedLend(): LendServiceBox = {
+  def fundedLend(): SLEServiceBox = {
     val exchangedServiceBox = this.exchangeLendRepaymentToken()
 
     exchangedServiceBox
   }
 
-  def createLend(): LendServiceBox = {
-    val decrementedLendServiceBox = this.negateLendToken()
+  def createLend(): SLEServiceBox = {
+    val decrementedSLEServiceBox = this.negateLendToken()
 
-    decrementedLendServiceBox
+    decrementedSLEServiceBox
   }
 
-  def refundLend(): LendServiceBox = {
-    val incrementedLendServiceBox = this.incrementLendToken()
+  def refundLend(): SLEServiceBox = {
+    val incrementedSLEServiceBox = this.incrementLendToken()
 
-    incrementedLendServiceBox
+    incrementedSLEServiceBox
   }
 }
 
-object SingleLenderServiceBoxContract {
+object SLEServiceBoxContract {
   val serviceOwner: Address = Configs.serviceOwner
   def getServiceBoxContract(ctx: BlockchainContext): ErgoContract = {
-    val lendBoxHash = ContractUtils.getContractScriptHash(SingleLenderLendBoxContract.getContract(ctx))
-    val repaymentBoxHash = ContractUtils.getContractScriptHash(SingleLenderRepaymentBoxContract.getContract(ctx))
+    val lendBoxHash = ContractUtils.getContractScriptHash(SLELendBoxContract.getContract(ctx))
+    val repaymentBoxHash = ContractUtils.getContractScriptHash(SLERepaymentBoxContract.getContract(ctx))
     val sleServiceBoxGuardScript = ExleContracts.SLEServiceBoxGuardScript.contractScript
 
     ctx.compileContract(ConstantsBuilder.create()
@@ -238,8 +240,8 @@ object SingleLenderServiceBoxContract {
 
 /**
  *
- * @param serviceToken
- * @param boxToken
+ * @param pubKey
+ * @param profitSharingPercentage
  */
 abstract class ServiceBox(val pubKey: CollByteRegister,
                            val profitSharingPercentage: LongRegister

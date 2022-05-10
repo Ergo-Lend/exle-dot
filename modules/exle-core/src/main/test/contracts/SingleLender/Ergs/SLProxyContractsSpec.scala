@@ -2,9 +2,8 @@ package contracts.SingleLender.Ergs
 
 import config.Configs
 import contracts._
-import contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLEServiceBox, SLELendBox, SLERepaymentBox}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
 import org.scalatest.matchers.should.Matchers
@@ -15,7 +14,7 @@ import special.collection.Coll
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class SLProxyContractsSpec extends AnyWordSpec with Matchers {
-  val serviceBox: LendServiceBox = buildGenesisServiceBox()
+  val serviceBox: SLEServiceBox = buildGenesisServiceBox()
 
   client.setClient()
   val lendProxyContractService = new LendProxyContractService(client)
@@ -64,7 +63,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             description = loanDescription,
           )
           val borrowerRegister = new BorrowerRegister(dummyAddress.toString)
-          val lendBox = new SingleLenderLendBox(
+          val lendBox = new SLELendBox(
             value = Parameters.MinFee,
             fundingInfoRegister = fundingInfoRegister,
             lendingProjectDetailsRegister = lendingProjectDetailsRegister,
@@ -162,8 +161,8 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             description = loanDescription,
           )
           val borrowerRegister = new BorrowerRegister(dummyAddress.toString)
-          val lendBox = new SingleLenderLendBox(
-            value = goal - SingleLenderLendBox.getLendBoxInitiationPayment + Parameters.MinFee,
+          val lendBox = new SLELendBox(
+            value = goal - SLELendBox.getLendBoxInitiationPayment + Parameters.MinFee,
             fundingInfoRegister = fundingInfoRegister,
             lendingProjectDetailsRegister = lendingProjectDetailsRegister,
             borrowerRegister = borrowerRegister,
@@ -521,7 +520,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             // outputs
             val outputServiceBox = wrappedServiceBox.fundedLend()
               .getOutputServiceBox(ctx, txB)
-            val repaymentBox = new SingleLenderRepaymentBox(
+            val repaymentBox = new SLERepaymentBox(
               wrappedLendBox,
               (ctx.getHeight + 10).toLong
             ).getOutputBox(ctx, txB)
@@ -565,7 +564,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             // outputs
             val outputServiceBox = wrappedServiceBox.fundedLend()
               .getOutputServiceBox(ctx, txB)
-            val repaymentBox = new SingleLenderRepaymentBox(
+            val repaymentBox = new SLERepaymentBox(
               wrappedLendBox,
               (ctx.getHeight + 10).toLong
             ).getOutputBox(ctx, txB)
@@ -607,7 +606,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             // outputs
             val outputServiceBox = wrappedServiceBox.fundedLend()
               .getOutputServiceBox(ctx, txB)
-            val repaymentBox = new SingleLenderRepaymentBox(
+            val repaymentBox = new SLERepaymentBox(
               wrappedLendBox,
               (ctx.getHeight + 10).toLong
             ).getOutputBox(ctx, txB)

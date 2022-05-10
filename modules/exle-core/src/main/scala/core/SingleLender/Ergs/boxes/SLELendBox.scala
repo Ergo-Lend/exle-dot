@@ -1,7 +1,8 @@
 package core.SingleLender.Ergs.boxes
 
+import boxes.LendBox
 import config.Configs
-import contracts.{ExleContracts}
+import contracts.SingleLender.Ergs.SLELendBoxContract
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
@@ -27,7 +28,7 @@ import special.collection.Coll
  * @param lendingProjectDetailsRegister
  * @param singleLenderRegister
  */
-case class SingleLenderLendBox(value: Long,
+case class SLELendBox(value: Long,
                                   fundingInfoRegister: FundingInfoRegister,
                                   lendingProjectDetailsRegister: LendingProjectDetailsRegister,
                                   borrowerRegister: BorrowerRegister,
@@ -35,7 +36,7 @@ case class SingleLenderLendBox(value: Long,
                                   val lendToken: ErgoToken = new ErgoToken(LendServiceTokens.lendToken, 1),
                                   id: ErgoId = ErgoId.create("")) extends LendBox {
 
-  def apply(inputBox: InputBox): SingleLenderLendBox = {
+  def apply(inputBox: InputBox): SLELendBox = {
     val r4 = inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Long]].toArray
     val r5 = inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Coll[Byte]]].toArray
     val r6 = inputBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray
@@ -45,7 +46,7 @@ case class SingleLenderLendBox(value: Long,
     val lendingProjectDetailsRegister = new LendingProjectDetailsRegister(r5)
     val borrowerRegister = new BorrowerRegister(r6)
     val lenderRegister = new SingleLenderRegister(r7)
-    new SingleLenderLendBox(
+    new SLELendBox(
       inputBox.getValue,
       fundingInfoRegister,
       lendingProjectDetailsRegister,
@@ -67,10 +68,10 @@ case class SingleLenderLendBox(value: Long,
     id = inputBox.getId
   )
 
-  def fundBox(lenderAddress: String): SingleLenderLendBox = {
+  def fundBox(lenderAddress: String): SLELendBox = {
     val lenderRegister = new SingleLenderRegister(lenderAddress)
     val fundedValue = getFundingTotalErgs
-    new SingleLenderLendBox(
+    new SLELendBox(
       value = fundedValue,
       fundingInfoRegister,
       lendingProjectDetailsRegister,
@@ -86,7 +87,7 @@ case class SingleLenderLendBox(value: Long,
    * @return
    */
   def getInitiationOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
-    val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx)
+    val lendBoxContract = SLELendBoxContract.getContract(ctx)
     val lendBox = txB.outBoxBuilder()
       .value(value)
       .contract(lendBoxContract)
@@ -112,7 +113,7 @@ case class SingleLenderLendBox(value: Long,
       throw new Exception("Lender address is empty, but single lender box is funded.")
     }
 
-    val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx)
+    val lendBoxContract = SLELendBoxContract.getContract(ctx)
     val lendBox = txB.outBoxBuilder()
       .value(value)
       .contract(lendBoxContract)
@@ -164,10 +165,10 @@ case class SingleLenderLendBox(value: Long,
   }
 }
 
-object SingleLenderLendBox {
-  def createViaPaymentBox(paymentBox: SingleLenderInitiationPaymentBox): SingleLenderLendBox = {
+object SLELendBox {
+  def createViaPaymentBox(paymentBox: SingleLenderInitiationPaymentBox): SLELendBox = {
     val lendBoxInitialValue = paymentBox.value - Parameters.MinFee - Configs.serviceFee
-    return new SingleLenderLendBox(
+    return new SLELendBox(
       lendBoxInitialValue,
       paymentBox.fundingInfoRegister,
       paymentBox.lendingProjectDetailsRegister,
@@ -183,26 +184,4 @@ object SingleLenderLendBox {
 
     return totalPayment
   }
-}
-
-object SingleLenderLendBoxContract extends Contract {
-  override def getContract(ctx: BlockchainContext): ErgoContract = {
-    val sleLendBoxGuardScript: String = ExleContracts.SLELendBoxGuardScript.contractScript
-
-    ctx.compileContract(ConstantsBuilder.create()
-      .item("_MinFee", Parameters.MinFee)
-      .item("_MinBoxAmount", Parameters.MinFee)
-      .item("_SLEServiceNFTId", LendServiceTokens.nft.getBytes)
-      .item("_SLELendTokenId", LendServiceTokens.lendToken.getBytes)
-      .item("_SLERepaymentTokenId", LendServiceTokens.repaymentToken.getBytes)
-      .build(), sleLendBoxGuardScript)
-  }
-}
-
-trait Box
-
-abstract class LendBox extends Box {
-  def getBorrowersAddress: Address
-  def getLendersAddress: Address
-  def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
 }

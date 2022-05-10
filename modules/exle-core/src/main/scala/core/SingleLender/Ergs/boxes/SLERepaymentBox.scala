@@ -1,19 +1,16 @@
 package core.SingleLender.Ergs.boxes
 
-import config.Configs
-import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LenderRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
-import ergo.Addresses
-import contracts.SingleLender.Ergs.SingleLender.singleLenderRepaymentBoxScript
-import contracts.{ExleContracts}
+import boxes.RepaymentBox
+import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import contracts.SingleLender.Ergs.SLERepaymentBoxContract
 import core.tokens.LendServiceTokens
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
-import scorex.crypto.hash.Digest32
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
 import special.collection.Coll
 
 /**
  * RepaymentBox: Single Lender
- * In a SingleLenderRepaymentBox there are 3 states
+ * In a SLERepaymentBox there are 3 states
  * 1. Empty - 0 value
  * 2. Partially Funded - Value less than completed value
  * 3. Fully Funded
@@ -22,21 +19,21 @@ import special.collection.Coll
  * The repayment box can be funded incrementally till it reaches it's repayment goal.
  *
  *
- * @param fundingInfoRegister
- * @param lendingProjectDetailsRegister
- * @param singleLenderRegister
- * @param repaymentDetailsRegister
+ * @param fundingInfoRegister Register that stores the funding information
+ * @param lendingProjectDetailsRegister Register that stores the details of the project for the loan
+ * @param singleLenderRegister Register that stores 1 lender
+ * @param repaymentDetailsRegister Register that stores the Repayment Details
  */
-class SingleLenderRepaymentBox(
-                              val value: Long = 0,
+case class SLERepaymentBox(
+                              value: Long = 0,
                               fundingInfoRegister: FundingInfoRegister,
                               lendingProjectDetailsRegister: LendingProjectDetailsRegister,
                               borrowerRegister: BorrowerRegister,
-                              val singleLenderRegister: SingleLenderRegister,
+                              singleLenderRegister: SingleLenderRegister,
                               repaymentDetailsRegister: RepaymentDetailsRegister,
-                              val repaymentToken: ErgoToken = new ErgoToken(LendServiceTokens.repaymentToken, 1),
-                              val id: ErgoId = ErgoId.create("")
-                              ) extends RepaymentBox(fundingInfoRegister, lendingProjectDetailsRegister, borrowerRegister, singleLenderRegister, repaymentDetailsRegister) {
+                              repaymentToken: ErgoToken = new ErgoToken(LendServiceTokens.repaymentToken, 1),
+                              id: ErgoId = ErgoId.create("")
+                              ) extends RepaymentBox {
 
   val repaymentBoxToken = new ErgoToken(LendServiceTokens.repaymentToken, 1)
 
@@ -52,7 +49,7 @@ class SingleLenderRepaymentBox(
     id = inputBox.getId
   )
 
-  def this(singleLenderLendBox: SingleLenderLendBox, fundedHeight: Long) = this(
+  def this(singleLenderLendBox: SLELendBox, fundedHeight: Long) = this(
     value = Parameters.MinFee,
     fundingInfoRegister = singleLenderLendBox.fundingInfoRegister,
     lendingProjectDetailsRegister = singleLenderLendBox.lendingProjectDetailsRegister,
@@ -64,13 +61,13 @@ class SingleLenderRepaymentBox(
   )
 
   /**
-   * Returns the outputbox for repayment
+   * Returns the output box for repayment
    *
    * if the box value is 0, it means it is instantiated. Therefore we return an empty repayment box
    * if the box value is < repaymentAmount, we return a partially fund box
    * if the box value is >= repaymentAmount, we return the box with the value
    *
-   * as long as the repayment is funded, it doesn't matter whether it is overfunded, we still repay the lender
+   * as long as the repayment is funded, it doesn't matter whether it is over-funded, we still repay the lender
    * whatever amount it has in it.
    *
    * @param ctx
@@ -84,7 +81,7 @@ class SingleLenderRepaymentBox(
     }
 
     //@todo add tokens
-    val repaymentBoxContract = SingleLenderRepaymentBoxContract.getContract(ctx)
+    val repaymentBoxContract = SLERepaymentBoxContract.getContract(ctx)
     val repaymentBox = txB.outBoxBuilder()
       .value(boxValue)
       .contract(repaymentBoxContract)
@@ -103,12 +100,12 @@ class SingleLenderRepaymentBox(
   }
 
   /**
-   * When we fund a box, we give them a new SingleLenderRepaymentBox
+   * When we fund a box, we give them a new SLERepaymentBox
    * @param fundingAmount
    * @return
    */
-  override def fundBox(fundingAmount: Long): SingleLenderRepaymentBox = {
-    new SingleLenderRepaymentBox(
+  override def fundBox(fundingAmount: Long): SLERepaymentBox = {
+    new SLERepaymentBox(
       value = value + fundingAmount,
       fundingInfoRegister = fundingInfoRegister,
       lendingProjectDetailsRegister = lendingProjectDetailsRegister,
@@ -119,8 +116,8 @@ class SingleLenderRepaymentBox(
     )
   }
 
-  override def fundedBox(): SingleLenderRepaymentBox = {
-    new SingleLenderRepaymentBox(
+  override def fundedBox(): SLERepaymentBox = {
+    new SLERepaymentBox(
       value = repaymentDetailsRegister.repaymentAmount + Parameters.MinFee,
       fundingInfoRegister = fundingInfoRegister,
       lendingProjectDetailsRegister = lendingProjectDetailsRegister,
@@ -164,38 +161,4 @@ class SingleLenderRepaymentBox(
   override def getRepaymentInterest: Long = {
     repaymentDetailsRegister.totalInterestAmount
   }
-}
-
-object SingleLenderRepaymentBoxContract extends Contract {
-  def getContract(ctx: BlockchainContext): ErgoContract = {
-    val sleRepaymentBoxScript: String = ExleContracts.SLERepaymentBoxGuardScript.contractScript
-
-    ctx.compileContract(ConstantsBuilder.create()
-      .item("_MinFee", Parameters.MinFee)
-      .item("_SLEServiceBoxNFTId", LendServiceTokens.nft.getBytes)
-      .item("_SLERepaymentTokenId", LendServiceTokens.repaymentToken.getBytes)
-      .build(), sleRepaymentBoxScript)
-  }
-}
-
-abstract class Contract {
-  def getContract(ctx: BlockchainContext): ErgoContract
-  def getContractScriptHash(ctx: BlockchainContext): Digest32 = {
-    Addresses.getContractScriptHash(getContract(ctx))
-  }
-}
-
-abstract class RepaymentBox(
-                    val fundingInfoRegister: FundingInfoRegister,
-                    val lendingProjectDetailsRegister: LendingProjectDetailsRegister,
-                    val borrowerRegister: BorrowerRegister,
-                    val lenderRegister: LenderRegister,
-                    val repaymentDetailsRegister: RepaymentDetailsRegister
-                  ) extends Box {
-
-  def getLendersAddress: ErgoAddress
-  def fundBox(fundingAmount: Long): RepaymentBox
-  def fundedBox(): RepaymentBox
-  def getOutputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
-  def getRepaymentInterest: Long
 }

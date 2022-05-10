@@ -2,7 +2,7 @@ package tools.runners.serviceBox
 
 import boxes.registers.RegisterTypes.StringRegister
 import config.Configs
-import core.SingleLender.Ergs.boxes.SingleLenderServiceBoxContract
+import core.SingleLender.Ergs.boxes.SLEServiceBoxContract
 import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import core.tokens.LendServiceTokens
 import ergo.{ContractUtils, ErgCommons}
@@ -27,7 +27,7 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
  * Step 4:
  * Verify service Box
  */
-object SingleLenderServiceBoxHandler {
+object SLEServiceBoxHandler {
   def main(args: Array[String]): Unit = {
 
     val configFileName = "ergo_config.json"
@@ -150,7 +150,7 @@ object SingleLenderServiceBoxHandler {
 
     val creationInfo: CreationInfoRegister = CreationInfoRegister(creationHeight = ctx.getHeight.toLong)
     val serviceInfo: ServiceBoxInfoRegister = ServiceBoxInfoRegister(name = "ErgoLend", description = "A Lending Platform on Ergo")
-    val boxInfo: StringRegister = new StringRegister("SingleLenderServiceBox")
+    val boxInfo: StringRegister = new StringRegister("SLEServiceBox")
     val ergoLendPubKeyRegister: SingleAddressRegister = new SingleAddressRegister(Configs.serviceOwner.toString)
     val profitSharingPercentageRegister: ProfitSharingRegister =
       ProfitSharingRegister(profitSharingPercentage = Configs.profitSharingPercentage, serviceFeeAmount = Configs.serviceFee)
@@ -191,7 +191,7 @@ object SingleLenderServiceBoxHandler {
 
     val txB = ctx.newTxBuilder()
 
-    val serviceBoxContract = SingleLenderServiceBoxContract.getServiceBoxContract(ctx)
+    val serviceBoxContract = SLEServiceBoxContract.getServiceBoxContract(ctx)
 
     val serviceBox = txB.outBoxBuilder
       .value(amountToSend)

@@ -6,7 +6,7 @@ import ergo.{BoxState, ErgCommons}
 import errors.ExceptionThrowable
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
-import core.SingleLender.Ergs.boxes.{LendProxyAddress, SingleLenderLendBox, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.boxes.{LendProxyAddress, SLELendBox, SLERepaymentBox}
 import features.{getRequestBodyAsDouble, getRequestBodyAsLong, getRequestBodyAsString}
 import io.circe.Json
 import play.api.Logger
@@ -32,7 +32,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     logger.info("Getting Lending funds")
 
     try {
-      val wrappedLendBoxes: List[SingleLenderLendBox] = explorer.getLendBoxes(offset, limit)
+      val wrappedLendBoxes: List[SLELendBox] = explorer.getLendBoxes(offset, limit)
       val lendBoxesJson: List[Json] = wrappedLendBoxes.map(lendBoxToJson(_))
 
       val lendBoxJsonList = Json.fromFields(List(
@@ -49,7 +49,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     logger.info("Getting Repayment funds")
 
     try {
-      val wrappedRepaymentBoxes: List[SingleLenderRepaymentBox] = explorer.getRepaymentBoxes(offset, limit)
+      val wrappedRepaymentBoxes: List[SLERepaymentBox] = explorer.getRepaymentBoxes(offset, limit)
       val repaymentBoxesJson: List[Json] = wrappedRepaymentBoxes.map(repaymentBoxToJson(_))
       val repaymentBoxJsonList = Json.fromFields(List(
         ("items", Json.fromValues(repaymentBoxesJson))
@@ -68,12 +68,12 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         val lendBox = explorer.getLendBox(lendId)
         if (lendBox.getRegisters.size() > 3)
         {
-          val wrappedRepaymentBox = new SingleLenderRepaymentBox(lendBox)
+          val wrappedRepaymentBox = new SLERepaymentBox(lendBox)
           val repaymentBoxJson = repaymentBoxToJson(wrappedRepaymentBox)
 
           Ok(repaymentBoxJson).as("application/json")
         } else {
-          val wrappedLendBox = new SingleLenderLendBox(lendBox)
+          val wrappedLendBox = new SLELendBox(lendBox)
           val lendBoxJson = lendBoxToJson(wrappedLendBox)
           Ok(lendBoxJson).as("application/json")
         }
@@ -88,7 +88,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       try {
         logger.info("Get Lend Funds by id: " + lendId)
         val repaymentBox = explorer.getRepaymentBox(lendId)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
         val repaymentBoxJson = repaymentBoxToJson(wrappedRepaymentBox)
 
         Ok(repaymentBoxJson).as("application/json")
@@ -97,7 +97,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
       }
   }
 
-  def lendBoxToJson(wrappedLendBox: SingleLenderLendBox): Json = {
+  def lendBoxToJson(wrappedLendBox: SLELendBox): Json = {
     val lendingProjectDetailsRegister = wrappedLendBox.lendingProjectDetailsRegister
     val fundingInfoRegister = wrappedLendBox.fundingInfoRegister
     val borrowerRegister = wrappedLendBox.borrowerRegister
@@ -123,7 +123,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
     ))
   }
 
-  def repaymentBoxToJson(wrappedRepaymentBox: SingleLenderRepaymentBox): Json = {
+  def repaymentBoxToJson(wrappedRepaymentBox: SLERepaymentBox): Json = {
     val lendingProjectDetailsRegister = wrappedRepaymentBox.lendingProjectDetailsRegister
     val fundingInfoRegister = wrappedRepaymentBox.fundingInfoRegister
     val borrowerRegister = wrappedRepaymentBox.borrowerRegister
@@ -208,7 +208,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           interestRate = interestRate,
           repaymentHeightLength = repaymentHeight
         )
-        val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
+        val paymentAmountInNanoErgs = SLELendBox.getLendBoxInitiationPayment
         val delay: Long = Configs.creationDelay
 
         val result = Json.fromFields(List(
@@ -234,7 +234,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
 
         ErgoValidator.validateAddress(walletAddress)
         val lendBox = explorer.getLendBox(lendBoxId)
-        val wrappedLendBox = new SingleLenderLendBox(lendBox)
+        val wrappedLendBox = new SLELendBox(lendBox)
         val amount = wrappedLendBox.getFundingTotalErgs
         val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
@@ -271,7 +271,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
 
         ErgoValidator.validateAddress(walletAddress)
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
         val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
         val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
@@ -307,7 +307,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         ErgoValidator.validateAddress(walletAddress)
 
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
         val fundAmount = wrappedRepaymentBox.getFullFundAmount
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
@@ -342,7 +342,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
 
         ErgoValidator.validateAddress(walletAddress)
         val lendBox = explorer.getLendBox(lendBoxId)
-        val wrappedLendBox = new SingleLenderLendBox(lendBox)
+        val wrappedLendBox = new SLELendBox(lendBox)
         val amount = wrappedLendBox.getFundingTotalErgs
         val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
@@ -380,7 +380,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
 
         ErgoValidator.validateAddress(walletAddress)
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
         val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
         val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
@@ -417,7 +417,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
         ErgoValidator.validateAddress(walletAddress)
 
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+        val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
         val fundAmount = wrappedRepaymentBox.getFullFundAmount
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
@@ -477,7 +477,7 @@ class LendController @Inject()(client: Client, explorer: LendBoxExplorer, lendPr
           writeToDb = false
         )
 
-        val paymentAmountInNanoErgs = SingleLenderLendBox.getLendBoxInitiationPayment
+        val paymentAmountInNanoErgs = SLELendBox.getLendBoxInitiationPayment
         val paymentAmountInErgs = ErgCommons.nanoErgsToErgs(paymentAmountInNanoErgs)
         val delay: Long = Configs.creationDelay
 

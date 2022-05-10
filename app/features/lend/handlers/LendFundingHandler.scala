@@ -6,7 +6,7 @@ import ergo.{ErgCommons, TxState}
 import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
-import core.SingleLender.Ergs.boxes.SingleLenderLendBox
+import core.SingleLender.Ergs.boxes.SLELendBox
 import core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
 import io.persistence.doobs.dbHandlers.FundLendReqDAO
 import io.persistence.doobs.models.FundLendReq
@@ -43,7 +43,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     val paymentAddress = Address.create(req.paymentAddress)
     val unSpentPaymentBoxes = client.getAllUnspentBox(paymentAddress)
     val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
-    val wrappedLendBox = new SingleLenderLendBox(lendBox)
+    val wrappedLendBox = new SLELendBox(lendBox)
     logger.info("removing request" + req.id)
 
     if (unSpentPaymentBoxes.nonEmpty) {
@@ -79,7 +79,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
   def handleReq(req: FundLendReq): Unit = {
     try {
       val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
-      val wrappedLendBox = new SingleLenderLendBox(lendBox)
+      val wrappedLendBox = new SLELendBox(lendBox)
 
       if (isReady(req)) {
         val deadlinePassed = client.getHeight >= wrappedLendBox.fundingInfoRegister.deadlineHeight

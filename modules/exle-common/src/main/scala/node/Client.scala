@@ -1,6 +1,7 @@
 package node
 
 import config.Configs
+import ergo.ErgCommons
 import errors.connectionException
 import org.ergoplatform.appkit.BoxOperations.ExplorerApiUnspentLoader
 import org.ergoplatform.appkit._
@@ -77,8 +78,9 @@ class Client() {
   def getCoveringBoxesFor(address: Address, amount: Long): CoveringBoxes = {
     client.execute(ctx =>
       try {
+        val amountMinusMinerFee: Long = amount - ErgCommons.MinMinerFee
         val boxOperations = BoxOperations.createForSender(address)
-        val inputBoxList = boxOperations.withAmountToSpend(amount).loadTop(ctx)
+        val inputBoxList = boxOperations.withAmountToSpend(amountMinusMinerFee).loadTop(ctx)
 
         val coveringBoxes = new CoveringBoxes(amount, inputBoxList)
 
@@ -92,9 +94,10 @@ class Client() {
   def getCoveringBoxesFor(address: Address, amount: Long, tokensToSpend: java.util.List[ErgoToken]): List[InputBox] = {
     client.execute(ctx =>
       try {
+        val amountMinusMinerFee: Long = amount - ErgCommons.MinMinerFee
         val boxOperations = BoxOperations.createForSender(address)
         val coveringBoxes = boxOperations
-          .withAmountToSpend(amount)
+          .withAmountToSpend(amountMinusMinerFee)
           .withTokensToSpend(tokensToSpend)
           .loadTop(ctx)
 

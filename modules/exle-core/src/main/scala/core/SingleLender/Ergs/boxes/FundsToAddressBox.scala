@@ -1,5 +1,6 @@
 package core.SingleLender.Ergs.boxes
 
+import boxes.Box
 import ergo.ContractUtils
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{Address, BlockchainContext, OutBox, UnsignedTransactionBuilder}

@@ -6,7 +6,7 @@ import ergo.{ErgCommons, TxState}
 import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
-import core.SingleLender.Ergs.boxes.SingleLenderLendBox
+import core.SingleLender.Ergs.boxes.SLELendBox
 import core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
 import explorer.Explorer
 import io.persistence.doobs.dbHandlers.{CreateLendReqDAO, DAO}
@@ -50,7 +50,7 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
         val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, ErgCommons.InfiniteBoxValue)
-        val covered = unSpentPaymentBoxes.getCoveredAmount >= SingleLenderLendBox.getLendBoxInitiationPayment
+        val covered = unSpentPaymentBoxes.getCoveredAmount >= SLELendBox.getLendBoxInitiationPayment
         val isScriptReducedToFalse = req.state == TxState.ScriptFalsed.id
         if (covered && !isScriptReducedToFalse) {
           logger.info(s"Request ${req.id} is going back to the request pool, creation fee is enough")
@@ -109,7 +109,10 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
           logger.error(s"Create Failure: Contract reduced to false")
           refundCreateLendProxy(req)
         }
-        case _: Throwable => logger.error(s"Create Failed for req ${req.id}")
+        case _: Throwable => {
+
+          logger.error(s"Create Failed for req ${req.id}")
+        }
       }
     })
   }
@@ -130,7 +133,7 @@ class LendInitiationHandler @Inject()(client: Client, lendBoxExplorer: LendBoxEx
 }
 
 class ProxyContractTxHandler @Inject()(client: Client, explorer: Explorer, dao: DAO) {
-  def getPaymentBoxes(req: ProxyReq, amount: Long = SingleLenderLendBox.getLendBoxInitiationPayment): CoveringBoxes = {
+  def getPaymentBoxes(req: ProxyReq, amount: Long = SLELendBox.getLendBoxInitiationPayment): CoveringBoxes = {
     val paymentAddress = Address.create(req.paymentAddress)
     val paymentBoxList = client.getCoveringBoxesFor(paymentAddress, amount)
 

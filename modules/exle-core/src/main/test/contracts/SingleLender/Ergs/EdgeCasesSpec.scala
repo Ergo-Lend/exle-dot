@@ -1,10 +1,9 @@
 package contracts.SingleLender.Ergs
 
 import config.Configs
-import contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
 import contracts._
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderLendBox}
+import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLEServiceBox, SLELendBox}
 import org.ergoplatform.appkit.{ErgoContract, Parameters, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -13,7 +12,7 @@ import sigmastate.lang.exceptions.InterpreterException
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class EdgeCasesSpec extends AnyWordSpec with Matchers {
-  val serviceBox: LendServiceBox = buildGenesisServiceBox()
+  val serviceBox: SLEServiceBox = buildGenesisServiceBox()
   val goal: Long = 1e9.toLong
   val interestRate: Long = 100L
   val repaymentHeightLength: Long = 100L
@@ -150,7 +149,7 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
             description = loanDescription,
           )
           val borrowerRegister = new BorrowerRegister(dummyAddress.toString)
-          val lendBox = new SingleLenderLendBox(
+          val lendBox = new SLELendBox(
             value = Parameters.MinFee,
             fundingInfoRegister = fundingInfoRegister,
             lendingProjectDetailsRegister = lendingProjectDetailsRegister,

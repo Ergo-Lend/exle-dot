@@ -4,7 +4,7 @@ import node.Client
 import common.StackTrace
 import config.Configs
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
-import core.SingleLender.Ergs.boxes.{SingleLenderLendBox, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.boxes.{SLELendBox, SLERepaymentBox}
 import core.tokens.LendServiceTokens
 import errors.{connectionException, explorerException, parseException}
 import explorer.Explorer
@@ -99,7 +99,7 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     }
   }
 
-  def getLendBoxes(offset: Int, limit: Int): List[SingleLenderLendBox] = {
+  def getLendBoxes(offset: Int, limit: Int): List[SLELendBox] = {
     try {
       val boxes = getUnspentTokenBoxes(LendServiceTokens.lendToken.toString, offset, limit)
       val lendBoxes = getJsonBoxesViaId(boxes, LendServiceTokens.lendToken.toString).map(jsonToWrappedLendBox(_))
@@ -117,7 +117,7 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     }
   }
 
-  def getRepaymentBoxes(offset: Int, limit: Int): List[SingleLenderRepaymentBox] = {
+  def getRepaymentBoxes(offset: Int, limit: Int): List[SLERepaymentBox] = {
     try {
       val boxes = getUnspentTokenBoxes(LendServiceTokens.repaymentToken.toString, offset, limit)
       val repaymentBoxes = getJsonBoxesViaId(boxes, LendServiceTokens.repaymentToken.toString).map(jsonToWrappedRepaymentBox(_))
@@ -148,7 +148,7 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
         .hcursor.downField("tokenId").as[String].getOrElse("") == tokenString)
   }
 
-  def jsonToWrappedLendBox(lendBoxJson: ciJson): SingleLenderLendBox = {
+  def jsonToWrappedLendBox(lendBoxJson: ciJson): SLELendBox = {
     val id: String = lendBoxJson.hcursor.downField("boxId").as[String].getOrElse("")
     val value: Long = lendBoxJson.hcursor.downField("value").as[Long].getOrElse(0)
     val registers = lendBoxJson.hcursor.downField("additionalRegisters").as[ciJson].getOrElse(null)
@@ -178,7 +178,7 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     val borrowerRegister = new BorrowerRegister(r6)
     val lenderRegister = if (!r7Value.isEmpty) new SingleLenderRegister(r7Value) else SingleLenderRegister.emptyRegister
 
-    val lendBox = new SingleLenderLendBox(
+    val lendBox = new SLELendBox(
       value,
       fundingInfoRegister,
       lendingProjectDetailsRegister,
@@ -189,7 +189,7 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     lendBox
   }
 
-  def jsonToWrappedRepaymentBox(repaymentBoxJson: ciJson): SingleLenderRepaymentBox = {
+  def jsonToWrappedRepaymentBox(repaymentBoxJson: ciJson): SLERepaymentBox = {
     val id: String = repaymentBoxJson.hcursor.downField("boxId").as[String].getOrElse("")
     val value: Long = repaymentBoxJson.hcursor.downField("value").as[Long].getOrElse(0)
     val registers = repaymentBoxJson.hcursor.downField("additionalRegisters").as[ciJson].getOrElse(null)
@@ -218,7 +218,7 @@ class LendBoxExplorer @Inject()(client: Client) extends Explorer {
     val lenderRegister = new SingleLenderRegister(r7)
     val repaymentDetailsRegister = new RepaymentDetailsRegister(r8)
 
-    val wrappedRepaymentBox = new SingleLenderRepaymentBox(
+    val wrappedRepaymentBox = new SLERepaymentBox(
       value,
       fundingInfoRegister,
       lendingProjectDetailsRegister,

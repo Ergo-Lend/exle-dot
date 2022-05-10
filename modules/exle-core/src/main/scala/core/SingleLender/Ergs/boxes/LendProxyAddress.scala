@@ -2,9 +2,9 @@ package core.SingleLender.Ergs.boxes
 
 import config.Configs
 import common.{StackTrace, Time}
+import contracts.SingleLender.Ergs.LendProxyContractService
 import ergo.TxState
 import errors.PaymentAddressException
-import contracts.SingleLender.Ergs.proxyContracts.LendProxyContractService
 import io.persistence.doobs.dbHandlers.{CreateLendReqDAO, FundLendReqDAO, FundRepaymentReqDAO}
 import play.api.Logger
 

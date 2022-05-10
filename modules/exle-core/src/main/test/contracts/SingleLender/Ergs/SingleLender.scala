@@ -4,7 +4,7 @@ import boxes.registers.RegisterTypes.StringRegister
 import config.Configs
 import contracts._
 import core.SingleLender.Ergs.boxes.registers._
-import core.SingleLender.Ergs.boxes.{LendServiceBox, SingleLenderLendBox, SingleLenderLendBoxContract, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.boxes.{SLEServiceBox, SLELendBox, SLERepaymentBox}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit.{Address, ErgoToken, OutBox, Parameters}
 
@@ -22,13 +22,13 @@ package object Ergs {
   val loanName = "Test Loan"
   val loanDescription = "Test Loan Description"
 
-  def buildGenesisServiceBox(): LendServiceBox = {
+  def buildGenesisServiceBox(): SLEServiceBox = {
     val creationInfo = new CreationInfoRegister(creationHeight = 1L)
     val serviceInfo = new ServiceBoxInfoRegister(name = "LendBox", description = "Testing")
-    val boxInfo = new StringRegister("SingleLenderServiceBox")
+    val boxInfo = new StringRegister("SLEServiceBox")
     val ownerPubKey = new SingleAddressRegister(Configs.serviceOwner.toString)
     val profitSharingRegister = new ProfitSharingRegister(Configs.profitSharingPercentage, Configs.serviceFee)
-    val lendServiceBox = new LendServiceBox(
+    val lendServiceBox = new SLEServiceBox(
       value = Parameters.MinFee,
       lendTokenAmount = 100,
       repaymentTokenAmount = 100,
@@ -50,7 +50,7 @@ package object Ergs {
                            loanName: String = loanName,
                            loanDescription: String = loanDescription,
                            borrowerAddress: Address = dummyAddress,
-                           lenderAddress: Address = null): SingleLenderLendBox = {
+                           lenderAddress: Address = null): SLELendBox = {
     client.getClient.execute {
       ctx => {
         val fundingInfoRegister = new FundingInfoRegister(
@@ -65,7 +65,7 @@ package object Ergs {
           description = loanDescription,
         )
         val borrowerRegister = new BorrowerRegister(borrowerAddress.toString)
-        val wrappedInputLendBox = new SingleLenderLendBox(
+        val wrappedInputLendBox = new SLELendBox(
           value = value,
           fundingInfoRegister = fundingInfoRegister,
           lendingProjectDetailsRegister = lendingProjectDetailsRegister,
@@ -103,7 +103,7 @@ package object Ergs {
         )
         val borrowerRegister = new BorrowerRegister(borrowerAddress.toString)
 
-        val lendBoxContract = SingleLenderLendBoxContract.getContract(ctx)
+        val lendBoxContract = SLELendBoxContract.getContract(ctx)
         val lendToken: ErgoToken = new ErgoToken(LendServiceTokens.lendToken, 1)
 
         val lendBox = txB.outBoxBuilder()
@@ -127,11 +127,11 @@ package object Ergs {
 
   def createWrappedRepaymentBox(fundingGoal: Long = goal,
                                 interestRate: Long = interestRate,
-                                lendersAddress: Address = dummyAddress): SingleLenderRepaymentBox = {
+                                lendersAddress: Address = dummyAddress): SLERepaymentBox = {
     client.getClient.execute {
       ctx => {
         val wrappedLendBox = createWrappedLendBox(goal = fundingGoal, interestRate = interestRate).fundBox(lendersAddress.toString)
-        val wrappedRepaymentBox = new SingleLenderRepaymentBox(wrappedLendBox, (ctx.getHeight + 100).toLong)
+        val wrappedRepaymentBox = new SLERepaymentBox(wrappedLendBox, (ctx.getHeight + 100).toLong)
 
         wrappedRepaymentBox
       }
@@ -147,7 +147,7 @@ package object Ergs {
                                    loanDescription: String = loanDescription,
                                    borrowerAddress: Address = dummyAddress,
                                    lenderAddress: Address = dummyAddress,
-                                   fundedRepaymentHeight: Long): SingleLenderRepaymentBox = {
+                                   fundedRepaymentHeight: Long): SLERepaymentBox = {
     client.getClient.execute {
       ctx => {
         val fundingInfoRegister = new FundingInfoRegister(
@@ -166,7 +166,7 @@ package object Ergs {
 
         val repaymentDetailsRegister = RepaymentDetailsRegister.apply(fundedRepaymentHeight, fundingInfoRegister)
 
-        val wrappedInputRepaymentBox = new SingleLenderRepaymentBox(
+        val wrappedInputRepaymentBox = new SLERepaymentBox(
           value = value,
           fundingInfoRegister = fundingInfoRegister,
           lendingProjectDetailsRegister = lendingProjectDetailsRegister,

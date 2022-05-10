@@ -2,7 +2,7 @@ package core.SingleLender.Ergs.txs
 
 import config.Configs
 import errors.{paymentBoxInfoNotFoundException, proveException}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, LendServiceBox, SingleLenderFundLendPaymentBox, SingleLenderInitiationPaymentBox, SingleLenderLendBox, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLEServiceBox, SingleLenderFundLendPaymentBox, SingleLenderInitiationPaymentBox, SLELendBox, SLERepaymentBox}
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
 import ergo.ErgCommons
 import io.persistence.doobs.models.{CreateLendReq, FundLendReq}
@@ -36,7 +36,7 @@ class SingleLenderLendInitiationTx(val serviceBox: InputBox,
     val txB = ctx.newTxBuilder()
     val prover = ctx.newProverBuilder().build()
 
-    val inputServiceBox = new LendServiceBox(serviceBox)
+    val inputServiceBox = new SLEServiceBox(serviceBox)
 
     if (paymentBox.isEmpty)
       throw paymentBoxInfoNotFoundException()
@@ -45,7 +45,7 @@ class SingleLenderLendInitiationTx(val serviceBox: InputBox,
     val outputServiceBox = wrappedOutputServiceBox.getOutputServiceBox(ctx, txB)
 
     // create outputLendingBox
-    val wrappedOutputLendBox: SingleLenderLendBox = SingleLenderLendBox.createViaPaymentBox(paymentBox.get)
+    val wrappedOutputLendBox: SLELendBox = SLELendBox.createViaPaymentBox(paymentBox.get)
     val outputLendBox = wrappedOutputLendBox.getInitiationOutputBox(ctx, txB)
     val outputServiceFeeBox = new FundsToAddressBox(Configs.serviceFee, Configs.serviceOwner.toString)
       .getOutputBox(ctx, txB)
@@ -95,7 +95,7 @@ class SingleLenderFundLendBoxTx(var lendingBox: InputBox,
     val prover = ctx.newProverBuilder().build()
 
     val fundLendPaymentBox = paymentBox.get
-    val inputLendBox = new SingleLenderLendBox(lendingBox)
+    val inputLendBox = new SLELendBox(lendingBox)
     val wrappedOutputLendBox = inputLendBox.fundBox(fundLendPaymentBox.singleLenderRegister.lendersAddress)
     val outputLendBox = wrappedOutputLendBox.getOutputBox(ctx, txB)
 
@@ -125,9 +125,9 @@ class SingleLenderFundLendBoxTx(var lendingBox: InputBox,
   }
 }
 
-class SingleLenderLendBoxFundedTx(val serviceBox: InputBox, var lendBox: InputBox) extends Tx {
-  def getRepaymentBox(fundedHeight: Long, lendBox: SingleLenderLendBox): SingleLenderRepaymentBox = {
-    val repaymentBox = new SingleLenderRepaymentBox(
+class SLELendBoxFundedTx(val serviceBox: InputBox, var lendBox: InputBox) extends Tx {
+  def getRepaymentBox(fundedHeight: Long, lendBox: SLELendBox): SLERepaymentBox = {
+    val repaymentBox = new SLERepaymentBox(
       fundingInfoRegister = lendBox.fundingInfoRegister,
       lendingProjectDetailsRegister = lendBox.lendingProjectDetailsRegister,
       borrowerRegister = lendBox.borrowerRegister,
@@ -137,7 +137,7 @@ class SingleLenderLendBoxFundedTx(val serviceBox: InputBox, var lendBox: InputBo
     repaymentBox
   }
 
-  def getBorrowersFundedBoxValue(inputLendBox: SingleLenderLendBox): Long = {
+  def getBorrowersFundedBoxValue(inputLendBox: SLELendBox): Long = {
     inputLendBox.value - ErgCommons.MinBoxFee - Parameters.MinFee
   }
 
@@ -148,13 +148,13 @@ class SingleLenderLendBoxFundedTx(val serviceBox: InputBox, var lendBox: InputBo
    * @return
    */
   def runTx(ctx: BlockchainContext): SignedTransaction = {
-    val inputLendBox = new SingleLenderLendBox(lendBox)
+    val inputLendBox = new SLELendBox(lendBox)
     val repaymentBox = getRepaymentBox(ctx.getHeight.toLong, inputLendBox)
 
     val txB = ctx.newTxBuilder()
     val prover = ctx.newProverBuilder().build()
 
-    val wrappedServiceBox = new LendServiceBox(serviceBox)
+    val wrappedServiceBox = new SLEServiceBox(serviceBox)
     val outputServiceBox = wrappedServiceBox.fundedLend.getOutputServiceBox(ctx, txB)
     val outputRepaymentBox = repaymentBox.getOutputBox(ctx, txB)
 
@@ -199,8 +199,8 @@ class SingleLenderRefundLendBoxTx(val serviceBox: InputBox, var lendBox: InputBo
    * @return
    */
   def runTx(ctx: BlockchainContext): SignedTransaction = {
-    val wrappedInputLendingBox = new SingleLenderLendBox(lendBox)
-    val wrappedInputServiceBox = new LendServiceBox(serviceBox)
+    val wrappedInputLendingBox = new SLELendBox(lendBox)
+    val wrappedInputServiceBox = new SLEServiceBox(serviceBox)
 
     val txB = ctx.newTxBuilder()
     val prover = ctx.newProverBuilder().build()
@@ -312,8 +312,8 @@ object SingleLenderTxFactory {
     singleLenderFundLendBoxTx
   }
 
-  def createFundedLendBoxTx(serviceBox: InputBox, lendBox: InputBox): SingleLenderLendBoxFundedTx = {
-    val singleLenderLendBoxFundedTx = new SingleLenderLendBoxFundedTx(serviceBox, lendBox)
+  def createFundedLendBoxTx(serviceBox: InputBox, lendBox: InputBox): SLELendBoxFundedTx = {
+    val singleLenderLendBoxFundedTx = new SLELendBoxFundedTx(serviceBox, lendBox)
 
     singleLenderLendBoxFundedTx
   }

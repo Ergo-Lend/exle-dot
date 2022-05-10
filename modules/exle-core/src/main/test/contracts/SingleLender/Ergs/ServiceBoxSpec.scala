@@ -1,13 +1,13 @@
 package contracts.SingleLender.Ergs
 
 import contracts._
-import core.SingleLender.Ergs.boxes.LendServiceBox
+import core.SingleLender.Ergs.boxes.SLEServiceBox
 import core.tokens.LendServiceTokens
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class ServiceBoxSpec extends AnyWordSpec with Matchers {
-  val serviceBox: LendServiceBox = buildGenesisServiceBox()
+  val serviceBox: SLEServiceBox = buildGenesisServiceBox()
   "Service Box" when {
     client.setClient()
     "Genesis" should {

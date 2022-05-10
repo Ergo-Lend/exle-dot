@@ -178,8 +178,8 @@ trait Explorer {
       })
       val keys = txMap.keys.toSeq
       logger.debug(outBox.getId.toString)
-      logger.debug(keys.toString())
       while (keys.contains(outBox.getId.toString)) {
+        logger.debug(keys.toString())
         val txJson = txMap(outBox.getId.toString)
         val inputs = (txJson \ "inputs").as[JsValue].toString().replaceAll("id", "boxId")
         val outputs = (txJson \ "outputs").as[JsValue].toString().replaceAll("id", "boxId")
@@ -204,7 +204,7 @@ trait Explorer {
       case _: parseException => throw connectionException()
       case e: Throwable =>
         logger.error(StackTrace.getStackTraceStr(e))
-        throw new Throwable("Something is wrong")
+        throw e
     }
   }
 }

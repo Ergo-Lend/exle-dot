@@ -1,8 +1,7 @@
-package contracts.SingleLender.Ergs.proxyContracts
+package contracts.SingleLender.Ergs
 
 import node.Client
 import config.Configs
-import contracts.SingleLender.Ergs.proxyContracts.proxyContracts.{createSingleLenderLendBoxProxyScript, fundSingleLenderLendBoxProxyScript, repaySingleLenderLoanProxyScript}
 import contracts.{ExleContracts}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._

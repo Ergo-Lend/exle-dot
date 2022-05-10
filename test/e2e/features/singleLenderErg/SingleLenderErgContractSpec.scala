@@ -1,7 +1,7 @@
 package e2e.features.singleLenderErg
 
 import config.Configs
-import contracts.SingleLender.Ergs.proxyContracts.proxyContracts.createSingleLenderLendBoxProxyScript
+import contracts.ExleContracts
 import core.tokens.LendServiceTokens
 import ergo.ErgCommons
 import org.ergoplatform.ErgoAddressEncoder
@@ -27,7 +27,7 @@ class SingleLenderErgContractSpec extends AnyWordSpec with Matchers {
       val txFee = ErgCommons.MinMinerFee
 
       ergoClient.execute(ctx => {
-        val lendCreationProxyContractString = createSingleLenderLendBoxProxyScript
+        val lendCreationProxyContractString = ExleContracts.SLECreateLendBoxProxyContract.contractScript
         val creationContract = ctx.compileContract(
           ConstantsBuilder.create()
             .build(),
