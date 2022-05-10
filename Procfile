@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/ergo-dot -Dhttp.port=${PORT}
+web: target/universal/stage/bin/exle-dot -Dhttp.port=${PORT}
