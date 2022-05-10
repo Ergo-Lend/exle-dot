@@ -1,6 +1,6 @@
 package features.base
 
-import client.Client
+import node.Client
 import play.api.Logger
 import play.api.libs.circe.Circe
 import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents, Request}

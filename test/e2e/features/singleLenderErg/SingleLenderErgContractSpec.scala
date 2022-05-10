@@ -1,12 +1,13 @@
 package e2e.features.singleLenderErg
 
 import config.Configs
-import contracts.SingleLender.Ergs.proxyContracts.proxyContracts.createSingleLenderLendBoxProxyScript
+import contracts.ExleContracts
+import core.tokens.LendServiceTokens
+import ergo.ErgCommons
 import org.ergoplatform.ErgoAddressEncoder
 import org.ergoplatform.appkit.{ConstantsBuilder, ErgoClient, ErgoToken, RestApiErgoClient}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import tokens.LendServiceTokens
 
 class SingleLenderErgContractSpec extends AnyWordSpec with Matchers {
   val ergoClient: ErgoClient = RestApiErgoClient.create(
@@ -23,10 +24,10 @@ class SingleLenderErgContractSpec extends AnyWordSpec with Matchers {
       val lendToken = new ErgoToken(LendServiceTokens.lendToken, 100)
       val repaymentToken = new ErgoToken(LendServiceTokens.repaymentToken, 100)
 
-      val txFee = Configs.fee
+      val txFee = ErgCommons.MinMinerFee
 
       ergoClient.execute(ctx => {
-        val lendCreationProxyContractString = createSingleLenderLendBoxProxyScript
+        val lendCreationProxyContractString = ExleContracts.SLECreateLendBoxProxyContract.contractScript
         val creationContract = ctx.compileContract(
           ConstantsBuilder.create()
             .build(),

@@ -1,7 +1,7 @@
 package reactor
 
 import explorer.ExplorerHandler
-import client.ChainClient
+import node.ChainClient
 
 /**
  * Fusion Lab

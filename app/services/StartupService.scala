@@ -1,7 +1,7 @@
 package services
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import client.Client
+import node.Client
 import config.Configs
 import features.lend.{JobsUtil, LendJobs}
 import features.lend.handlers.{FinalizeSingleLenderHandler, LendFundingHandler, LendInitiationHandler, RepaymentFundingHandler}

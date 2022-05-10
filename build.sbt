@@ -1,4 +1,4 @@
-import dependencies.{DependencyInjection, _}
+import dependencies._
 
 name := """exle-dot"""
 organization := "io.exle"
@@ -20,7 +20,8 @@ lazy val commonSettings = List(
     NexusReleases,
     NexusSnapshots
   ),
-  libraryDependencies ++= dependencies.Testing
+  libraryDependencies ++= Testing ++
+    Enumeratum
 )
 
 lazy val allConfigDependency = "compile->compile;test->test"

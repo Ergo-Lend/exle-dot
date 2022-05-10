@@ -1,8 +1,8 @@
 package features.lend.handlers
 
-import client.Client
+import node.Client
 import common.{StackTrace, Time}
-import ergo.TxState
+import ergo.{ErgCommons, TxState}
 import errors.{connectionException, failedTxException, proveException, skipException}
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
@@ -45,7 +45,7 @@ class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBox
 
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
-        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
+        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, ErgCommons.InfiniteBoxValue)
         val covered = unSpentPaymentBoxes.getCoveredAmount >= req.ergAmount
         if (covered) {
           logger.info(s"Request ${req.id} is going back to the request pool, creation fee is enough")

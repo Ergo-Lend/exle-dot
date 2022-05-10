@@ -1,12 +1,12 @@
 package features.lend.handlers
 
-import client.Client
+import node.Client
 import common.{StackTrace, Time}
-import ergo.TxState
+import ergo.{ErgCommons, TxState}
 import errors.{connectionException, failedTxException, paymentNotCoveredException, proveException, skipException}
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
-import core.SingleLender.Ergs.boxes.SingleLenderLendBox
+import core.SingleLender.Ergs.boxes.SLELendBox
 import core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
 import io.persistence.doobs.dbHandlers.FundLendReqDAO
 import io.persistence.doobs.models.FundLendReq
@@ -43,12 +43,12 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     val paymentAddress = Address.create(req.paymentAddress)
     val unSpentPaymentBoxes = client.getAllUnspentBox(paymentAddress)
     val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
-    val wrappedLendBox = new SingleLenderLendBox(lendBox)
+    val wrappedLendBox = new SLELendBox(lendBox)
     logger.info("removing request" + req.id)
 
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
-        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, Configs.infBoxVal)
+        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, ErgCommons.InfiniteBoxValue)
         val covered = unSpentPaymentBoxes.getCoveredAmount >= req.ergAmount
         val deadlinePassed = client.getHeight > wrappedLendBox.fundingInfoRegister.deadlineHeight
         if (covered && !deadlinePassed) {
@@ -59,6 +59,7 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
           val refundTxId = refundProxyContract(req)
           if (refundTxId.nonEmpty) {
             fundLendReqDAO.deleteById(req.id)
+            return
           }
         }
       } catch {
@@ -71,13 +72,14 @@ class LendFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplo
     } else {
       logger.info(s"will remove fund Lend request: ${req.id} with state: ${req.state}")
       fundLendReqDAO.deleteById(req.id)
+      return
     }
   }
 
   def handleReq(req: FundLendReq): Unit = {
     try {
       val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
-      val wrappedLendBox = new SingleLenderLendBox(lendBox)
+      val wrappedLendBox = new SLELendBox(lendBox)
 
       if (isReady(req)) {
         val deadlinePassed = client.getHeight >= wrappedLendBox.fundingInfoRegister.deadlineHeight

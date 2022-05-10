@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 
 trait ConfigHelper {
-  val config: Configuration = Configuration(ConfigFactory.load("ergo.conf"))
+  val config: Configuration = Configuration(ConfigFactory.load())
 
   /**
    * Read the config and return the value of the key
@@ -20,6 +20,7 @@ trait ConfigHelper {
       else throw config.reportError(key, message=s"$key is required.")
     } catch {
       case ex: Throwable =>
+        println(ex)
         sys.exit()
     }
   }
@@ -34,6 +35,7 @@ trait ConfigHelper {
       else throw config.reportError(key, message=s"$key is required.")
     } catch {
       case ex: Throwable =>
+        println(ex)
         sys.exit()
     }
   }

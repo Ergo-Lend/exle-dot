@@ -3,7 +3,8 @@ package core.SingleLender.Ergs.txs
 import config.Configs
 import errors.proveException
 import core.SingleLender.Ergs.boxes.registers.SingleAddressRegister
-import core.SingleLender.Ergs.boxes.{LendServiceBox, PaymentBox, SingleLenderFundRepaymentPaymentBox, SingleLenderRepaymentBox}
+import core.SingleLender.Ergs.boxes.{SLEServiceBox, PaymentBox, SingleLenderFundRepaymentPaymentBox, SLERepaymentBox}
+import ergo.ErgCommons
 import io.persistence.doobs.models.FundRepaymentReq
 import org.ergoplatform.appkit.{Address, BlockchainContext, InputBox, Parameters, SignedTransaction, UnsignedTransaction, UnsignedTransactionBuilder}
 
@@ -36,13 +37,13 @@ class SingleLenderFundRepaymentTx(var repaymentBox: InputBox,
     val prover = ctx.newProverBuilder().build()
 
     val wrappedPaymentBox = paymentBox.get
-    val wrappedInputRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
+    val wrappedInputRepaymentBox = new SLERepaymentBox(repaymentBox)
 
     // if funded then return fundedBox, else return repaymentBox with valid fund
     val outputRepaymentBox = wrappedInputRepaymentBox.fundBox(wrappedPaymentBox.value - Parameters.MinFee).getOutputBox(ctx, txB)
 
     val fundRepaymentTx = txB.boxesToSpend(getInputBoxes.asJava)
-      .fee(Configs.fee)
+      .fee(ErgCommons.MinMinerFee)
       .outputs(outputRepaymentBox)
       .sendChangeTo(Address.create(wrappedPaymentBox.singleAddressRegister.address).getErgoAddress)
       .build()
@@ -106,8 +107,8 @@ class SingleLenderRepaymentFundedTx(val serviceBox: InputBox, val repaymentBox: 
   def runTx(ctx: BlockchainContext): SignedTransaction = {
     val txB = ctx.newTxBuilder()
     val prover = ctx.newProverBuilder().build()
-    val wrappedRepaymentBox = new SingleLenderRepaymentBox(repaymentBox)
-    val wrappedInputServiceBox = new LendServiceBox(serviceBox)
+    val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
+    val wrappedInputServiceBox = new SLEServiceBox(serviceBox)
 
     val outputBoxes = wrappedInputServiceBox.consumeRepaymentBox(wrappedRepaymentBox, ctx, txB).asJava
 
@@ -115,13 +116,13 @@ class SingleLenderRepaymentFundedTx(val serviceBox: InputBox, val repaymentBox: 
     var lendInitiationTx: UnsignedTransaction = null
     if (outputBoxes.size() >= 3) {
       lendInitiationTx = txB.boxesToSpend(getInputBoxes.asJava)
-        .fee(Configs.fee)
+        .fee(ErgCommons.MinMinerFee)
         .outputs(outputBoxes.get(0), outputBoxes.get(1), outputBoxes.get(2))
         .sendChangeTo(wrappedRepaymentBox.getLendersAddress)
         .build()
     } else {
       lendInitiationTx = txB.boxesToSpend(getInputBoxes.asJava)
-        .fee(Configs.fee)
+        .fee(ErgCommons.MinMinerFee)
         .outputs(outputBoxes.get(0), outputBoxes.get(1))
         .sendChangeTo(wrappedRepaymentBox.getLendersAddress)
         .build()
