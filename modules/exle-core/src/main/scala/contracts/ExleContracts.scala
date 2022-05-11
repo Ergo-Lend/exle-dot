@@ -14,16 +14,16 @@ sealed trait ExleContract extends EnumEntry {
   val contractType: ContractType = ContractTypes.None
   val fileExtension: String = ".es"
   val fileName: String = this.toString + fileExtension
+  val dirName: String = "ExleContracts"
   lazy val contractScript: String = get()
 
-  def getPath: String = exleDomain + "/" + exleDomainType + "/" + contractType.plural + "/" + fileName
+  def getPath: String = List(dirName, exleDomain, exleDomainType, contractType.plural, fileName).mkString("/")
 
   def get(): String = {
     val getViaPath: () => String = () => {
-      val dirPath = Directory.Current.get + "/resources/ExleContracts/"
-      val fullPath = dirPath + this.getPath
+      val fullPath = getPath
+      val contractSource = Source.fromResource(fullPath)
 
-      val contractSource = Source.fromFile(fullPath)
       val contractString = contractSource.mkString
       contractSource.close()
 
@@ -59,12 +59,12 @@ object ExleContracts extends Enum[ExleContract] {
   // SLT Proxy Contracts
   case object SLTCreateLendBoxProxyContract extends SLTProxyContract
   case object SLTFundLendBoxProxyContract extends SLTProxyContract
-  case object SLTFundRepaymentBoxProxyContract extends SLTProxyContract
+//  case object SLTFundRepaymentBoxProxyContract extends SLTProxyContract
 
   // SLT Box Guard Scripts
-  case object SLTServiceBoxGuardScript extends SLTBoxGuardScript
-  case object SLTLendBoxGuardScript extends SLTBoxGuardScript
-  case object SLTRepaymentBoxGuardScript extends SLTBoxGuardScript
+//  case object SLTServiceBoxGuardScript extends SLTBoxGuardScript
+//  case object SLTLendBoxGuardScript extends SLTBoxGuardScript
+//  case object SLTRepaymentBoxGuardScript extends SLTBoxGuardScript
 
   // ===== Test Assets ===== //
   case object DummyErgoScript extends TestAssetsContract

@@ -16,6 +16,12 @@ class ContractsSpec extends AnyWordSpec with Matchers {
         assert(retrievedContract.equals(dummyErgoScript), s"filePath: ${retrievedContract}")
         println(Configs.nodeUrl)
       }
+
+      "find all contracts" in {
+        for (contract <- ExleContracts.values) {
+          assert(contract.contractScript.isInstanceOf[String])
+        }
+      }
     }
   }
 }
