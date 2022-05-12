@@ -1,6 +1,7 @@
 package contracts
 
 import config.Configs
+import contracts.ExleContracts.DummyErgoScript
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -12,7 +13,7 @@ class ContractsSpec extends AnyWordSpec with Matchers {
           "  // this is a test\n" +
           "}"
 
-        val retrievedContract = ExleContracts.DummyErgoScript.contractScript
+        val retrievedContract = DummyErgoScript.contractScript
         assert(retrievedContract.equals(dummyErgoScript), s"filePath: ${retrievedContract}")
         println(Configs.nodeUrl)
       }

@@ -2,9 +2,10 @@ package contracts.SingleLender
 
 import boxes.registers.RegisterTypes.StringRegister
 import config.Configs
+import contracts.SingleLender.Ergs.SLELendBoxContract
 import contracts._
 import core.SingleLender.Ergs.boxes.registers._
-import core.SingleLender.Ergs.boxes.{SLEServiceBox, SLELendBox, SLERepaymentBox}
+import core.SingleLender.Ergs.boxes.{SLELendBox, SLERepaymentBox, SLEServiceBox}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit.{Address, ErgoToken, OutBox, Parameters}
 

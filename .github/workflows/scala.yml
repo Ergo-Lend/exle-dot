@@ -23,10 +23,41 @@ jobs:
           echo DATABASE_PASSWORD="" >> .env
           echo JDBC_TEST_URL="" >> .env
           cat .env
+      # Run App Test
       - name: Run tests
         run: sbt coverage test
       - name: Coverage Report
         run: sbt coverageReport coverageAggregate
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+
+      # Run Core
+      - name: Run Core tests
+        run: sbt "project exle-core" coverage test
+      - name: Coverage Report
+        run: sbt "project exle-core" coverageReport coverageAggregate
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+
+      # Run Common
+      - name: Run Common tests
+        run: sbt "project exle-common" coverage test
+      - name: Coverage Report
+        run: sbt "project exle-common" coverageReport coverageAggregate
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+
+      # Run Chain
+      - name: Run Chain tests
+        run: sbt "project exle-chain" coverage test
+      - name: Coverage Report
+        run: sbt "project exle-chain" coverageReport coverageAggregate
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
