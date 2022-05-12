@@ -2,6 +2,7 @@ package contracts
 
 import enumeratum._
 
+import java.net.URL
 import scala.collection.immutable
 import scala.io.Source
 import scala.reflect.io.Directory
@@ -24,10 +25,11 @@ sealed trait ExleContract extends EnumEntry {
 
   def get(): String = {
     val getViaPath: () => String = () => {
-      val fullPath = getPath
+      val fullPath: String = getPath
+      val resourcePath: URL = getClass.getClassLoader.getResource(fullPath)
       try {
         val contractSource =
-          Source.fromURL(getClass.getClassLoader.getResource(fullPath))
+          Source.fromURL(resourcePath)
 
         val contractString = contractSource.mkString
         contractSource.close()
@@ -35,7 +37,7 @@ sealed trait ExleContract extends EnumEntry {
         contractString
       } catch {
         case _: NullPointerException =>
-          throw new NullPointerException(s"$fullPath not found")
+          throw new NullPointerException(s"$resourcePath not found")
       }
     }
 
