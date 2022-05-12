@@ -32,7 +32,7 @@ sealed trait ExleContract extends EnumEntry {
 
         contractString
       } catch {
-        case e: NullPointerException =>
+        case _: NullPointerException =>
           throw new NullPointerException(s"$fullPath not found")
       }
     }
