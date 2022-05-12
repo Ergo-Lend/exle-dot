@@ -12,8 +12,13 @@ import play.api.mvc._
 import javax.inject._
 
 @Singleton
-class ExplorerController @Inject()(client: Client, val controllerComponents: ControllerComponents)
-  extends BaseController with Explorer with Circe with ExceptionThrowable {
+class ExplorerController @Inject() (
+  client: Client,
+  val controllerComponents: ControllerComponents
+) extends BaseController
+    with Explorer
+    with Circe
+    with ExceptionThrowable {
   private val logger: Logger = Logger(this.getClass)
 
   def test(): Action[AnyContent] = Action {
@@ -24,7 +29,7 @@ class ExplorerController @Inject()(client: Client, val controllerComponents: Con
   }
 
   def getBoxById(id: String): Action[Json] = Action(circe.json) {
-    implicit request => {
+    implicit request =>
       try {
         val box = getUnspentBoxById(id)
         println(box)
@@ -32,11 +37,10 @@ class ExplorerController @Inject()(client: Client, val controllerComponents: Con
       } catch {
         case e: Throwable => exception(e, logger)
       }
-    }
   }
 
-  def getTxsInMempoolByAddressViaController(address: String): Action[Json] = Action(circe.json) {
-    implicit request => {
+  def getTxsInMempoolByAddressViaController(address: String): Action[Json] =
+    Action(circe.json) { implicit request =>
       try {
         val txs = getTxsInMempoolByAddress(address)
         Ok(txs).as("application/json")
@@ -44,20 +48,19 @@ class ExplorerController @Inject()(client: Client, val controllerComponents: Con
         case e: Throwable => exception(e, logger)
       }
     }
-  }
 
-  def getTxConfirmation: Action[Json] = Action(circe.json) {
-    implicit request => {
-      try {
-        val txId: String = getRequestBodyAsString(request, "txId")
-        val confirmationNumber: Long = getConfirmationNumber(txId)
-        val result = Json.fromFields(List(
+  def getTxConfirmation: Action[Json] = Action(circe.json) { implicit request =>
+    try {
+      val txId: String = getRequestBodyAsString(request, "txId")
+      val confirmationNumber: Long = getConfirmationNumber(txId)
+      val result = Json.fromFields(
+        List(
           ("confirmationNumber", Json.fromLong(confirmationNumber))
-        ))
-        Ok(result.toString()).as("application/json")
-      } catch {
-        case e: Throwable => exception(e, logger)
-      }
+        )
+      )
+      Ok(result.toString()).as("application/json")
+    } catch {
+      case e: Throwable => exception(e, logger)
     }
   }
 }

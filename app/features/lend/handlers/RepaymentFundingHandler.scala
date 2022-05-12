@@ -3,10 +3,18 @@ package features.lend.handlers
 import node.Client
 import common.{StackTrace, Time}
 import ergo.{ErgCommons, TxState}
-import errors.{connectionException, failedTxException, proveException, skipException}
+import errors.{
+  connectionException,
+  failedTxException,
+  proveException,
+  skipException
+}
 import config.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
-import core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleRepaymentTxFactory}
+import core.SingleLender.Ergs.txs.{
+  RefundProxyContractTx,
+  SingleRepaymentTxFactory
+}
 import io.persistence.doobs.dbHandlers.FundRepaymentReqDAO
 import io.persistence.doobs.models.FundRepaymentReq
 import org.ergoplatform.appkit.{Address, InputBox}
@@ -16,15 +24,18 @@ import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBoxExplorer, repaymentReqDAO: FundRepaymentReqDAO)
-  extends ProxyContractTxHandler(client, lendBoxExplorer, repaymentReqDAO) {
+class RepaymentFundingHandler @Inject() (
+  client: Client,
+  lendBoxExplorer: LendBoxExplorer,
+  repaymentReqDAO: FundRepaymentReqDAO
+) extends ProxyContractTxHandler(client, lendBoxExplorer, repaymentReqDAO) {
   private val logger: Logger = Logger(this.getClass)
 
   def handleReqs(): Unit = {
     logger.info("Handling Funding requests...")
 
     repaymentReqDAO.all.onComplete((requests => {
-      requests.get.map(req => {
+      requests.get.map { req =>
         try {
           if (req.ttl <= Time.currentTime || req.state == 2) {
             handleRemoval(req)
@@ -34,7 +45,7 @@ class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBox
         } catch {
           case e: Throwable => logger.error(StackTrace.getStackTraceStr(e))
         }
-      })
+      }
     }))
   }
 
@@ -45,11 +56,19 @@ class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBox
 
     if (unSpentPaymentBoxes.nonEmpty) {
       try {
-        val unSpentPaymentBoxes = client.getCoveringBoxesFor(paymentAddress, ErgCommons.InfiniteBoxValue)
+        val unSpentPaymentBoxes = client.getCoveringBoxesFor(
+          paymentAddress,
+          ErgCommons.InfiniteBoxValue
+        )
         val covered = unSpentPaymentBoxes.getCoveredAmount >= req.ergAmount
         if (covered) {
-          logger.info(s"Request ${req.id} is going back to the request pool, creation fee is enough")
-          repaymentReqDAO.updateTTL(req.id, Time.currentTime + Configs.creationDelay)
+          logger.info(
+            s"Request ${req.id} is going back to the request pool, creation fee is enough"
+          )
+          repaymentReqDAO.updateTTL(
+            req.id,
+            Time.currentTime + Configs.creationDelay
+          )
           throw skipException()
         } else {
           val refundTxId = refundProxyContract(req)
@@ -59,18 +78,20 @@ class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBox
         }
       } catch {
         case _: connectionException => throw new Throwable
-        case _: failedTxException => throw new Throwable
-        case e: skipException => throw e
+        case _: failedTxException   => throw new Throwable
+        case e: skipException       => throw e
         case _: Throwable =>
           logger.error(s"Checking creation request ${req.id} failed")
       }
     } else {
-      logger.info(s"Unspent Box empty: will remove fund repayment request: ${req.id} with state: ${req.state}")
+      logger.info(
+        s"Unspent Box empty: will remove fund repayment request: ${req.id} with state: ${req.state}"
+      )
       repaymentReqDAO.deleteById(req.id)
     }
   }
 
-  def handleReq(req: FundRepaymentReq): Unit = {
+  def handleReq(req: FundRepaymentReq): Unit =
     try {
       val repaymentBox = lendBoxExplorer.getRepaymentBox(req.repaymentBoxId)
 
@@ -87,20 +108,28 @@ class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBox
       case _: Throwable =>
         logger.error(s"Error")
     }
-  }
 
-  def fundRepaymentTx(req: FundRepaymentReq, repaymentInputBox: InputBox): Unit = {
-    client.getClient.execute(ctx => {
+  def fundRepaymentTx(
+    req: FundRepaymentReq,
+    repaymentInputBox: InputBox
+  ): Unit =
+    client.getClient.execute { ctx =>
       try {
-        val paymentBoxList = getPaymentBoxes(req, req.ergAmount).getBoxes.asScala
+        val paymentBoxList =
+          getPaymentBoxes(req, req.ergAmount).getBoxes.asScala
 
-        val fundLendTx = SingleRepaymentTxFactory.createLenderFundRepaymentTx(repaymentInputBox, paymentBoxList, req)
+        val fundLendTx = SingleRepaymentTxFactory.createLenderFundRepaymentTx(
+          repaymentInputBox,
+          paymentBoxList,
+          req
+        )
 
         val signedTx = fundLendTx.runTx(ctx)
 
         var fundTxId = ctx.sendTransaction(signedTx)
 
-        if (fundTxId == null) throw failedTxException(s"fund lend tx sending failed for ${req.id}")
+        if (fundTxId == null)
+          throw failedTxException(s"fund lend tx sending failed for ${req.id}")
         else fundTxId = fundTxId.replaceAll("\"", "")
 
         repaymentReqDAO.updateLendTxId(req.id, fundTxId)
@@ -113,20 +142,23 @@ class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBox
         }
         case _: Throwable => logger.error("Fund Failed")
       }
-    })
-  }
+    }
 
-  def refundProxyContract(req: FundRepaymentReq): String = {
-    client.getClient.execute(ctx => {
+  def refundProxyContract(req: FundRepaymentReq): String =
+    client.getClient.execute { ctx =>
       try {
         val paymentBoxes = getPaymentBoxes(req, req.ergAmount).getBoxes.asScala
-        val refundProxyContractTx = new RefundProxyContractTx(paymentBoxes, req.userAddress)
+        val refundProxyContractTx =
+          new RefundProxyContractTx(paymentBoxes, req.userAddress)
 
         val signedTx = refundProxyContractTx.runTx(ctx)
 
         var refundTxId = ctx.sendTransaction(signedTx)
 
-        if (refundTxId == null) throw failedTxException(s"refund lend tx sending failed for ${req.id}")
+        if (refundTxId == null)
+          throw failedTxException(
+            s"refund lend tx sending failed for ${req.id}"
+          )
         else refundTxId = refundTxId.replaceAll("\"", "")
 
         refundTxId
@@ -135,6 +167,5 @@ class RepaymentFundingHandler @Inject()(client: Client, lendBoxExplorer: LendBox
           logger.error("Fund Failed")
           throw e
       }
-    })
-  }
+    }
 }
