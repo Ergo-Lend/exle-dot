@@ -6,8 +6,13 @@ organization := "io.exle"
 version := "1.0"
 scalaVersion := "2.12.15"
 
-lazy val NexusReleases  = "Sonatype Releases" at "https://s01.oss.sonatype.org/content/repositories/releases"
-lazy val NexusSnapshots = "Sonatype Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
+lazy val NexusReleases = "Sonatype Releases".at(
+  "https://s01.oss.sonatype.org/content/repositories/releases"
+)
+
+lazy val NexusSnapshots = "Sonatype Snapshots".at(
+  "https://s01.oss.sonatype.org/content/repositories/snapshots"
+)
 
 lazy val commonSettings = List(
   scalacOptions ++= commonScalacOptions,
@@ -30,7 +35,7 @@ lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .withId("lendbackend")
   .settings(commonSettings)
-  .settings(moduleName := "lendbackend", name:= "LendBackend")
+  .settings(moduleName := "lendbackend", name := "LendBackend")
   .dependsOn(core, chain)
 
 lazy val core = utils
@@ -39,12 +44,12 @@ lazy val core = utils
   .settings(
     libraryDependencies ++=
       Ergo ++
-      Circe ++
-      PostgresDB ++
-      PlayApi ++
-      HttpDep ++
-      Testing ++
-      DependencyInjection
+        Circe ++
+        PostgresDB ++
+        PlayApi ++
+        HttpDep ++
+        Testing ++
+        DependencyInjection
   )
   .dependsOn(Seq(chain, common).map(_ % allConfigDependency): _*)
 
@@ -88,7 +93,7 @@ lazy val commonScalacOptions = List(
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
+  case x                             => MergeStrategy.first
 }
 
 assembly / assemblyJarName := s"${name.value}-${version.value}.jar"
