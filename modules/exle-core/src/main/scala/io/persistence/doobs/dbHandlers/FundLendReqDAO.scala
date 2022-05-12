@@ -14,7 +14,8 @@ trait FundLendReqComponent {
 
   import profile.api._
 
-  class FundLendReqTable(tag: Tag) extends Table[FundLendReq](tag, "fund_lend_requests") {
+  class FundLendReqTable(tag: Tag)
+      extends Table[FundLendReq](tag, "fund_lend_requests") {
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def lendBoxId = column[String]("lend_box_id")
     def ergAmount = column[Long]("erg_amount")
@@ -30,7 +31,8 @@ trait FundLendReqComponent {
     def deleted = column[Boolean]("deleted")
 
     def * =
-      ( id,
+      (
+        id,
         lendBoxId,
         ergAmount,
         state,
@@ -39,30 +41,36 @@ trait FundLendReqComponent {
         lenderAddress,
         timeStamp,
         ttl,
-        deleted) <> (FundLendReq.tupled, FundLendReq.unapply)
+        deleted
+      ) <> (FundLendReq.tupled, FundLendReq.unapply)
   }
 }
 
 @Singleton
-class FundLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) (implicit executionContext: ExecutionContext)
-  extends FundLendReqComponent
-    with HasDatabaseConfigProvider[JdbcProfile] with DAO {
+class FundLendReqDAO @Inject() (
+  protected val dbConfigProvider: DatabaseConfigProvider
+)(implicit executionContext: ExecutionContext)
+    extends FundLendReqComponent
+    with HasDatabaseConfigProvider[JdbcProfile]
+    with DAO {
 
   import profile.api._
 
   val requests = TableQuery[FundLendReqTable]
 
   /**
-   *
-   */
-  def insert(lendBoxId: String,
-             fundingErgAmount: Long,
-             state: TxState,
-             paymentAddress: String,
-             lendTxID: Option[String],
-             walletAddress: String,
-             timeStamp: String,
-             ttl: Long): Future[Unit] = {
+    *
+    */
+  def insert(
+    lendBoxId: String,
+    fundingErgAmount: Long,
+    state: TxState,
+    paymentAddress: String,
+    lendTxID: Option[String],
+    walletAddress: String,
+    timeStamp: String,
+    ttl: Long
+  ): Future[Unit] = {
     val action = requests += FundLendReq(
       id = 1,
       lendBoxId = lendBoxId,
@@ -73,13 +81,22 @@ class FundLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigPro
       lendTxID = lendTxID,
       timeStamp = timeStamp,
       ttl = ttl,
-      deleted = false)
+      deleted = false
+    )
     db.run(action.asTry).map(_ => ())
   }
 
-  def all: Future[Seq[FundLendReq]] = db.run(requests.filter(_.deleted === false).result)
+  def all: Future[Seq[FundLendReq]] =
+    db.run(requests.filter(_.deleted === false).result)
 
-  def byId(id: Long): Future[FundLendReq] = db.run(requests.filter(_.deleted === false).filter(req => req.id === id).result.head)
+  def byId(id: Long): Future[FundLendReq] =
+    db.run(
+      requests
+        .filter(_.deleted === false)
+        .filter(req => req.id === id)
+        .result
+        .head
+    )
 
   def deleteById(id: Long): Future[Int] = db.run(
     requests.filter(req => req.id === id).map(req => req.deleted).update(true)

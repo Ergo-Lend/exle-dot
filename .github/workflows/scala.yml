@@ -66,8 +66,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Formatting
+      # Format App Check
+      - name: Formatting App
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      # Format core Check
+      - name: Formatting App
+        run: sbt "project exle-core" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      # Format common Check
+      - name: Formatting App
+        run: sbt "project exle-common" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      # Format chain Check
+      - name: Formatting App
+        run: sbt "project exle-chain" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
 
 permissions:
   contents: read

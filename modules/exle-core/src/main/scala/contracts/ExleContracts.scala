@@ -17,7 +17,9 @@ sealed trait ExleContract extends EnumEntry {
   val dirName: String = "ExleContracts"
   lazy val contractScript: String = get()
 
-  def getPath: String = List(dirName, exleDomain, exleDomainType, contractType.plural, fileName).mkString("/")
+  def getPath: String =
+    List(dirName, exleDomain, exleDomainType, contractType.plural, fileName)
+      .mkString("/")
 
   def get(): String = {
     val getViaPath: () => String = () => {
@@ -40,10 +42,10 @@ object ExleContracts extends Enum[ExleContract] {
   val values: immutable.IndexedSeq[ExleContract] = findValues
 
   /**
-   * Finds the Exle Contract and returns it as a string
-   * @param exleContracts the specified exle contracts
-   * @return
-   */
+    * Finds the Exle Contract and returns it as a string
+    * @param exleContracts the specified exle contracts
+    * @return
+    */
   // ===== SLE [Single Lender Ergs] ===== //
   // SLE Proxy Contracts
   case object SLECreateLendBoxProxyContract extends SLEProxyContract
@@ -72,8 +74,8 @@ object ExleContracts extends Enum[ExleContract] {
 
 //<editor-fold desc="Contract Domains">
 /**
- * ===== Contract Domains Instantiation =====
- */
+  * ===== Contract Domains Instantiation =====
+  */
 // Single Lender Tokens
 sealed trait SLTContract extends ExleContract {
   override val exleDomain: String = "SingleLender"
@@ -89,8 +91,8 @@ sealed trait SLEContract extends ExleContract {
 
 //<editor-fold desc="Detailed Contract Types">
 /**
- * // ===== Detailed Level Contracts =====
- */
+  * // ===== Detailed Level Contracts =====
+  */
 // Single Lender Tokens
 sealed trait SLTProxyContract extends SLTContract {
   override val contractType: ContractType = ContractTypes.ProxyContract
@@ -117,15 +119,20 @@ sealed trait TestAssetsContract extends ExleContract {
 
 //<editor-fold desc="Contract Type Enum">
 /**
- * Describes the different contract types as Enums
- */
-sealed trait ContractType extends EnumEntry { val plural: String}
+  * Describes the different contract types as Enums
+  */
+sealed trait ContractType extends EnumEntry { val plural: String }
 
 object ContractTypes extends Enum[ContractType] {
   val values: immutable.IndexedSeq[ContractType] = findValues
 
-  case object ProxyContract extends ContractType { override val plural = "ProxyContracts" }
-  case object BoxGuardScript extends ContractType { override val plural = "BoxGuardScripts" }
+  case object ProxyContract extends ContractType {
+    override val plural = "ProxyContracts"
+  }
+
+  case object BoxGuardScript extends ContractType {
+    override val plural = "BoxGuardScripts"
+  }
   case object None extends ContractType { override val plural = "" }
 }
 //</editor-fold>

@@ -1,5 +1,3 @@
 package node
 
-abstract class ChainClient {
-
-}
+abstract class ChainClient {}

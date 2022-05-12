@@ -14,7 +14,8 @@ trait RepaymentReqComponent {
 
   import profile.api._
 
-  class RepaymentReqTable(tag: Tag) extends Table[FundRepaymentReq](tag, "repayment_requests") {
+  class RepaymentReqTable(tag: Tag)
+      extends Table[FundRepaymentReq](tag, "repayment_requests") {
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def repaymentBoxId = column[String]("repayment_box_id")
     def ergAmount = column[Long]("erg_amount")
@@ -29,7 +30,8 @@ trait RepaymentReqComponent {
     def deleted = column[Boolean]("deleted")
 
     def * =
-      ( id,
+      (
+        id,
         repaymentBoxId,
         ergAmount,
         state,
@@ -38,30 +40,36 @@ trait RepaymentReqComponent {
         userAddress,
         timeStamp,
         ttl,
-        deleted) <> (FundRepaymentReq.tupled, FundRepaymentReq.unapply)
+        deleted
+      ) <> (FundRepaymentReq.tupled, FundRepaymentReq.unapply)
   }
 }
 
 @Singleton
-class FundRepaymentReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) (implicit executionContext: ExecutionContext)
-  extends RepaymentReqComponent
-    with HasDatabaseConfigProvider[JdbcProfile] with DAO {
+class FundRepaymentReqDAO @Inject() (
+  protected val dbConfigProvider: DatabaseConfigProvider
+)(implicit executionContext: ExecutionContext)
+    extends RepaymentReqComponent
+    with HasDatabaseConfigProvider[JdbcProfile]
+    with DAO {
 
   import profile.api._
 
   val requests = TableQuery[RepaymentReqTable]
 
   /**
-   *
-   */
-  def insert(repaymentBoxId: String,
-             fundingErgAmount: Long,
-             state: TxState,
-             paymentAddress: String,
-             repaymentTxID: Option[String],
-             walletAddress: String,
-             timeStamp: String,
-             ttl: Long): Future[Unit] = {
+    *
+    */
+  def insert(
+    repaymentBoxId: String,
+    fundingErgAmount: Long,
+    state: TxState,
+    paymentAddress: String,
+    repaymentTxID: Option[String],
+    walletAddress: String,
+    timeStamp: String,
+    ttl: Long
+  ): Future[Unit] = {
     val action = requests += FundRepaymentReq(
       id = 1,
       repaymentBoxId = repaymentBoxId,
@@ -72,13 +80,22 @@ class FundRepaymentReqDAO @Inject()(protected val dbConfigProvider: DatabaseConf
       userAddress = walletAddress,
       timeStamp = timeStamp,
       ttl = ttl,
-      deleted = false)
+      deleted = false
+    )
     db.run(action.asTry).map(_ => ())
   }
 
-  def all: Future[Seq[FundRepaymentReq]] = db.run(requests.filter(_.deleted === false).result)
+  def all: Future[Seq[FundRepaymentReq]] =
+    db.run(requests.filter(_.deleted === false).result)
 
-  def byId(id: Long): Future[FundRepaymentReq] = db.run(requests.filter(_.deleted === false).filter(req => req.id === id).result.head)
+  def byId(id: Long): Future[FundRepaymentReq] =
+    db.run(
+      requests
+        .filter(_.deleted === false)
+        .filter(req => req.id === id)
+        .result
+        .head
+    )
 
   def deleteById(id: Long): Future[Int] = db.run(
     requests.filter(req => req.id === id).map(req => req.deleted).update(true)

@@ -7,7 +7,9 @@ trait Token
 
 object LendServiceTokens extends Token {
   val lendToken: ErgoId = ErgoId.create(Configs.lendServiceTokens.lendToken)
-  val repaymentToken: ErgoId = ErgoId.create(Configs.lendServiceTokens.repaymentToken)
+
+  val repaymentToken: ErgoId =
+    ErgoId.create(Configs.lendServiceTokens.repaymentToken)
   val nft: ErgoId = ErgoId.create(Configs.lendServiceTokens.nft)
 }
 

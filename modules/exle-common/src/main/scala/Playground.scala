@@ -7,4 +7,3 @@ object Playground extends App {
   val config = Configuration(ConfigFactory.load())
   System.out.println(config.get[String]("service.feeAddress"))
 }
-

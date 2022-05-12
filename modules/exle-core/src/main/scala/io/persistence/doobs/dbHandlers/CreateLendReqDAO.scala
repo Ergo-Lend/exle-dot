@@ -14,7 +14,8 @@ trait CreateLendReqComponent {
 
   import profile.api._
 
-  class CreateLendReqTable(tag: Tag) extends Table[CreateLendReq](tag, "create_requests") {
+  class CreateLendReqTable(tag: Tag)
+      extends Table[CreateLendReq](tag, "create_requests") {
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def name = column[String]("name")
     def description = column[String]("description")
@@ -33,36 +34,57 @@ trait CreateLendReqComponent {
     def ttl = column[Long]("ttl")
     def deleted = column[Boolean]("deleted")
 
-    def * = (id, name, description, goal, creationHeight, deadlineHeight, repaymentHeight, interestRate, state, borrowerAddress, paymentAddress,
-      createTxId.?, timeStamp, ttl, deleted) <> (CreateLendReq.tupled, CreateLendReq.unapply)
+    def * =
+      (
+        id,
+        name,
+        description,
+        goal,
+        creationHeight,
+        deadlineHeight,
+        repaymentHeight,
+        interestRate,
+        state,
+        borrowerAddress,
+        paymentAddress,
+        createTxId.?,
+        timeStamp,
+        ttl,
+        deleted
+      ) <> (CreateLendReq.tupled, CreateLendReq.unapply)
   }
 }
 
 @Singleton
-class CreateLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) (implicit executionContext: ExecutionContext)
-  extends CreateLendReqComponent
-    with HasDatabaseConfigProvider[JdbcProfile] with DAO {
+class CreateLendReqDAO @Inject() (
+  protected val dbConfigProvider: DatabaseConfigProvider
+)(implicit executionContext: ExecutionContext)
+    extends CreateLendReqComponent
+    with HasDatabaseConfigProvider[JdbcProfile]
+    with DAO {
 
   import profile.api._
 
   val requests = TableQuery[CreateLendReqTable]
 
   /**
-   *
-   */
-  def insert(name: String,
-             description: String,
-             goal: Long,
-             creationHeight: Long,
-             deadlineHeight: Long,
-             repaymentHeight: Long,
-             interestRate: Long,
-             state: TxState,
-             walletAddress: String,
-             paymentAddress: String,
-             createTxId: Option[String],
-             timeStamp: String,
-             ttl: Long): Future[Unit] = {
+    *
+    */
+  def insert(
+    name: String,
+    description: String,
+    goal: Long,
+    creationHeight: Long,
+    deadlineHeight: Long,
+    repaymentHeight: Long,
+    interestRate: Long,
+    state: TxState,
+    walletAddress: String,
+    paymentAddress: String,
+    createTxId: Option[String],
+    timeStamp: String,
+    ttl: Long
+  ): Future[Unit] = {
     val action = requests += CreateLendReq(
       id = 1,
       name = name,
@@ -78,13 +100,22 @@ class CreateLendReqDAO @Inject()(protected val dbConfigProvider: DatabaseConfigP
       createTxId = createTxId,
       timeStamp = timeStamp,
       ttl = ttl,
-      deleted = false)
+      deleted = false
+    )
     db.run(action.asTry).map(_ => ())
   }
 
-  def all: Future[Seq[CreateLendReq]] = db.run(requests.filter(_.deleted === false).result)
+  def all: Future[Seq[CreateLendReq]] =
+    db.run(requests.filter(_.deleted === false).result)
 
-  def byId(id: Long): Future[CreateLendReq] = db.run(requests.filter(_.deleted === false).filter(req => req.id === id).result.head)
+  def byId(id: Long): Future[CreateLendReq] =
+    db.run(
+      requests
+        .filter(_.deleted === false)
+        .filter(req => req.id === id)
+        .result
+        .head
+    )
 
   def deleteById(id: Long): Future[Int] = db.run(
     requests.filter(req => req.id === id).map(req => req.deleted).update(true)

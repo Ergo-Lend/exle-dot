@@ -6,23 +6,26 @@ import org.ergoplatform.appkit.{ErgoValue, InputBox}
 import special.collection.Coll
 
 /**
- * Register: RepaymentDetails
- *
- * Stores the details for repayment when a lendbox is successfully funded and a repayment box is created
- *
- * Repayment Amount Calculation
- * Financial Equation: (Total + (Total * InterestRate * Time
- * Equation: (fundingGoal + (fundingGoal * interestRate * (1 + (height - fundingDeadlineHeight/repaymentHeightGoal))
- *
- * @param fundedHeight Height of blockchain when lendbox is funded and spent (repayment box gets created)
- * @param repaymentAmount the amount of currency/token to be repaid
- * @param totalInterestAmount total Interest
- * @param repaymentHeightGoal the optimal time for repayment to be paid (can be used for Credit system)
- */
-class RepaymentDetailsRegister(val fundedHeight: Long,
-                               val repaymentAmount: Long,
-                               val totalInterestAmount: Long,
-                               val repaymentHeightGoal: Long) extends CollByteRegister with RepaymentRegister {
+  * Register: RepaymentDetails
+  *
+  * Stores the details for repayment when a lendbox is successfully funded and a repayment box is created
+  *
+  * Repayment Amount Calculation
+  * Financial Equation: (Total + (Total * InterestRate * Time
+  * Equation: (fundingGoal + (fundingGoal * interestRate * (1 + (height - fundingDeadlineHeight/repaymentHeightGoal))
+  *
+  * @param fundedHeight Height of blockchain when lendbox is funded and spent (repayment box gets created)
+  * @param repaymentAmount the amount of currency/token to be repaid
+  * @param totalInterestAmount total Interest
+  * @param repaymentHeightGoal the optimal time for repayment to be paid (can be used for Credit system)
+  */
+class RepaymentDetailsRegister(
+  val fundedHeight: Long,
+  val repaymentAmount: Long,
+  val totalInterestAmount: Long,
+  val repaymentHeightGoal: Long
+) extends CollByteRegister
+    with RepaymentRegister {
 
   def toRegister: ErgoValue[Coll[Long]] = {
     val register: Array[Long] = new Array[Long](4)
@@ -44,7 +47,11 @@ class RepaymentDetailsRegister(val fundedHeight: Long,
 }
 
 object RepaymentDetailsRegister {
-  def apply(fundedHeight: Long, fundingInfoRegister: FundingInfoRegister): RepaymentDetailsRegister = {
+
+  def apply(
+    fundedHeight: Long,
+    fundingInfoRegister: FundingInfoRegister
+  ): RepaymentDetailsRegister = {
     val fundingGoal = fundingInfoRegister.fundingGoal
     val interestRate = fundingInfoRegister.interestRatePercent
     val repaymentHeightLength = fundingInfoRegister.repaymentHeightLength
@@ -53,7 +60,12 @@ object RepaymentDetailsRegister {
     val totalInterestAmount = (fundingGoal * interestRate) / 1000
     val repaymentAmount = fundingGoal + totalInterestAmount
 
-    new RepaymentDetailsRegister(fundedHeight, repaymentAmount, totalInterestAmount, repaymentHeightGoal)
+    new RepaymentDetailsRegister(
+      fundedHeight,
+      repaymentAmount,
+      totalInterestAmount,
+      repaymentHeightGoal
+    )
   }
 
   def calculateInterestRate(fundingGoal: Long, interestRate: Long): Long = {
