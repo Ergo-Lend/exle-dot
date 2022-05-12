@@ -71,13 +71,13 @@ jobs:
       - name: Formatting App
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
       # Format core Check
-      - name: Formatting App
+      - name: Formatting Core
         run: sbt "project exle-core" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
       # Format common Check
-      - name: Formatting App
+      - name: Formatting Common
         run: sbt "project exle-common" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
       # Format chain Check
-      - name: Formatting App
+      - name: Formatting Chain
         run: sbt "project exle-chain" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
 
 permissions:
