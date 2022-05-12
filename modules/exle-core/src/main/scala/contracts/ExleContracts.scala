@@ -24,12 +24,18 @@ sealed trait ExleContract extends EnumEntry {
   def get(): String = {
     val getViaPath: () => String = () => {
       val fullPath = getPath
-      val contractSource = Source.fromResource(fullPath)
+      try {
+        val contractSource = Source.fromResource(fullPath)
 
-      val contractString = contractSource.mkString
-      contractSource.close()
+        val contractString = contractSource.mkString
+        contractSource.close()
 
-      contractString
+        contractString
+      } catch {
+        case e: Throwable =>
+          println(fullPath)
+          throw e
+      }
     }
 
     val contractString: String = getViaPath()
