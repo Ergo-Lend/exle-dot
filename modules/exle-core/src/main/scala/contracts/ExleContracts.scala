@@ -19,7 +19,7 @@ sealed trait ExleContract extends EnumEntry {
 
   def getPath: String =
     List(dirName, exleDomain, exleDomainType, contractType.plural, fileName)
-      .mkString("/")
+      .filter(_.nonEmpty).mkString("/")
 
   def get(): String = {
     val getViaPath: () => String = () => {
