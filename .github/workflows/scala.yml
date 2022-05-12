@@ -23,6 +23,7 @@ jobs:
           echo DATABASE_PASSWORD="" >> .env
           echo JDBC_TEST_URL="" >> .env
           cat .env
+
       # Run App Test
       - name: Run tests
         run: sbt coverage test

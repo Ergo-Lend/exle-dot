@@ -1,9 +1,10 @@
 package contracts.SingleLender.Ergs
 
 import config.Configs
+import contracts.SingleLender.Ergs.LendProxyContractService
 import contracts._
 import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLEServiceBox, SLELendBox, SLERepaymentBox}
+import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLELendBox, SLERepaymentBox, SLEServiceBox}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
 import org.scalatest.matchers.should.Matchers
