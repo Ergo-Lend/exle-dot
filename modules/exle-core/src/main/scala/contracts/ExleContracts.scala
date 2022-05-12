@@ -19,13 +19,15 @@ sealed trait ExleContract extends EnumEntry {
 
   def getPath: String =
     List(dirName, exleDomain, exleDomainType, contractType.plural, fileName)
-      .filter(_.nonEmpty).mkString("/")
+      .filter(_.nonEmpty)
+      .mkString("/")
 
   def get(): String = {
     val getViaPath: () => String = () => {
       val fullPath = getPath
       try {
-        val contractSource = Source.fromURL(getClass.getClassLoader.getResource(fullPath))
+        val contractSource =
+          Source.fromURL(getClass.getClassLoader.getResource(fullPath))
 
         val contractString = contractSource.mkString
         contractSource.close()
