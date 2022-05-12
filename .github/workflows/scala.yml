@@ -67,6 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      # Guides: https://scalameta.org/scalafmt/docs/installation.html#task-keys
       # Format App Check
       - name: Formatting App
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck

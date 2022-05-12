@@ -14,7 +14,10 @@ class ContractsSpec extends AnyWordSpec with Matchers {
           "}"
 
         val retrievedContract = DummyErgoScript.contractScript
-        assert(retrievedContract.equals(dummyErgoScript), s"filePath: ${retrievedContract}")
+        assert(
+          retrievedContract.equals(dummyErgoScript),
+          s"filePath: ${retrievedContract}"
+        )
         println(Configs.nodeUrl)
       }
 
