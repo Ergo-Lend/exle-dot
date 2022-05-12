@@ -3,6 +3,7 @@ package contracts
 import enumeratum._
 
 import java.net.URL
+import java.nio.file.Paths
 import scala.collection.immutable
 import scala.io.Source
 import scala.reflect.io.Directory
