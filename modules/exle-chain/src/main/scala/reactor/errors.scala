@@ -1,6 +1,7 @@
 package reactor
 
-class ChamberNotFoundException(message: String = "No Chamber found") extends Exception(message) {
+class ChamberNotFoundException(message: String = "No Chamber found")
+    extends Exception(message) {
   def this(message: String, cause: Throwable) {
     this(message)
     initCause(cause)

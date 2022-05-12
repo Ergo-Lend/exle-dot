@@ -1,5 +1,5 @@
 import sbt.Keys.{moduleName, name}
-import sbt.{Project, file}
+import sbt.{file, Project}
 
 object utils {
 

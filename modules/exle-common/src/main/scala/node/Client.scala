@@ -18,33 +18,38 @@ class Client() {
   def setClient(): Unit = {
     println("Ergo Client Starting up...")
     try {
-      client = RestApiErgoClient.create(Configs.nodeUrl, Configs.networkType, "", Configs.explorerUrl)
-      client.execute(ctx => {
-        System.out.println(s"Client Instantiated, Current Height: ${ctx.getHeight}")
+      client = RestApiErgoClient.create(
+        Configs.nodeUrl,
+        Configs.networkType,
+        "",
+        Configs.explorerUrl
+      )
+      client.execute { ctx =>
+        System.out.println(
+          s"Client Instantiated, Current Height: ${ctx.getHeight}"
+        )
         ctx.getHeight
-      })
+      }
     } catch {
       case e: Throwable =>
         logger.error(message = s"Could not set client! ${e.getMessage}.")
     }
   }
 
-  def getClient: ErgoClient = {
+  def getClient: ErgoClient =
     client
-  }
 
   /**
-   * @return current height of the blockchain
-   */
-  def getHeight: Long = {
+    * @return current height of the blockchain
+    */
+  def getHeight: Long =
     try {
       client.execute(ctx => ctx.getHeight.toLong)
     } catch {
       case _: Throwable => throw connectionException()
     }
-  }
 
-  def getUnspentBox(address: Address): List[InputBox] = {
+  def getUnspentBox(address: Address): List[InputBox] =
     client.execute(ctx =>
       try {
         ctx.getUnspentBoxesFor(address, 0, 100).asScala.toList
@@ -52,9 +57,8 @@ class Client() {
         case _: Throwable => throw connectionException()
       }
     )
-  }
 
-  def getAllUnspentBox(address: Address): List[InputBox] = {
+  def getAllUnspentBox(address: Address): List[InputBox] =
     client.execute(ctx =>
       try {
         val nullToken: java.util.List[ErgoToken] = List.empty[ErgoToken].asJava
@@ -64,8 +68,8 @@ class Client() {
         val unspent = BoxOperations.getCoveringBoxesFor(
           (1e9 * 1e8).toLong,
           nullToken,
-          (page: Integer) =>
-            inputBoxesLoader.loadBoxesPage(ctx, address, page))
+          (page: Integer) => inputBoxesLoader.loadBoxesPage(ctx, address, page)
+        )
 
         unspent.getBoxes.asScala.toList
       } catch {
@@ -73,14 +77,14 @@ class Client() {
           throw connectionException(e.getMessage)
       }
     )
-  }
 
-  def getCoveringBoxesFor(address: Address, amount: Long): CoveringBoxes = {
+  def getCoveringBoxesFor(address: Address, amount: Long): CoveringBoxes =
     client.execute(ctx =>
       try {
         val amountMinusMinerFee: Long = amount - ErgCommons.MinMinerFee
         val boxOperations = BoxOperations.createForSender(address)
-        val inputBoxList = boxOperations.withAmountToSpend(amountMinusMinerFee).loadTop(ctx)
+        val inputBoxList =
+          boxOperations.withAmountToSpend(amountMinusMinerFee).loadTop(ctx)
 
         val coveringBoxes = new CoveringBoxes(amount, inputBoxList)
 
@@ -89,9 +93,12 @@ class Client() {
         case _: Throwable => throw connectionException()
       }
     )
-  }
 
-  def getCoveringBoxesFor(address: Address, amount: Long, tokensToSpend: java.util.List[ErgoToken]): List[InputBox] = {
+  def getCoveringBoxesFor(
+    address: Address,
+    amount: Long,
+    tokensToSpend: java.util.List[ErgoToken]
+  ): List[InputBox] =
     client.execute(ctx =>
       try {
         val amountMinusMinerFee: Long = amount - ErgCommons.MinMinerFee
@@ -106,5 +113,4 @@ class Client() {
         case _: Throwable => throw connectionException()
       }
     )
-  }
 }
