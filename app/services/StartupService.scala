@@ -4,18 +4,25 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import node.Client
 import config.Configs
 import features.lend.{JobsUtil, LendJobs}
-import features.lend.handlers.{FinalizeSingleLenderHandler, LendFundingHandler, LendInitiationHandler, RepaymentFundingHandler}
+import features.lend.handlers.{
+  FinalizeSingleLenderHandler,
+  LendFundingHandler,
+  LendInitiationHandler,
+  RepaymentFundingHandler
+}
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
-class StartupService @Inject()(client: Client,
-                               system: ActorSystem,
-                               lendInitiationHandler: LendInitiationHandler,
-                               lendFundingHandler: LendFundingHandler,
-                               repaymentFundingHandler: RepaymentFundingHandler,
-                               finalizeSingleLenderHandler: FinalizeSingleLenderHandler) (implicit ec: ExecutionContext){
+class StartupService @Inject() (
+  client: Client,
+  system: ActorSystem,
+  lendInitiationHandler: LendInitiationHandler,
+  lendFundingHandler: LendFundingHandler,
+  repaymentFundingHandler: RepaymentFundingHandler,
+  finalizeSingleLenderHandler: FinalizeSingleLenderHandler
+)(implicit ec: ExecutionContext) {
   println("App Started")
   client.setClient()
 
@@ -25,7 +32,11 @@ class StartupService @Inject()(client: Client,
         lendInitiationHandler,
         lendFundingHandler,
         repaymentFundingHandler,
-        finalizeSingleLenderHandler)), "scheduler")
+        finalizeSingleLenderHandler
+      )
+    ),
+    "scheduler"
+  )
 
   system.scheduler.scheduleAtFixedRate(
     initialDelay = 2.seconds,
