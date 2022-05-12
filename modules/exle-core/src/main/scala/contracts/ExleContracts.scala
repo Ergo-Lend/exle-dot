@@ -26,10 +26,9 @@ sealed trait ExleContract extends EnumEntry {
   def get(): String = {
     val getViaPath: () => String = () => {
       val fullPath: String = getPath
-      val resourcePath: URL = getClass.getClassLoader.getResource(fullPath)
       try {
         val contractSource =
-          Source.fromURL(resourcePath)
+          Source.fromResource(fullPath)
 
         val contractString = contractSource.mkString
         contractSource.close()
@@ -37,7 +36,7 @@ sealed trait ExleContract extends EnumEntry {
         contractString
       } catch {
         case _: NullPointerException =>
-          throw new NullPointerException(s"$resourcePath not found")
+          throw new NullPointerException(s"$fullPath not found")
       }
     }
 
