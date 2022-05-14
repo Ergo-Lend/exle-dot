@@ -9,6 +9,7 @@ ergo_config.json
 /RUNNING_PID
 logfile
 *.log
+.DS_Store
 
 # targets
 target
