@@ -9,13 +9,10 @@ ergo_config.json
 /RUNNING_PID
 logfile
 *.log
+.DS_Store
 
 # targets
-target
-/modules/*/target/
-/target/
-/project/target/
-/project/project/target
+**/target
 
 # env
 .env
