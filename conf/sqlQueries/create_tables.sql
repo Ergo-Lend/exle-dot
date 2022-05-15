@@ -2,11 +2,7 @@
 
 -- !Ups
 
-DROP TABLE CREATE_REQUESTS;
-DROP TABLE FUND_LEND_REQUESTS;
-DROP TABLE REPAYMENT_REQUESTS;
-
-CREATE TABLE CREATE_REQUESTS (
+CREATE TABLE IF NOT EXISTS CREATE_REQUESTS (
     id                  serial PRIMARY KEY,
     name                VARCHAR(255) NOT NULL,
     description         VARCHAR(10000),
@@ -24,7 +20,7 @@ CREATE TABLE CREATE_REQUESTS (
     deleted             BOOLEAN
 );
 
-CREATE TABLE FUND_LEND_REQUESTS (
+CREATE TABLE IF NOT EXISTS FUND_LEND_REQUESTS (
     id                  serial primary key,
     lend_box_id         VARCHAR(10000),
     erg_amount          BIGINT NOT NULL,
@@ -37,7 +33,7 @@ CREATE TABLE FUND_LEND_REQUESTS (
     deleted             BOOLEAN
 );
 
-CREATE TABLE REPAYMENT_REQUESTS (
+CREATE TABLE IF NOT EXISTS REPAYMENT_REQUESTS (
     id                  serial primary key,
     repayment_box_id    VARCHAR(10000),
     erg_amount          BIGINT NOT NULL,
