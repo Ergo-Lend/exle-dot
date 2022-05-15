@@ -19,9 +19,9 @@ jobs:
         run: |
           touch .env
           echo JDBC_DB_URL="" >> .env
-          echo DATABASE_USERNAME="" >> .env
-          echo DATABASE_PASSWORD="" >> .env
-          echo JDBC_TEST_URL="" >> .env
+          echo POSTGRES_USER="" >> .env
+          echo POSTGRES_PASSWORD="" >> .env
+          echo SECRET_KEY="" >> .env
           cat .env
 
       # Run Core
