@@ -2,8 +2,17 @@ package contracts.SingleLender.Ergs
 
 import configs.{Configs, ServiceConfig}
 import contracts._
-import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLELendBox, SLEServiceBox}
+import core.SingleLender.Ergs.boxes.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  SingleLenderRegister
+}
+import core.SingleLender.Ergs.boxes.{
+  FundsToAddressBox,
+  SLELendBox,
+  SLEServiceBox
+}
 import org.ergoplatform.appkit.{ErgoContract, Parameters, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

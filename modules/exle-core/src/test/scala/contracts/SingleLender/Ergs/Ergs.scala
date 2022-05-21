@@ -27,7 +27,9 @@ package object Ergs {
     val serviceInfo =
       new ServiceBoxInfoRegister(name = "LendBox", description = "Testing")
     val boxInfo = new StringRegister("SLEServiceBox")
-    val ownerPubKey = new SingleAddressRegister(ServiceConfig.serviceOwner.toString)
+    val ownerPubKey = new SingleAddressRegister(
+      ServiceConfig.serviceOwner.toString
+    )
     val profitSharingRegister = new ProfitSharingRegister(
       ServiceConfig.profitSharingPercentage,
       ServiceConfig.serviceFee

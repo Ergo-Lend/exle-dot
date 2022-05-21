@@ -2,8 +2,18 @@ package contracts.SingleLender.Ergs
 
 import configs.{Configs, ServiceConfig}
 import contracts._
-import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLELendBox, SLERepaymentBox, SLEServiceBox}
+import core.SingleLender.Ergs.boxes.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  SingleLenderRegister
+}
+import core.SingleLender.Ergs.boxes.{
+  FundsToAddressBox,
+  SLELendBox,
+  SLERepaymentBox,
+  SLEServiceBox
+}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
 import org.scalatest.matchers.should.Matchers
@@ -96,7 +106,9 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           "returns service box with one less lend token" in {
             val outputServiceBox = signed.getOutputsToSpend.get(0)
             assert(
-              outputServiceBox.getTokens.get(0).getId == LendServiceTokens.serviceNFT
+              outputServiceBox.getTokens
+                .get(0)
+                .getId == LendServiceTokens.serviceNFT
             )
             assert(outputServiceBox.getTokens.get(0).getValue == 1)
             assert(

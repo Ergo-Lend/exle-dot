@@ -20,7 +20,9 @@ class ServiceBoxSpec extends AnyWordSpec with Matchers {
         "have lend service NFT" in {
           assert(inputServiceBox.getTokens.get(0).getValue == 1)
           assert(
-            inputServiceBox.getTokens.get(0).getId == LendServiceTokens.serviceNFT
+            inputServiceBox.getTokens
+              .get(0)
+              .getId == LendServiceTokens.serviceNFT
           )
         }
 
