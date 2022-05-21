@@ -27,7 +27,7 @@ The code base is a play app that depends on multiple modules that are built in-h
 
 ## Before Submitting PR
 run:
-1. formatting
+1. formatting, refer to [scalafmt](https://scalameta.org/scalafmt/docs/installation.html#task-keys)
 ```shell
 sbt scalafmtAll
 ```

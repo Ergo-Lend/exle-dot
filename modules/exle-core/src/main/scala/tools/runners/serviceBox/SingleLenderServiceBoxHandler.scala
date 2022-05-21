@@ -4,10 +4,30 @@ import boxes.registers.RegisterTypes.StringRegister
 import configs.{NodeConfig, ServiceConfig}
 import configs.NodeConfig.SystemNodeConfig
 import contracts.SingleLender.Ergs.SLEServiceBoxContract
-import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
+import core.SingleLender.Ergs.boxes.registers.{
+  CreationInfoRegister,
+  ProfitSharingRegister,
+  ServiceBoxInfoRegister,
+  SingleAddressRegister
+}
 import core.tokens.LendServiceTokens
 import ergo.{ContractUtils, ErgCommons}
-import org.ergoplatform.appkit.{Address, BlockchainContext, BoxOperations, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  BoxOperations,
+  ErgoClient,
+  ErgoId,
+  ErgoProver,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  Parameters,
+  RestApiErgoClient,
+  SecretString,
+  SignedTransaction,
+  UnsignedTransactionBuilder
+}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
 
 import java.util.stream.Collectors

@@ -2,11 +2,29 @@ package core.SingleLender.Ergs.txs
 
 import configs.ServiceConfig
 import errors.{paymentBoxInfoNotFoundException, proveException}
-import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLELendBox, SLERepaymentBox, SLEServiceBox, SingleLenderFundLendPaymentBox, SingleLenderInitiationPaymentBox}
-import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import core.SingleLender.Ergs.boxes.{
+  FundsToAddressBox,
+  SLELendBox,
+  SLERepaymentBox,
+  SLEServiceBox,
+  SingleLenderFundLendPaymentBox,
+  SingleLenderInitiationPaymentBox
+}
+import core.SingleLender.Ergs.boxes.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  RepaymentDetailsRegister,
+  SingleLenderRegister
+}
 import ergo.ErgCommons
 import io.persistence.doobs.models.{CreateLendReq, FundLendReq}
-import org.ergoplatform.appkit.{BlockchainContext, InputBox, Parameters, SignedTransaction}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  InputBox,
+  Parameters,
+  SignedTransaction
+}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -51,8 +69,10 @@ class SingleLenderLendInitiationTx(
       SLELendBox.createViaPaymentBox(paymentBox.get)
     val outputLendBox = wrappedOutputLendBox.getInitiationOutputBox(ctx, txB)
     val outputServiceFeeBox =
-      new FundsToAddressBox(ServiceConfig.serviceFee, ServiceConfig.serviceOwner.toString)
-        .getOutputBox(ctx, txB)
+      new FundsToAddressBox(
+        ServiceConfig.serviceFee,
+        ServiceConfig.serviceOwner.toString
+      ).getOutputBox(ctx, txB)
 
     val inputBoxes = Seq(serviceBox) ++ lendInitiationProxyContractPayment
 

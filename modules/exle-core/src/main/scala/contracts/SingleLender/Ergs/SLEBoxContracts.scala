@@ -5,7 +5,13 @@ import configs.{Configs, ServiceConfig}
 import contracts.ExleContracts
 import core.tokens.LendServiceTokens
 import ergo.ContractUtils
-import org.ergoplatform.appkit.{Address, BlockchainContext, ConstantsBuilder, ErgoContract, Parameters}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  ConstantsBuilder,
+  ErgoContract,
+  Parameters
+}
 
 object SLELendBoxContract extends Contract {
 

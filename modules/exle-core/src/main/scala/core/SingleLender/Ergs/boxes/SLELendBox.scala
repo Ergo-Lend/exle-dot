@@ -3,7 +3,12 @@ package core.SingleLender.Ergs.boxes
 import boxes.LendBox
 import configs.ServiceConfig
 import contracts.SingleLender.Ergs.SLELendBoxContract
-import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import core.SingleLender.Ergs.boxes.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  SingleLenderRegister
+}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
 import special.collection.Coll
