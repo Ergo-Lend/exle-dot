@@ -30,6 +30,11 @@ run:
 1. formatting, refer to [scalafmt](https://scalameta.org/scalafmt/docs/installation.html#task-keys)
 ```shell
 sbt scalafmtAll
+sbt exle-core/scalafmt
+sbt exle-core/test:scalafmt
+sbt exle-common/scalafmt
+sbt exle-common/test:scalafmt
+...
 ```
 2. tests
 ```shell

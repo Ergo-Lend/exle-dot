@@ -13,7 +13,8 @@ class ErgoPaySpec extends AnyWordSpec with Matchers {
 
   "isMainNetAddress" should {
     "return true if isMainNet address" in {
-      val isMainNet: Boolean = ErgoPayUtils.isMainNetAddress(dummyAddress.toString)
+      val isMainNet: Boolean =
+        ErgoPayUtils.isMainNetAddress(dummyAddress.toString)
 
       assert(isMainNet)
     }
@@ -21,7 +22,8 @@ class ErgoPaySpec extends AnyWordSpec with Matchers {
     "return the mainnet node url if it is mainnet" in {
       val nodeUrl: String = nodeConfig.nodeUrl
 
-      val ergoPayDefaultNodeUrl: String = ErgoPayUtils.getDefaultNodeUrl(isMainNet)
+      val ergoPayDefaultNodeUrl: String =
+        ErgoPayUtils.getDefaultNodeUrl(isMainNet)
 
       assert(nodeUrl == ergoPayDefaultNodeUrl)
     }

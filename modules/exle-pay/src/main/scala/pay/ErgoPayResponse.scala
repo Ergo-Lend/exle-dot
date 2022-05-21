@@ -9,11 +9,13 @@ import pay.Severity.Severity
 
 import java.util.Base64
 
-case class ErgoPayResponse(message: String = "",
-                           messageSeverity: Severity = Severity.NONE,
-                           address: String = "",
-                           reducedTx: String = "",
-                           replyTo: String = "")
+case class ErgoPayResponse(
+  message: String = "",
+  messageSeverity: Severity = Severity.NONE,
+  address: String = "",
+  reducedTx: String = "",
+  replyTo: String = ""
+)
 
 object Severity extends Enumeration {
   type Severity = Value
@@ -21,8 +23,12 @@ object Severity extends Enumeration {
 }
 
 object ErgoPayResponse {
-  implicit val severityEncoder: Encoder[Severity.Value] = Encoder.encodeEnumeration(Severity)
-  implicit val severityDecoder: Decoder[Severity.Value] = Decoder.decodeEnumeration(Severity)
+
+  implicit val severityEncoder: Encoder[Severity.Value] =
+    Encoder.encodeEnumeration(Severity)
+
+  implicit val severityDecoder: Decoder[Severity.Value] =
+    Decoder.decodeEnumeration(Severity)
 
   implicit val encodeFieldType: Encoder[ErgoPayResponse] = {
     Encoder.forProduct5(
@@ -33,6 +39,7 @@ object ErgoPayResponse {
       "replyTo"
     )(ErgoPayResponse.unapply(_).get)
   }
+
   implicit val decodeFieldType: Decoder[ErgoPayResponse] = {
     Decoder.forProduct5(
       "message",
@@ -43,23 +50,26 @@ object ErgoPayResponse {
     )(ErgoPayResponse.apply)
   }
 
-  def get(deadline: Long,
-          sender: String,
-          recipient: String,
-          ergAmount: Long,
-          message: String = ""): ErgoPayResponse =
-  {
+  def get(
+    deadline: Long,
+    sender: String,
+    recipient: String,
+    ergAmount: Long,
+    message: String = ""
+  ): ErgoPayResponse = {
     val senderAddress = Address.create(sender)
     val recipientAddress = Address.create(recipient)
     val isMainNet: Boolean = ErgoPayUtils.isMainNetAddress(sender)
 
     val reducedTxBytes: Array[Byte] =
-      ErgoPayUtils.getReducedSendTx(
-        ergAmount,
-        sender = senderAddress,
-        recipient = recipientAddress,
-        isMainNet
-      ).toBytes
+      ErgoPayUtils
+        .getReducedSendTx(
+          ergAmount,
+          sender = senderAddress,
+          recipient = recipientAddress,
+          isMainNet
+        )
+        .toBytes
 
     val ergoPayResponseMessage =
       if (!message.isEmpty) message
@@ -74,24 +84,32 @@ object ErgoPayResponse {
   }
 }
 
-case class ProxyContractErgoPayResponse(deadline: Long,
-                                        recipient: String,
-                                        ergAmount: Long,
-                                        ergoPayResponse: ErgoPayResponse) {
-  def toJson: Json = {
+case class ProxyContractErgoPayResponse(
+  deadline: Long,
+  recipient: String,
+  ergAmount: Long,
+  ergoPayResponse: ErgoPayResponse
+) {
+
+  def toJson: Json =
     this.asJson
-  }
 }
 
 object ProxyContractErgoPayResponse {
-  def getResponse(deadline: Long,
-                  sender: String,
-                  recipient: String,
-                  ergAmount: Long,
-                  message: String = ""): ProxyContractErgoPayResponse =
-  {
+
+  def getResponse(
+    deadline: Long,
+    sender: String,
+    recipient: String,
+    ergAmount: Long,
+    message: String = ""
+  ): ProxyContractErgoPayResponse = {
     val ergoPayResponse: ErgoPayResponse = ErgoPayResponse.get(
-      deadline, sender, recipient, ergAmount, message
+      deadline,
+      sender,
+      recipient,
+      ergAmount,
+      message
     )
 
     ProxyContractErgoPayResponse(
@@ -102,13 +120,18 @@ object ProxyContractErgoPayResponse {
     )
   }
 
-  def getErgoPayResponse(deadline: Long,
-                         sender: String,
-                         recipient: String,
-                         ergAmount: Long,
-                         message: String = ""): ErgoPayResponse = {
+  def getErgoPayResponse(
+    deadline: Long,
+    sender: String,
+    recipient: String,
+    ergAmount: Long,
+    message: String = ""
+  ): ErgoPayResponse =
     ErgoPayResponse.get(
-      deadline, sender, recipient, ergAmount, message
+      deadline,
+      sender,
+      recipient,
+      ergAmount,
+      message
     )
-  }
 }
