@@ -1,6 +1,6 @@
 package core.SingleLender.Ergs.boxes
 
-import config.Configs
+import configs.Configs
 import common.{StackTrace, Time}
 import contracts.SingleLender.Ergs.LendProxyContractService
 import ergo.TxState

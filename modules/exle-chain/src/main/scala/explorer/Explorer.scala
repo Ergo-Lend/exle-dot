@@ -1,7 +1,7 @@
 package explorer
 
 import common.StackTrace
-import config.Configs
+import configs.{Configs, GetNodeConfig, NodeConfig}
 import ergo.TxState
 import ergo.TxState.TxState
 import errors.{connectionException, explorerException, parseException}
@@ -18,9 +18,10 @@ import scala.util.{Failure, Success, Try}
 
 trait Explorer {
   private val logger: Logger = Logger(this.getClass)
+  private val nodeConfig: NodeConfig = GetNodeConfig.get()
 
-  private val baseUrlV0 = s"${Configs.explorerUrl}/api/v0"
-  private val baseUrlV1 = s"${Configs.explorerUrl}/api/v1"
+  private val baseUrlV0 = s"${nodeConfig.explorerUrl}/api/v0"
+  private val baseUrlV1 = s"${nodeConfig.explorerUrl}/api/v1"
   private val tx = s"$baseUrlV1/transactions"
   private val unconfirmedTx = s"$baseUrlV0/transactions/unconfirmed"
   private val unspentBoxesByTokenId = s"$baseUrlV1/boxes/unspent/byTokenId"

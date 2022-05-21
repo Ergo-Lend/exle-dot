@@ -2,7 +2,7 @@ package core.SingleLender.Ergs
 
 import node.Client
 import common.StackTrace
-import config.Configs
+import configs.Configs
 import core.SingleLender.Ergs.boxes.registers.{
   BorrowerRegister,
   FundingInfoRegister,
@@ -28,7 +28,7 @@ class LendBoxExplorer @Inject() (client: Client) extends Explorer {
     try {
       client.getClient.execute { (ctx: BlockchainContext) =>
         val serviceBoxciJson =
-          getUnspentTokenBoxes(LendServiceTokens.nft.toString, 0, 100)
+          getUnspentTokenBoxes(LendServiceTokens.serviceNFT.toString, 0, 100)
         val serviceBoxId = serviceBoxciJson.hcursor
           .downField("items")
           .as[List[ciJson]]

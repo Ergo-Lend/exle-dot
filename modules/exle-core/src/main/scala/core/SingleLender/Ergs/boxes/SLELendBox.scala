@@ -1,7 +1,7 @@
 package core.SingleLender.Ergs.boxes
 
 import boxes.LendBox
-import config.Configs
+import configs.ServiceConfig
 import contracts.SingleLender.Ergs.SLELendBoxContract
 import core.SingleLender.Ergs.boxes.registers.{
   BorrowerRegister,
@@ -217,7 +217,7 @@ object SLELendBox {
     paymentBox: SingleLenderInitiationPaymentBox
   ): SLELendBox = {
     val lendBoxInitialValue =
-      paymentBox.value - Parameters.MinFee - Configs.serviceFee
+      paymentBox.value - Parameters.MinFee - ServiceConfig.serviceFee
     new SLELendBox(
       lendBoxInitialValue,
       paymentBox.fundingInfoRegister,
@@ -232,7 +232,7 @@ object SLELendBox {
     val lendInitiationTxFee = Parameters.MinFee
 
     val totalPayment =
-      lendBoxCreation + lendInitiationTxFee + Configs.serviceFee
+      lendBoxCreation + lendInitiationTxFee + ServiceConfig.serviceFee
 
     totalPayment
   }

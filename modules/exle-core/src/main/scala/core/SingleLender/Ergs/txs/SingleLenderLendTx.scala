@@ -1,6 +1,6 @@
 package core.SingleLender.Ergs.txs
 
-import config.Configs
+import configs.ServiceConfig
 import errors.{paymentBoxInfoNotFoundException, proveException}
 import core.SingleLender.Ergs.boxes.{
   FundsToAddressBox,
@@ -69,8 +69,10 @@ class SingleLenderLendInitiationTx(
       SLELendBox.createViaPaymentBox(paymentBox.get)
     val outputLendBox = wrappedOutputLendBox.getInitiationOutputBox(ctx, txB)
     val outputServiceFeeBox =
-      new FundsToAddressBox(Configs.serviceFee, Configs.serviceOwner.toString)
-        .getOutputBox(ctx, txB)
+      new FundsToAddressBox(
+        ServiceConfig.serviceFee,
+        ServiceConfig.serviceOwner.toString
+      ).getOutputBox(ctx, txB)
 
     val inputBoxes = Seq(serviceBox) ++ lendInitiationProxyContractPayment
 

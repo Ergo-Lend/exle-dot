@@ -3,7 +3,7 @@ package features.lend.handlers
 import node.Client
 import common.StackTrace
 import errors.{connectionException, failedTxException}
-import config.Configs
+import configs.Configs
 import contracts.SingleLender.Ergs.{SLELendBoxContract, SLERepaymentBoxContract}
 import core.SingleLender.Ergs.LendBoxExplorer
 import core.SingleLender.Ergs.boxes.{SLELendBox, SLERepaymentBox}

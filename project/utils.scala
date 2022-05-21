@@ -9,4 +9,20 @@ object utils {
         moduleName := id,
         name := description
       )
+
+  lazy val commonScalacOptions = List(
+    "-deprecation",
+    "-encoding",
+    "UTF-8",
+    "-language:higherKinds",
+    "-language:postfixOps",
+    "-language:implicitConversions",
+    "-feature",
+    "-unchecked",
+    "-Xfuture",
+    "-Yno-adapted-args",
+    "-Ywarn-numeric-widen",
+    "-Ywarn-value-discard",
+    "-Ypartial-unification"
+  )
 }

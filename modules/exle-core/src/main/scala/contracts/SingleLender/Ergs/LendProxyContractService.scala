@@ -1,7 +1,7 @@
 package contracts.SingleLender.Ergs
 
 import node.Client
-import config.Configs
+import configs.Configs
 import contracts.{ExleContracts}
 import core.tokens.LendServiceTokens
 import org.ergoplatform.appkit._
@@ -41,7 +41,7 @@ class LendProxyContractService @Inject() (client: Client) {
     try {
       client.getClient.execute { (ctx: BlockchainContext) =>
         val serviceNftToken =
-          ErgoId.create(LendServiceTokens.nft.toString).getBytes
+          ErgoId.create(LendServiceTokens.serviceNFT.toString).getBytes
         val lendToken =
           ErgoId.create(LendServiceTokens.lendToken.toString).getBytes
         val borrowerPk = Address.create(pk).getErgoAddress.script.bytes

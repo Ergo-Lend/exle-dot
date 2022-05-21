@@ -1,6 +1,6 @@
 package contracts
 
-import config.Configs
+import configs.NodeConfig.SystemNodeConfig
 import contracts.ExleContracts.DummyErgoScript
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -19,7 +19,7 @@ class ContractsSpec extends AnyWordSpec with Matchers {
           retrievedContract.equals(dummyErgoScript),
           s"filePath: ${retrievedContract}"
         )
-        println(Configs.nodeUrl)
+        println(SystemNodeConfig.nodeUrl)
       }
 
       "find all contracts" ignore {

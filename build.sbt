@@ -1,4 +1,5 @@
 import dependencies._
+import utils.commonScalacOptions
 
 name := """exle-dot"""
 organization := "io.exle"
@@ -36,7 +37,7 @@ lazy val root = (project in file("."))
   .withId("lendbackend")
   .settings(commonSettings)
   .settings(moduleName := "lendbackend", name := "LendBackend")
-  .dependsOn(core, chain)
+  .dependsOn(core, chain, pay)
 
 lazy val core = utils
   .mkModule("exle-core", "ExleCore")
@@ -75,21 +76,17 @@ lazy val common = utils
         DependencyInjection
   )
 
-lazy val commonScalacOptions = List(
-  "-deprecation",
-  "-encoding",
-  "UTF-8",
-  "-language:higherKinds",
-  "-language:postfixOps",
-  "-language:implicitConversions",
-  "-feature",
-  "-unchecked",
-  "-Xfuture",
-  "-Yno-adapted-args",
-  "-Ywarn-numeric-widen",
-  "-Ywarn-value-discard",
-  "-Ypartial-unification"
-)
+lazy val pay = utils
+  .mkModule("exle-pay", "ExlePay")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing ++
+        Circe ++
+        DependencyInjection
+  )
+  .dependsOn(common)
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

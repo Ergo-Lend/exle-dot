@@ -61,7 +61,7 @@ class SLEServiceBox(
   val ergoLendPubKey: SingleAddressRegister,
   override val profitSharingPercentage: ProfitSharingRegister
 ) extends ServiceBox(ergoLendPubKey, profitSharingPercentage) {
-  override val nft: ErgoId = LendServiceTokens.nft
+  override val nft: ErgoId = LendServiceTokens.serviceNFT
   val lendToken: ErgoId = LendServiceTokens.lendToken
   val repaymentToken: ErgoId = LendServiceTokens.repaymentToken
 
@@ -99,7 +99,7 @@ class SLEServiceBox(
   ): OutBox = {
     val serviceBoxContract = SLEServiceBoxContract.getContract(ctx)
 
-    val lendServiceNft = new ErgoToken(LendServiceTokens.nft, 1)
+    val lendServiceNft = new ErgoToken(LendServiceTokens.serviceNFT, 1)
     val lendServiceTokens =
       new ErgoToken(LendServiceTokens.lendToken, lendTokenAmount)
     val repaymentServiceTokens =

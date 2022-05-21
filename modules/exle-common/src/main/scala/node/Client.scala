@@ -1,10 +1,19 @@
 package node
 
-import config.Configs
+import configs.NodeConfig.SystemNodeConfig
 import ergo.ErgCommons
 import errors.connectionException
+import configs.{NodeConfig}
 import org.ergoplatform.appkit.BoxOperations.ExplorerApiUnspentLoader
-import org.ergoplatform.appkit._
+import org.ergoplatform.appkit.{
+  Address,
+  BoxOperations,
+  CoveringBoxes,
+  ErgoClient,
+  ErgoToken,
+  InputBox,
+  RestApiErgoClient
+}
 import play.api.Logger
 
 import javax.inject.Singleton
@@ -19,14 +28,15 @@ class Client() {
     println("Ergo Client Starting up...")
     try {
       client = RestApiErgoClient.create(
-        Configs.nodeUrl,
-        Configs.networkType,
+        SystemNodeConfig.nodeUrl,
+        NodeConfig.networkType,
         "",
-        Configs.explorerUrl
+        SystemNodeConfig.explorerUrl
       )
       client.execute { ctx =>
         System.out.println(
-          s"Client Instantiated, Current Height: ${ctx.getHeight}"
+          s"Client Instantiated, Current Height: ${ctx.getHeight}" +
+            s"Network: ${NodeConfig.networkType}"
         )
         ctx.getHeight
       }

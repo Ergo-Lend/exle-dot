@@ -1,6 +1,6 @@
 package core.SingleLender.Ergs.txs
 
-import config.Configs
+import configs.Configs
 import errors.proveException
 import core.SingleLender.Ergs.boxes.registers.SingleAddressRegister
 import core.SingleLender.Ergs.boxes.{
