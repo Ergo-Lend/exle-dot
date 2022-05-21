@@ -1,6 +1,6 @@
 package common
 
-import config.Configs
+import configs.Configs
 import org.ergoplatform.appkit.{ErgoType, ErgoValue, JavaHelpers}
 import sigmastate.Values.ErgoTree
 import special.collection.Coll

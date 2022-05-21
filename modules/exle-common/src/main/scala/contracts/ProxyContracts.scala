@@ -1,6 +1,6 @@
 package contracts
 
-import config.Configs
+import configs.Configs
 import node.Client
 import org.ergoplatform.appkit.{
   BlockchainContext,

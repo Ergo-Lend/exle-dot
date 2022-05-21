@@ -1,25 +1,21 @@
-package features.lend
+package controllers
 
-import node.Client
 import common.ErgoValidator
-import ergo.{BoxState, ErgCommons}
-import errors.ExceptionThrowable
-import config.Configs
+import configs.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
 import core.SingleLender.Ergs.boxes.{
   LendProxyAddress,
   SLELendBox,
   SLERepaymentBox
 }
-import features.{
-  getRequestBodyAsDouble,
-  getRequestBodyAsLong,
-  getRequestBodyAsString
-}
+import ergo.{BoxState, ErgCommons}
+import errors.ExceptionThrowable
 import io.circe.Json
+import node.Client
+import pay.ProxyContractErgoPayResponse
 import play.api.Logger
-import play.api.mvc._
 import play.api.libs.circe.Circe
+import play.api.mvc._
 
 import javax.inject._
 
@@ -269,17 +265,18 @@ class LendController @Inject() (
         interestRate = interestRate,
         repaymentHeightLength = repaymentHeight
       )
-      val paymentAmountInNanoErgs = SLELendBox.getLendBoxInitiationPayment
-      val delay: Long = Configs.creationDelay
 
-      val result = Json.fromFields(
-        List(
-          ("deadline", Json.fromLong(delay)),
-          ("address", Json.fromString(paymentAddress)),
-          ("fee", Json.fromLong(paymentAmountInNanoErgs))
+      val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+        ProxyContractErgoPayResponse.getResponse(
+          deadline = Configs.creationDelay,
+          sender = walletAddress,
+          recipient = paymentAddress,
+          ergAmount = SLELendBox.getLendBoxInitiationPayment,
+          message =
+            s"Send ${SLELendBox.getLendBoxInitiationPayment} to Fund Repayment Proxy Contract"
         )
-      )
-      Ok(result.toString()).as("application/json")
+
+      Ok(proxyContractErgoPayResponse.toJson).as("application/json")
     } catch {
       case e: Throwable =>
         exception(e, logger)
@@ -299,7 +296,6 @@ class LendController @Inject() (
       val lendBox = explorer.getLendBox(lendBoxId)
       val wrappedLendBox = new SLELendBox(lendBox)
       val amount = wrappedLendBox.getFundingTotalErgs
-      val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
       val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
         lendBoxId = lendBoxId,
@@ -307,16 +303,16 @@ class LendController @Inject() (
         fundAmount = amount
       )
 
-      val delay: Long = Configs.creationDelay
-
-      val result = Json.fromFields(
-        List(
-          ("deadline", Json.fromLong(delay)),
-          ("address", Json.fromString(paymentAddress)),
-          ("fee", Json.fromLong(amount))
+      val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+        ProxyContractErgoPayResponse.getResponse(
+          deadline = Configs.creationDelay,
+          sender = walletAddress,
+          recipient = paymentAddress,
+          ergAmount = amount,
+          message = s"Send ${amount} to Fund Lend Proxy Contract"
         )
-      )
-      Ok(result.toString()).as("application/json")
+
+      Ok(proxyContractErgoPayResponse.toJson).as("application/json")
     } catch {
       case e: Throwable => exception(e, logger)
     }
@@ -339,7 +335,6 @@ class LendController @Inject() (
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
         val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
         val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
-        val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
           repaymentBoxId = repaymentBoxId,
@@ -347,16 +342,16 @@ class LendController @Inject() (
           fundAmount = amount
         )
 
-        val delay: Long = Configs.creationDelay
-
-        val result = Json.fromFields(
-          List(
-            ("deadline", Json.fromLong(delay)),
-            ("address", Json.fromString(paymentAddress)),
-            ("fee", Json.fromLong(amount))
+        val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+          ProxyContractErgoPayResponse.getResponse(
+            deadline = Configs.creationDelay,
+            sender = walletAddress,
+            recipient = paymentAddress,
+            ergAmount = amount,
+            message = s"Send ${amount} to Fund Repayment Proxy Contract"
           )
-        )
-        Ok(result.toString()).as("application/json")
+
+        Ok(proxyContractErgoPayResponse.toJson).as("application/json")
       } catch {
         case e: Throwable => exception(e, logger)
       }
@@ -372,7 +367,6 @@ class LendController @Inject() (
         val walletAddress: String =
           getRequestBodyAsString(request, "walletAddress")
 
-        println(Configs.networkType)
         ErgoValidator.validateAddress(walletAddress)
 
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
@@ -385,16 +379,16 @@ class LendController @Inject() (
           fundAmount = fundAmount
         )
 
-        val delay: Long = Configs.creationDelay
-
-        val result = Json.fromFields(
-          List(
-            ("deadline", Json.fromLong(delay)),
-            ("address", Json.fromString(paymentAddress)),
-            ("fee", Json.fromLong(fundAmount))
+        val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+          ProxyContractErgoPayResponse.getResponse(
+            deadline = Configs.creationDelay,
+            sender = walletAddress,
+            recipient = paymentAddress,
+            ergAmount = fundAmount,
+            message = s"Send ${fundAmount} to Fund Repayment Proxy Contract"
           )
-        )
-        Ok(result.toString()).as("application/json")
+
+        Ok(proxyContractErgoPayResponse.toJson).as("application/json")
       } catch {
         case e: Throwable => exception(e, logger)
       }
@@ -415,7 +409,6 @@ class LendController @Inject() (
       val lendBox = explorer.getLendBox(lendBoxId)
       val wrappedLendBox = new SLELendBox(lendBox)
       val amount = wrappedLendBox.getFundingTotalErgs
-      val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
       val paymentAddress = lendProxyAddress.getFundLendBoxProxyAddress(
         lendBoxId = lendBoxId,
@@ -424,16 +417,16 @@ class LendController @Inject() (
         writeToDb = false
       )
 
-      val delay: Long = Configs.creationDelay
-
-      val result = Json.fromFields(
-        List(
-          ("deadline", Json.fromLong(delay)),
-          ("address", Json.fromString(paymentAddress)),
-          ("fee", Json.fromLong(amount))
+      val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+        ProxyContractErgoPayResponse.getResponse(
+          deadline = Configs.creationDelay,
+          sender = walletAddress,
+          recipient = paymentAddress,
+          ergAmount = amount,
+          message = s"Send ${amount} to Fund Lend Proxy Contract"
         )
-      )
-      Ok(result.toString()).as("application/json")
+
+      Ok(proxyContractErgoPayResponse.toJson).as("application/json")
     } catch {
       case e: Throwable => exception(e, logger)
     }
@@ -456,7 +449,6 @@ class LendController @Inject() (
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
         val wrappedRepaymentBox = new SLERepaymentBox(repaymentBox)
         val amount = wrappedRepaymentBox.getFundAmount(fundAmount)
-        val amountInErgs = ErgCommons.nanoErgsToErgs(amount)
 
         val paymentAddress = lendProxyAddress.getFundRepaymentBoxProxyAddress(
           repaymentBoxId = repaymentBoxId,
@@ -465,16 +457,16 @@ class LendController @Inject() (
           writeToDb = false
         )
 
-        val delay: Long = Configs.creationDelay
-
-        val result = Json.fromFields(
-          List(
-            ("deadline", Json.fromLong(delay)),
-            ("address", Json.fromString(paymentAddress)),
-            ("fee", Json.fromLong(amount))
+        val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+          ProxyContractErgoPayResponse.getResponse(
+            deadline = Configs.creationDelay,
+            sender = walletAddress,
+            recipient = paymentAddress,
+            ergAmount = amount,
+            message = s"Send ${amount} to Fund Repayment Proxy Contract"
           )
-        )
-        Ok(result.toString()).as("application/json")
+
+        Ok(proxyContractErgoPayResponse.toJson).as("application/json")
       } catch {
         case e: Throwable => exception(e, logger)
       }
@@ -490,7 +482,6 @@ class LendController @Inject() (
         val walletAddress: String =
           getRequestBodyAsString(request, "walletAddress")
 
-        println(Configs.networkType)
         ErgoValidator.validateAddress(walletAddress)
 
         val repaymentBox = explorer.getRepaymentBox(repaymentBoxId)
@@ -504,16 +495,16 @@ class LendController @Inject() (
           writeToDb = false
         )
 
-        val delay: Long = Configs.creationDelay
-
-        val result = Json.fromFields(
-          List(
-            ("deadline", Json.fromLong(delay)),
-            ("address", Json.fromString(paymentAddress)),
-            ("fee", Json.fromLong(fundAmount))
+        val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+          ProxyContractErgoPayResponse.getResponse(
+            deadline = Configs.creationDelay,
+            sender = walletAddress,
+            recipient = paymentAddress,
+            ergAmount = fundAmount,
+            message = s"Send ${fundAmount} to Fund Repayment Proxy Contract"
           )
-        )
-        Ok(result.toString()).as("application/json")
+
+        Ok(proxyContractErgoPayResponse.toJson).as("application/json")
       } catch {
         case e: Throwable => exception(e, logger)
       }
@@ -562,20 +553,17 @@ class LendController @Inject() (
           writeToDb = false
         )
 
-        val paymentAmountInNanoErgs = SLELendBox.getLendBoxInitiationPayment
-        val paymentAmountInErgs =
-          ErgCommons.nanoErgsToErgs(paymentAmountInNanoErgs)
-        val delay: Long = Configs.creationDelay
-
-        val result = Json.fromFields(
-          List(
-            ("deadline", Json.fromLong(delay)),
-            ("address", Json.fromString(paymentAddress)),
-            ("fee", Json.fromLong(paymentAmountInNanoErgs)),
-            ("ergs", Json.fromDoubleOrString(paymentAmountInErgs))
+        val proxyContractErgoPayResponse: ProxyContractErgoPayResponse =
+          ProxyContractErgoPayResponse.getResponse(
+            deadline = Configs.creationDelay,
+            sender = walletAddress,
+            recipient = paymentAddress,
+            ergAmount = SLELendBox.getLendBoxInitiationPayment,
+            message =
+              s"Send ${SLELendBox.getLendBoxInitiationPayment} to Lend Creation Proxy Contract"
           )
-        )
-        Ok(result.toString()).as("application/json")
+
+        Ok(proxyContractErgoPayResponse.toJson).as("application/json")
       } catch {
         case e: Throwable =>
           exception(e, logger)

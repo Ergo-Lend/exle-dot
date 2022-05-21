@@ -5,28 +5,31 @@
 
 # An example controller showing a sample home page
 
-GET     /                               features.lend.LendController.test
+GET     /                               controllers.LendController.test
 # Lend
-GET     /api/lend/test                  features.lend.LendController.test
-GET     /api/lend/:lendId               features.lend.LendController.getLendBoxById(lendId: String)
-GET     /api/lend                       features.lend.LendController.getLendBoxes(offset: Int?=0, limit: Int?=100)
-POST    /api/lend/create                features.lend.LendController.createLendBox
-POST    /api/lend/fund                  features.lend.LendController.fundLendBox
-POST    /api/lend/mockCreate            features.lend.LendController.mockCreateLendBox
-POST    /api/lend/mockFund              features.lend.LendController.mockFundLendBox
+GET     /api/lend/test                  controllers.LendController.test
+GET     /api/lend/:lendId               controllers.LendController.getLendBoxById(lendId: String)
+GET     /api/lend                       controllers.LendController.getLendBoxes(offset: Int?=0, limit: Int?=100)
+POST    /api/lend/create                controllers.LendController.createLendBox
+POST    /api/lend/fund                  controllers.LendController.fundLendBox
+POST    /api/lend/mockCreate            controllers.LendController.mockCreateLendBox
+POST    /api/lend/mockFund              controllers.LendController.mockFundLendBox
 
-GET     /api/repayment/:repaymentId     features.lend.LendController.getRepaymentBoxById(repaymentId: String)
-GET     /api/repayment                  features.lend.LendController.getRepaymentBoxes(offset: Int?=0, limit: Int?=100)
-POST    /api/repayment/fund             features.lend.LendController.fundRepaymentBox
-POST    /api/repayment/fullFund         features.lend.LendController.fundRepaymentBoxFully
-POST    /api/repayment/mockFund         features.lend.LendController.mockFundRepaymentBox
-POST    /api/repayment/mockFullFund     features.lend.LendController.mockFundRepaymentBoxFully
+GET     /api/repayment/:repaymentId     controllers.LendController.getRepaymentBoxById(repaymentId: String)
+GET     /api/repayment                  controllers.LendController.getRepaymentBoxes(offset: Int?=0, limit: Int?=100)
+POST    /api/repayment/fund             controllers.LendController.fundRepaymentBox
+POST    /api/repayment/fullFund         controllers.LendController.fundRepaymentBoxFully
+POST    /api/repayment/mockFund         controllers.LendController.mockFundRepaymentBox
+POST    /api/repayment/mockFullFund     controllers.LendController.mockFundRepaymentBoxFully
 
 # Explorer
 GET     /api/explorer/test              features.base.ExplorerController.test
 GET     /api/explorer/box/:id           features.base.ExplorerController.getBoxById(id: String)
 GET     /api/explorer/txs/:address      features.base.ExplorerController.getTxsInMempoolByAddressViaController(address: String)
 GET     /api/explorer/txs/confirmation  features.base.ExplorerController.getTxConfirmation
+
+# ErgoPay Test
+GET     /pay/roundtrip/:address         controllers.PayController.roundtrip(address: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

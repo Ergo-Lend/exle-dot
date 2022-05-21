@@ -1,6 +1,6 @@
 package boxes.registers
 
-import config.Configs
+import configs.Configs
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{Address, ErgoType, ErgoValue, JavaHelpers}
 import sigmastate.serialization.ErgoTreeSerializer

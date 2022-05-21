@@ -9,7 +9,7 @@ import errors.{
   proveException,
   skipException
 }
-import config.Configs
+import configs.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
 import core.SingleLender.Ergs.txs.{
   RefundProxyContractTx,

@@ -10,7 +10,7 @@ import errors.{
   proveException,
   skipException
 }
-import config.Configs
+import configs.Configs
 import core.SingleLender.Ergs.LendBoxExplorer
 import core.SingleLender.Ergs.boxes.SLELendBox
 import core.SingleLender.Ergs.txs.{RefundProxyContractTx, SingleLenderTxFactory}
@@ -51,6 +51,8 @@ class LendFundingHandler @Inject() (
   def handleRemoval(req: FundLendReq): Unit = {
     val paymentAddress = Address.create(req.paymentAddress)
     val unSpentPaymentBoxes = client.getAllUnspentBox(paymentAddress)
+    // @todo kelim
+    //  When lendbox has been refunded, and can't be found. remove requests.
     val lendBox = lendBoxExplorer.getLendBox(req.lendBoxId)
     val wrappedLendBox = new SLELendBox(lendBox)
     logger.info("removing request" + req.id)

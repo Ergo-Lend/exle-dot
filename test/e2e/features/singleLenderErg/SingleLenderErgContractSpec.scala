@@ -1,6 +1,7 @@
 package e2e.features.singleLenderErg
 
-import config.Configs
+import configs.{Configs, NodeConfig}
+import configs.NodeConfig.SystemNodeConfig
 import contracts.ExleContracts
 import core.tokens.LendServiceTokens
 import ergo.ErgCommons
@@ -17,13 +18,21 @@ import org.scalatest.wordspec.AnyWordSpec
 class SingleLenderErgContractSpec extends AnyWordSpec with Matchers {
 
   val ergoClient: ErgoClient =
-    RestApiErgoClient.create(Configs.nodeUrl, Configs.networkType, "", "")
-  val addressEncoder = new ErgoAddressEncoder(Configs.networkType.networkPrefix)
+    RestApiErgoClient.create(
+      SystemNodeConfig.nodeUrl,
+      NodeConfig.networkType,
+      "",
+      ""
+    )
+
+  val addressEncoder = new ErgoAddressEncoder(
+    NodeConfig.networkType.networkPrefix
+  )
 
   "SingleLenderErgContract".can {
 
     "Create Proxy Contract" should {
-      val serviceNFTToken = new ErgoToken(LendServiceTokens.nft, 1)
+      val serviceNFTToken = new ErgoToken(LendServiceTokens.serviceNFT, 1)
       val lendToken = new ErgoToken(LendServiceTokens.lendToken, 100)
       val repaymentToken = new ErgoToken(LendServiceTokens.repaymentToken, 100)
 

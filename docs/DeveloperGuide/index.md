@@ -24,3 +24,18 @@ The code base is a play app that depends on multiple modules that are built in-h
 : A common module where generics are stored and are shared between many modules.
 - **Exle Chain**
 : A system that runs transactions against the blockchain in a concurrent and chained manner.
+
+## Before Submitting PR
+run:
+1. formatting
+```shell
+sbt scalafmtAll
+```
+2. tests
+```shell
+sbt "project {project name (f.e exle-chain)}" test
+```
+for test coverage 
+```shell
+sbt "project {project name (f.e exle-chain)}" coverage test
+```

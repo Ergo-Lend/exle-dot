@@ -1,32 +1,13 @@
 package tools.runners.serviceBox
 
 import boxes.registers.RegisterTypes.StringRegister
-import config.Configs
+import configs.{NodeConfig, ServiceConfig}
+import configs.NodeConfig.SystemNodeConfig
 import contracts.SingleLender.Ergs.SLEServiceBoxContract
-import core.SingleLender.Ergs.boxes.registers.{
-  CreationInfoRegister,
-  ProfitSharingRegister,
-  ServiceBoxInfoRegister,
-  SingleAddressRegister
-}
+import core.SingleLender.Ergs.boxes.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
 import core.tokens.LendServiceTokens
 import ergo.{ContractUtils, ErgCommons}
-import org.ergoplatform.appkit.{
-  Address,
-  BlockchainContext,
-  BoxOperations,
-  ErgoClient,
-  ErgoId,
-  ErgoProver,
-  ErgoToken,
-  InputBox,
-  OutBox,
-  Parameters,
-  RestApiErgoClient,
-  SecretString,
-  SignedTransaction,
-  UnsignedTransactionBuilder
-}
+import org.ergoplatform.appkit.{Address, BlockchainContext, BoxOperations, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
 
 import java.util.stream.Collectors
@@ -56,12 +37,12 @@ object SLEServiceBoxHandler {
     val nodeConf: ErgoNodeConfig = conf.getNode
 
     val client: ErgoClient = RestApiErgoClient.create(
-      Configs.nodeUrl,
-      Configs.networkType,
+      SystemNodeConfig.nodeUrl,
+      NodeConfig.networkType,
       "hello",
-      Configs.explorerUrl
+      SystemNodeConfig.explorerUrl
     )
-    System.out.println(s"Network Type is: ${Configs.networkType}")
+    System.out.println(s"Network Type is: ${NodeConfig.networkType}")
 
     val txJson: String = client.execute { (ctx: BlockchainContext) =>
       val runTx = "merge"
@@ -176,14 +157,14 @@ object SLEServiceBoxHandler {
     config: ErgoToolConfig,
     nodeConfig: ErgoNodeConfig
   ): SignedTransaction = {
-    val serviceNftBoxId: String = LendServiceTokens.nft.toString
+    val serviceNftBoxId: String = LendServiceTokens.serviceNFT.toString
     val lendTokenId: String = LendServiceTokens.lendToken.toString
     val repaymentTokenId: String = LendServiceTokens.repaymentToken.toString
 
     val addressIndex: Int = config.getParameters.get("addressIndex").toInt
     val ownerAddress: Address = Address.createEip3Address(
       0,
-      Configs.networkType,
+      NodeConfig.networkType,
       SecretString.create(nodeConfig.getWallet.getMnemonic),
       SecretString.create("")
     )
@@ -196,11 +177,11 @@ object SLEServiceBoxHandler {
     )
     val boxInfo: StringRegister = new StringRegister("SLEServiceBox")
     val ergoLendPubKeyRegister: SingleAddressRegister =
-      new SingleAddressRegister(Configs.serviceOwner.toString)
+      new SingleAddressRegister(ServiceConfig.serviceOwner.toString)
     val profitSharingPercentageRegister: ProfitSharingRegister =
       ProfitSharingRegister(
-        profitSharingPercentage = Configs.profitSharingPercentage,
-        serviceFeeAmount = Configs.serviceFee
+        profitSharingPercentage = ServiceConfig.profitSharingPercentage,
+        serviceFeeAmount = ServiceConfig.serviceFee
       )
 
     val prover: ErgoProver = ctx
@@ -296,7 +277,7 @@ object SLEServiceBoxHandler {
 
     val ownerAddress = Address.createEip3Address(
       0,
-      Configs.networkType,
+      NodeConfig.networkType,
       SecretString.create(node.getWallet.getMnemonic),
       SecretString.create("")
     )

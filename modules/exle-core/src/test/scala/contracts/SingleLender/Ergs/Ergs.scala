@@ -1,8 +1,7 @@
 package contracts.SingleLender
 
 import boxes.registers.RegisterTypes.StringRegister
-import config.Configs
-import contracts.SingleLender.Ergs.SLELendBoxContract
+import configs.ServiceConfig
 import contracts._
 import core.SingleLender.Ergs.boxes.registers._
 import core.SingleLender.Ergs.boxes.{SLELendBox, SLERepaymentBox, SLEServiceBox}
@@ -28,10 +27,10 @@ package object Ergs {
     val serviceInfo =
       new ServiceBoxInfoRegister(name = "LendBox", description = "Testing")
     val boxInfo = new StringRegister("SLEServiceBox")
-    val ownerPubKey = new SingleAddressRegister(Configs.serviceOwner.toString)
+    val ownerPubKey = new SingleAddressRegister(ServiceConfig.serviceOwner.toString)
     val profitSharingRegister = new ProfitSharingRegister(
-      Configs.profitSharingPercentage,
-      Configs.serviceFee
+      ServiceConfig.profitSharingPercentage,
+      ServiceConfig.serviceFee
     )
     val lendServiceBox = new SLEServiceBox(
       value = Parameters.MinFee,

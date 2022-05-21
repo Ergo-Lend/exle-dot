@@ -1,18 +1,9 @@
 package contracts.SingleLender.Ergs
 
-import config.Configs
+import configs.{Configs, ServiceConfig}
 import contracts._
-import core.SingleLender.Ergs.boxes.registers.{
-  BorrowerRegister,
-  FundingInfoRegister,
-  LendingProjectDetailsRegister,
-  SingleLenderRegister
-}
-import core.SingleLender.Ergs.boxes.{
-  FundsToAddressBox,
-  SLELendBox,
-  SLEServiceBox
-}
+import core.SingleLender.Ergs.boxes.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import core.SingleLender.Ergs.boxes.{FundsToAddressBox, SLELendBox, SLEServiceBox}
 import org.ergoplatform.appkit.{ErgoContract, Parameters, UnsignedTransaction}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -28,6 +19,8 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
   val deadlineHeightLength: Long = 100L
   val loanName: String = "Test Loan"
   val loanDescription: String = "Test Loan Description"
+
+  val service: ServiceConfig.type = ServiceConfig
 
   client.setClient()
   val lendProxyContractService = new LendProxyContractService(client)
@@ -164,7 +157,7 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
         val inputProxyContract = txB
           .outBoxBuilder()
           .contract(lendCreationProxyContract)
-          .value(Parameters.MinFee * 3 + Configs.serviceFee)
+          .value(Parameters.MinFee * 3 + service.serviceFee)
           .build()
           .convertToInputWith(dummyTxId, 0)
 
@@ -192,8 +185,8 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
         ).getOutputBox(ctx, txB)
 
         val outputOwnerFeeBox = FundsToAddressBox(
-          value = Configs.serviceFee,
-          address = Configs.serviceOwner
+          value = service.serviceFee,
+          address = service.serviceOwner
         ).getOutputBox(ctx, txB)
 
         val tx = txB
