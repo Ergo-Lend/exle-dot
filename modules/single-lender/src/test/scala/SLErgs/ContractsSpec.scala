@@ -25,7 +25,6 @@ class ContractsSpec extends AnyWordSpec with Matchers {
 
       "find all contracts" in {
         ExleContracts.values
-          .filter(_ != ExleContracts.DummyErgoScript)
           .map(x => assert(x.contractScript.isInstanceOf[String]))
       }
     }
