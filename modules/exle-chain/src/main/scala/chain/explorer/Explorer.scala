@@ -26,8 +26,8 @@ trait Explorer {
   private val unconfirmedTx = s"$baseUrlV0/transactions/unconfirmed"
 
   private val unspentBoxesByTokenId =
-    s"$baseUrlV1/commons.boxes/unspent/byTokenId"
-  private val boxesP1 = s"$baseUrlV1/commons.boxes"
+    s"$baseUrlV1/boxes/unspent/byTokenId"
+  private val boxesP1 = s"$baseUrlV1/boxes"
   private val mempoolTransactions = s"$baseUrlV1/mempool/transactions/byAddress"
 
   def getTxsInMempoolByAddress(address: String): Json =
@@ -93,8 +93,9 @@ trait Explorer {
 
   def getUnspentTokenBoxes(tokenId: String, offset: Int, limit: Int): Json =
     try {
+      val url = s"$unspentBoxesByTokenId/$tokenId?offset=$offset&limit=$limit"
       GetRequest.httpGet(
-        s"$unspentBoxesByTokenId/$tokenId?offset=$offset&limit=$limit"
+        url
       )
     } catch {
       case _: Throwable => Json.Null
