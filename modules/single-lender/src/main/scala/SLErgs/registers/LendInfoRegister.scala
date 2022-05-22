@@ -1,6 +1,10 @@
 package SLErgs.registers
 
-import commons.boxes.registers.RegisterTypes.{CollByte, CollByteRegister, LongRegister}
+import commons.boxes.registers.RegisterTypes.{
+  CollByte,
+  CollByteRegister,
+  LongRegister
+}
 import org.ergoplatform.appkit.ErgoValue
 import special.collection.Coll
 

@@ -2,7 +2,12 @@ package SLErgs.boxes
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLELendBoxContract
-import SLErgs.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import SLErgs.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  SingleLenderRegister
+}
 import commons.boxes.LendBox
 import commons.configs.ServiceConfig
 import org.ergoplatform.appkit._

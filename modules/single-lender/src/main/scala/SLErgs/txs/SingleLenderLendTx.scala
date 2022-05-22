@@ -1,12 +1,30 @@
 package SLErgs.txs
 
-import SLErgs.boxes.{FundsToAddressBox, SLELendBox, SLERepaymentBox, SLEServiceBox, SingleLenderFundLendPaymentBox, SingleLenderInitiationPaymentBox}
-import SLErgs.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import SLErgs.boxes.{
+  FundsToAddressBox,
+  SLELendBox,
+  SLERepaymentBox,
+  SLEServiceBox,
+  SingleLenderFundLendPaymentBox,
+  SingleLenderInitiationPaymentBox
+}
+import SLErgs.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  RepaymentDetailsRegister,
+  SingleLenderRegister
+}
 import commons.configs.ServiceConfig
 import commons.ergo.ErgCommons
 import commons.errors.{PaymentBoxInfoNotFoundException, ProveException}
 import db.models.{CreateLendReq, FundLendReq}
-import org.ergoplatform.appkit.{BlockchainContext, InputBox, Parameters, SignedTransaction}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  InputBox,
+  Parameters,
+  SignedTransaction
+}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable

@@ -8,7 +8,12 @@ import commons.common.StackTrace
 import commons.configs.Configs
 import commons.errors.{ConnectionException, FailedTxException}
 import commons.node.Client
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoClientException, InputBox}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  ErgoClientException,
+  InputBox
+}
 import play.api.Logger
 
 import javax.inject.Inject

@@ -6,7 +6,7 @@ import org.ergoplatform.appkit.NetworkType
 object NodeConfig extends ConfigHelper {
 
   lazy val networkType: NetworkType =
-    if (readKey("commons.node.networkType").toLowerCase.equals("mainnet"))
+    if (readKey("node.networkType").toLowerCase.equals("mainnet"))
       NetworkType.MAINNET
     else
       NetworkType.TESTNET
@@ -15,23 +15,23 @@ object NodeConfig extends ConfigHelper {
 }
 
 object MainNetNodeConfig extends ConfigHelper {
-  lazy val nodeUrl: String = readKey(s"commons.node.MAINNET.url").replaceAll("/$", "")
+  lazy val nodeUrl: String = readKey(s"node.MAINNET.url").replaceAll("/$", "")
 
   lazy val explorerUrl: String =
-    readKey(s"chain.explorer.MAINNET.url").replaceAll("/$", "")
+    readKey(s"explorer.MAINNET.url").replaceAll("/$", "")
 
   lazy val explorerFront: String =
-    readKey(s"chain.explorer.MAINNET.front").replaceAll("/$", "")
+    readKey(s"explorer.MAINNET.front").replaceAll("/$", "")
 }
 
 object TestNetNodeConfig extends ConfigHelper {
-  lazy val nodeUrl: String = readKey(s"commons.node.TESTNET.url").replaceAll("/$", "")
+  lazy val nodeUrl: String = readKey(s"node.TESTNET.url").replaceAll("/$", "")
 
   lazy val explorerUrl: String =
-    readKey(s"chain.explorer.TESTNET.url").replaceAll("/$", "")
+    readKey(s"explorer.TESTNET.url").replaceAll("/$", "")
 
   lazy val explorerFront: String =
-    readKey(s"chain.explorer.TESTNET.front").replaceAll("/$", "")
+    readKey(s"explorer.TESTNET.front").replaceAll("/$", "")
 }
 
 case class NodeConfig(

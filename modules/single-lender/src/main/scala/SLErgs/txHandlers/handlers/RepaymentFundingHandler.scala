@@ -6,7 +6,12 @@ import commons.common.{StackTrace, Time}
 import commons.TxState
 import commons.configs.Configs
 import commons.ergo.ErgCommons
-import commons.errors.{ConnectionException, FailedTxException, ProveException, SkipException}
+import commons.errors.{
+  ConnectionException,
+  FailedTxException,
+  ProveException,
+  SkipException
+}
 import commons.node.Client
 import db.dbHandlers.FundRepaymentReqDAO
 import db.models.FundRepaymentReq

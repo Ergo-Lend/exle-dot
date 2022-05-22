@@ -1,9 +1,19 @@
 package SLErgs
 
-import SLErgs.boxes.{FundsToAddressBox, SLELendBox, SLERepaymentBox, SLEServiceBox}
+import SLErgs.boxes.{
+  FundsToAddressBox,
+  SLELendBox,
+  SLERepaymentBox,
+  SLEServiceBox
+}
 import commons.configs.{Configs, ServiceConfig}
 import SLErgs.contracts._
-import SLErgs.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import SLErgs.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  SingleLenderRegister
+}
 import org.ergoplatform.appkit._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

@@ -3,7 +3,12 @@ package SLErgs.boxes
 import commons.boxes.Box
 import commons.ergo.ContractUtils
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{Address, BlockchainContext, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  OutBox,
+  UnsignedTransactionBuilder
+}
 
 /**
   * Funds to Address

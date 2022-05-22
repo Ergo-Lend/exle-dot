@@ -4,7 +4,8 @@ import SLErgs.txHandlers.handlers.{
   FinalizeSingleLenderHandler,
   LendFundingHandler,
   LendInitiationHandler,
-  RepaymentFundingHandler}
+  RepaymentFundingHandler
+}
 import akka.actor.{Actor, ActorLogging}
 import play.api.Logger
 

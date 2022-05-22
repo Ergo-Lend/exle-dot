@@ -1,11 +1,29 @@
 import SLErgs.boxes.{SLELendBox, SLERepaymentBox, SLEServiceBox}
 import SLErgs.contracts.SLELendBoxContract
-import SLErgs.registers.{BorrowerRegister, CreationInfoRegister, FundingInfoRegister, LendingProjectDetailsRegister, ProfitSharingRegister, RepaymentDetailsRegister, ServiceBoxInfoRegister, SingleAddressRegister, SingleLenderRegister}
+import SLErgs.registers.{
+  BorrowerRegister,
+  CreationInfoRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  ProfitSharingRegister,
+  RepaymentDetailsRegister,
+  ServiceBoxInfoRegister,
+  SingleAddressRegister,
+  SingleLenderRegister
+}
 import commons.boxes.registers.RegisterTypes.StringRegister
 import commons.configs.ServiceConfig
 import commons.node.Client
 import org.ergoplatform.appkit.impl.ErgoTreeContract
-import org.ergoplatform.appkit.{Address, ErgoProver, ErgoToken, InputBox, NetworkType, OutBox, Parameters}
+import org.ergoplatform.appkit.{
+  Address,
+  ErgoProver,
+  ErgoToken,
+  InputBox,
+  NetworkType,
+  OutBox,
+  Parameters
+}
 
 /**
   * We need

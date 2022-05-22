@@ -24,7 +24,9 @@ trait Explorer {
   private val baseUrlV1 = s"${nodeConfig.explorerUrl}/api/v1"
   private val tx = s"$baseUrlV1/transactions"
   private val unconfirmedTx = s"$baseUrlV0/transactions/unconfirmed"
-  private val unspentBoxesByTokenId = s"$baseUrlV1/commons.boxes/unspent/byTokenId"
+
+  private val unspentBoxesByTokenId =
+    s"$baseUrlV1/commons.boxes/unspent/byTokenId"
   private val boxesP1 = s"$baseUrlV1/commons.boxes"
   private val mempoolTransactions = s"$baseUrlV1/mempool/transactions/byAddress"
 

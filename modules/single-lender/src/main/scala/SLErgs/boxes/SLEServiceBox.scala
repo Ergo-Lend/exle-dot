@@ -2,9 +2,18 @@ package SLErgs.boxes
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLEServiceBoxContract
-import SLErgs.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
+import SLErgs.registers.{
+  CreationInfoRegister,
+  ProfitSharingRegister,
+  ServiceBoxInfoRegister,
+  SingleAddressRegister
+}
 import commons.boxes.Box
-import commons.boxes.registers.RegisterTypes.{CollByteRegister, LongRegister, StringRegister}
+import commons.boxes.registers.RegisterTypes.{
+  CollByteRegister,
+  LongRegister,
+  StringRegister
+}
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit._
 import special.collection.Coll

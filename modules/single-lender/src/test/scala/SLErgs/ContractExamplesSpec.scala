@@ -7,7 +7,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class ContractExamplesSpec extends AnyWordSpec with Matchers {
-  "Contract Examples" can {
+  "Contract Examples".can {
     client.setClient()
 
     "Prove a true contract" should {

@@ -1,6 +1,12 @@
 package SLErgs.boxes
 
-import SLErgs.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleAddressRegister, SingleLenderRegister}
+import SLErgs.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  SingleAddressRegister,
+  SingleLenderRegister
+}
 import org.ergoplatform.appkit.InputBox
 
 import scala.collection.mutable

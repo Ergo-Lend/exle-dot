@@ -91,7 +91,7 @@ sealed trait SLTContract extends ExleContract {
 // Single Lender SLErgs.Ergs
 sealed trait SLEContract extends ExleContract {
   override val exleDomain: String = "SingleLender"
-  override val exleDomainType: String = "SLErgs.Ergs"
+  override val exleDomainType: String = "Ergs"
 }
 //</editor-fold>
 

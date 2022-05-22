@@ -1,6 +1,10 @@
 package SLErgs.txs
 
-import SLErgs.boxes.{SLERepaymentBox, SLEServiceBox, SingleLenderFundRepaymentPaymentBox}
+import SLErgs.boxes.{
+  SLERepaymentBox,
+  SLEServiceBox,
+  SingleLenderFundRepaymentPaymentBox
+}
 import SLErgs.registers.SingleAddressRegister
 import commons.ergo.ErgCommons
 import commons.errors.{ProveException}

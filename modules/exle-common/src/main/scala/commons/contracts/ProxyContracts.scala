@@ -2,7 +2,12 @@ package commons.contracts
 
 import commons.configs.Configs
 import commons.node.Client
-import org.ergoplatform.appkit.{BlockchainContext, Constants, ErgoContract, Parameters}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  Constants,
+  ErgoContract,
+  Parameters
+}
 
 class ProxyContracts(client: Client) {
   val minFee: Long = Parameters.MinFee

@@ -3,7 +3,16 @@ package pay
 import commons.ergo.{ContractUtils, ErgCommons}
 import commons.configs.TestNetNodeConfig
 import commons.configs.MainNetNodeConfig
-import org.ergoplatform.appkit.{Address, BoxOperations, ErgoContract, ErgoToken, NetworkType, ReducedTransaction, RestApiErgoClient, UnsignedTransaction}
+import org.ergoplatform.appkit.{
+  Address,
+  BoxOperations,
+  ErgoContract,
+  ErgoToken,
+  NetworkType,
+  ReducedTransaction,
+  RestApiErgoClient,
+  UnsignedTransaction
+}
 
 object ErgoPayUtils {
 

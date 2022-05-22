@@ -5,7 +5,15 @@ import commons.configs.NodeConfig.SystemNodeConfig
 import commons.ergo.ErgCommons
 import commons.errors.ConnectionException
 import org.ergoplatform.appkit.BoxOperations.ExplorerApiUnspentLoader
-import org.ergoplatform.appkit.{Address, BoxOperations, CoveringBoxes, ErgoClient, ErgoToken, InputBox, RestApiErgoClient}
+import org.ergoplatform.appkit.{
+  Address,
+  BoxOperations,
+  CoveringBoxes,
+  ErgoClient,
+  ErgoToken,
+  InputBox,
+  RestApiErgoClient
+}
 import play.api.Logger
 
 import javax.inject.Singleton

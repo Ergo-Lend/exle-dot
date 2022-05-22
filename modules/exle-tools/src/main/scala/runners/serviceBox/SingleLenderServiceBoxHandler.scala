@@ -2,12 +2,32 @@ package runners.serviceBox
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLEServiceBoxContract
-import SLErgs.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
+import SLErgs.registers.{
+  CreationInfoRegister,
+  ProfitSharingRegister,
+  ServiceBoxInfoRegister,
+  SingleAddressRegister
+}
 import commons.boxes.registers.RegisterTypes.StringRegister
 import commons.configs.{NodeConfig, ServiceConfig}
 import commons.configs.NodeConfig.SystemNodeConfig
 import commons.ergo.{ContractUtils, ErgCommons}
-import org.ergoplatform.appkit.{Address, BlockchainContext, BoxOperations, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  BoxOperations,
+  ErgoClient,
+  ErgoId,
+  ErgoProver,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  Parameters,
+  RestApiErgoClient,
+  SecretString,
+  SignedTransaction,
+  UnsignedTransactionBuilder
+}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
 
 import java.util.stream.Collectors

@@ -1,7 +1,13 @@
 package SLErgs
 
 import SLErgs.boxes.{SLELendBox, SLERepaymentBox}
-import SLErgs.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import SLErgs.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  RepaymentDetailsRegister,
+  SingleLenderRegister
+}
 import commons.common.StackTrace
 import commons.configs.Configs
 import commons.errors.{ConnectionException, ExplorerException, ParseException}
