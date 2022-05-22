@@ -22,12 +22,6 @@ POST    /api/repayment/fullFund         controllers.LendController.fundRepayment
 POST    /api/repayment/mockFund         controllers.LendController.mockFundRepaymentBox
 POST    /api/repayment/mockFullFund     controllers.LendController.mockFundRepaymentBoxFully
 
-# Explorer
-GET     /api/explorer/test              features.base.ExplorerController.test
-GET     /api/explorer/box/:id           features.base.ExplorerController.getBoxById(id: String)
-GET     /api/explorer/txs/:address      features.base.ExplorerController.getTxsInMempoolByAddressViaController(address: String)
-GET     /api/explorer/txs/confirmation  features.base.ExplorerController.getTxConfirmation
-
 # ErgoPay Test
 GET     /pay/roundtrip/:address         controllers.PayController.roundtrip(address: String)
 

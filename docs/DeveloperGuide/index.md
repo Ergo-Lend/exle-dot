@@ -24,6 +24,18 @@ The code base is a play app that depends on multiple modules that are built in-h
 : A common module where generics are stored and are shared between many modules.
 - **Exle Chain**
 : A system that runs transactions against the blockchain in a concurrent and chained manner.
+- **Exle Pay**
+: Ergo Pay transaction Handling
+- **Tx Handler**
+: Handles transactions that needs to be processed
+
+## Implementing a new Loan Feature
+Implementing a new loan feature would require a few components.
+1. Contracts
+2. Boxes
+3. Txs
+4. Tx Handlers
+
 
 ## Before Submitting PR
 run:

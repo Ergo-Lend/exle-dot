@@ -1,6 +1,6 @@
 package payTest
 
-import configs.{GetNodeConfig, NodeConfig}
+import commons.configs.{GetNodeConfig, NodeConfig}
 import org.ergoplatform.appkit.Address
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

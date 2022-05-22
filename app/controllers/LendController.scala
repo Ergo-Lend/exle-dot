@@ -1,17 +1,14 @@
 package controllers
 
-import common.ErgoValidator
-import configs.Configs
-import core.SingleLender.Ergs.LendBoxExplorer
-import core.SingleLender.Ergs.boxes.{
-  LendProxyAddress,
-  SLELendBox,
-  SLERepaymentBox
-}
-import ergo.{BoxState, ErgCommons}
-import errors.ExceptionThrowable
+import SLErgs.LendBoxExplorer
+import SLErgs.boxes.{LendProxyAddress, SLELendBox, SLERepaymentBox}
+import commons.common.ErgoValidator
+import commons.BoxState
+import commons.configs.Configs
+import commons.ergo.ErgCommons
+import commons.errors.ExceptionThrowable
 import io.circe.Json
-import node.Client
+import commons.node.Client
 import pay.ProxyContractErgoPayResponse
 import play.api.Logger
 import play.api.libs.circe.Circe

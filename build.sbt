@@ -37,22 +37,7 @@ lazy val root = (project in file("."))
   .withId("lendbackend")
   .settings(commonSettings)
   .settings(moduleName := "lendbackend", name := "LendBackend")
-  .dependsOn(core, chain, pay)
-
-lazy val core = utils
-  .mkModule("exle-core", "ExleCore")
-  .settings(commonSettings)
-  .settings(
-    libraryDependencies ++=
-      Ergo ++
-        Circe ++
-        PostgresDB ++
-        PlayApi ++
-        HttpDep ++
-        Testing ++
-        DependencyInjection
-  )
-  .dependsOn(Seq(chain, common).map(_ % allConfigDependency): _*)
+  .dependsOn(chain, pay, singleLender)
 
 lazy val chain = utils
   .mkModule("exle-chain", "ExleChain")
@@ -87,6 +72,40 @@ lazy val pay = utils
         DependencyInjection
   )
   .dependsOn(common)
+
+lazy val db = utils
+  .mkModule("db", "Doobs")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+        PostgresDB ++
+        Testing ++
+        PlayApi ++
+//        DoobieDB ++
+        DependencyInjection
+  )
+  .dependsOn(common)
+
+lazy val singleLender = utils
+  .mkModule("single-lender", "SingleLender")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing
+  )
+  .dependsOn(Seq(common, chain, db).map(_ % allConfigDependency): _*)
+
+lazy val tools = utils
+  .mkModule("exle-tools", "ExleTools")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing
+  )
+  .dependsOn(Seq(common, singleLender).map(_ % allConfigDependency): _*)
+
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
