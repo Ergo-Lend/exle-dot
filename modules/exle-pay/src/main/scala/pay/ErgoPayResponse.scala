@@ -1,6 +1,6 @@
 package pay
 
-import ergo.ErgCommons.nanoErgsToErgs
+import commons.ergo.ErgCommons.nanoErgsToErgs
 import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}

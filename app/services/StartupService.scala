@@ -1,15 +1,15 @@
 package services
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import node.Client
-import configs.Configs
-import features.lend.{JobsUtil, LendJobs}
-import features.lend.handlers.{
+import SLErgs.txHandlers.handlers.{
   FinalizeSingleLenderHandler,
   LendFundingHandler,
   LendInitiationHandler,
   RepaymentFundingHandler
 }
+import SLErgs.txHandlers.jobs.{JobsUtil, LendJobs}
+import akka.actor.{ActorRef, ActorSystem, Props}
+import commons.node.Client
+import commons.configs.Configs
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext

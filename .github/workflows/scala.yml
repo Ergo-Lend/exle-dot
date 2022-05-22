@@ -24,11 +24,11 @@ jobs:
           echo SECRET_KEY="" >> .env
           cat .env
 
-      # Run Core
-      - name: Run Core tests
-        run: sbt "project exle-core" coverage test
+      # Run Single Lender
+      - name: Run Single Lender tests
+        run: sbt "project single-lender" coverage test
       - name: Coverage Report
-        run: sbt "project exle-core" coverageReport coverageAggregate
+        run: sbt "project single-lender" coverageReport coverageAggregate
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -73,6 +73,17 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: true
+
+      # Run db
+      - name: Run db tests
+        run: sbt "project db" coverage test
+      - name: Coverage Report
+        run: sbt "project db" coverageReport coverageAggregate
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -82,8 +93,11 @@ jobs:
       - name: Formatting App
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
       # Format core Check
-      - name: Formatting Core
-        run: sbt "project exle-core" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      - name: Formatting Single Lender
+        run: sbt "project single-lender" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      # Format db Check
+      - name: Formatting Doobs
+        run: sbt "project db" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
       # Format common Check
       - name: Formatting Common
         run: sbt "project exle-common" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
@@ -93,6 +107,9 @@ jobs:
       # Format pay Check
       - name: Formatting pay
         run: sbt "project exle-pay" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      # Format tools Check
+      - name: Formatting Tools
+        run: sbt "project exle-tools" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
 
 permissions:
   contents: read

@@ -18,20 +18,33 @@ Congrats, you've made your first improvement.
 The code base is a play app that depends on multiple modules that are built in-house. Below are the lists of modules and what it does.
 
 ### Modules
-- **Exle Core**
-: The core module that implements the main features, and inherits most of the other modules.
+- **Single Lender**
+: Single Lender feature is all in this module
 - **Exle Common**
 : A common module where generics are stored and are shared between many modules.
 - **Exle Chain**
 : A system that runs transactions against the blockchain in a concurrent and chained manner.
+- **Exle Pay**
+: Ergo Pay transaction Handling
+- **Tx Handler**
+: Handles transactions that needs to be processed
+
+## Implementing a new Loan Feature
+Implementing a new loan feature would require a few components.
+1. Contracts
+2. Boxes
+3. Txs
+4. Tx Handlers
+
 
 ## Before Submitting PR
 run:
 1. formatting, refer to [scalafmt](https://scalameta.org/scalafmt/docs/installation.html#task-keys)
 ```shell
 sbt scalafmtAll
-sbt exle-core/scalafmt
-sbt exle-core/test:scalafmt
+sbt scalafmtSbt
+sbt single-lender/scalafmt
+sbt single-lender/test:scalafmt
 sbt exle-common/scalafmt
 sbt exle-common/test:scalafmt
 ...

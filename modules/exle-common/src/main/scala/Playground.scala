@@ -1,5 +1,5 @@
 import com.typesafe.config.ConfigFactory
-import configs.Configs.readKey
+import commons.configs.Configs.readKey
 import org.ergoplatform.appkit.Address
 import play.api.Configuration
 

@@ -1,8 +1,8 @@
 package pay
 
-import ergo.{ContractUtils, ErgCommons}
-import configs.TestNetNodeConfig
-import _root_.configs.MainNetNodeConfig
+import commons.ergo.{ContractUtils, ErgCommons}
+import commons.configs.TestNetNodeConfig
+import commons.configs.MainNetNodeConfig
 import org.ergoplatform.appkit.{
   Address,
   BoxOperations,
