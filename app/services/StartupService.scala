@@ -4,7 +4,8 @@ import SLErgs.txHandlers.handlers.{
   FinalizeSingleLenderHandler,
   LendFundingHandler,
   LendInitiationHandler,
-  RepaymentFundingHandler}
+  RepaymentFundingHandler
+}
 import SLErgs.txHandlers.jobs.{JobsUtil, LendJobs}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import commons.node.Client

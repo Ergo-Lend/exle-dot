@@ -78,7 +78,7 @@ lazy val db = utils
   .settings(commonSettings)
   .settings(
     libraryDependencies ++=
-        PostgresDB ++
+      PostgresDB ++
         Testing ++
         PlayApi ++
 //        DoobieDB ++
@@ -105,7 +105,6 @@ lazy val tools = utils
         Testing
   )
   .dependsOn(Seq(common, singleLender).map(_ % allConfigDependency): _*)
-
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

@@ -42,6 +42,7 @@ run:
 1. formatting, refer to [scalafmt](https://scalameta.org/scalafmt/docs/installation.html#task-keys)
 ```shell
 sbt scalafmtAll
+sbt scalafmtSbt
 sbt single-lender/scalafmt
 sbt single-lender/test:scalafmt
 sbt exle-common/scalafmt
