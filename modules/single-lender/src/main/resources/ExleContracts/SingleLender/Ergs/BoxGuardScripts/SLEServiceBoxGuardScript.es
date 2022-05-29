@@ -8,6 +8,8 @@
     // Type             : Guard Script
     // Author           : Kii
     // Last Modified    : May 8th 2022
+    // Version          : v 1.0
+    // Status           : Completed
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _MinFee:                     Long
@@ -148,7 +150,7 @@
                       **/
                     if (interestRate == 0 || defaulted) {
                         // There will only be servicebox and lender box (+ miner's fee)
-                        // not putting count of lendcore.boxes for potential credit check
+                        // not putting count of boxes for potential credit check
                         sigmaProp(serviceFullCheck)
                     } else {
                         // Take profit

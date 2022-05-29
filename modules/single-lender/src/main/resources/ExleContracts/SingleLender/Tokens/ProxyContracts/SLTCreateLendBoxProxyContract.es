@@ -5,7 +5,9 @@
     //                    right information and accounting details in it.
     // Type             : Proxy Contract
     // Author           : Kii
-    // Last Modified    : May 8th 2022
+    // Last Modified    : May 28th 2022
+    // Version          : v 1.0
+    // Status           : Testing Phase
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _BorrowerPk:                     Coll[Byte]
@@ -23,22 +25,22 @@
     // 1. Create Loan
     // 2. Refund
 
-    // the amount of lendcore.boxes as outputs, else return
+    // the amount of boxes as outputs, else return
     if (OUTPUTS.size != 2) {
         val isLenderPkDefined = OUTPUTS(1).R7[GroupElement].isDefined
 
         sigmaProp(
             allOf(Coll(
-                OUTPUTS(0).core.SingleLender.Ergs.tokens(0)._1 == _SLTServiceNFTId,
-                OUTPUTS(1).core.SingleLender.Ergs.tokens(0)._1 == _SLTLendTokenId,
-                OUTPUTS(1).R4[Coll[Long]].get(0) == _Goal,
-                OUTPUTS(1).R4[Coll[Long]].get(1) == _DeadlineHeight,
-                OUTPUTS(1).R4[Coll[Long]].get(2) == _InterestRate,
-                OUTPUTS(1).R4[Coll[Long]].get(3) == _RepaymentHeightLength,
-                OUTPUTS(1).R6[Coll[Byte]].get == _BorrowerPk,
-                OUTPUTS(1).value == _MinFee,
+                OUTPUTS(0).tokens(0)._1             == _SLTServiceNFTId,
+                OUTPUTS(1).tokens(0)._1             == _SLTLendTokenId,
+                OUTPUTS(1).R4[Coll[Long]].get(0)    == _Goal,
+                OUTPUTS(1).R4[Coll[Long]].get(1)    == _DeadlineHeight,
+                OUTPUTS(1).R4[Coll[Long]].get(2)    == _InterestRate,
+                OUTPUTS(1).R4[Coll[Long]].get(3)    == _RepaymentHeightLength,
+                OUTPUTS(1).R6[Coll[Byte]].get       == _BorrowerPk,
                 // Check if the loan token ID is correct
-                OUTPUTS(1).R7[Coll[Byte]].get == _LoanTokenId,
+                OUTPUTS(1).R7[Coll[Byte]].get       == _LoanTokenId,
+                OUTPUTS(1).value                    == _MinFee,
                 !isLenderPkDefined
             ))
         )

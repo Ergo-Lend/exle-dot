@@ -1,0 +1,50 @@
+# ================ Box Info ================= #
+# Name      : SLT [Single Lender Ergs] Service Box
+# Type      : Box
+# Author    : Kii
+# Version   : v 1.0
+
+box:
+  slt_lend_box:
+    registers:
+      r0:
+        type: "erg value"
+        value: "min box value"
+      r1:
+        type: "guardscript"
+      r2:
+        type: "token"
+        values:
+          - SLTServiceNft = 1
+          - SLTRepaymentToken = 1000000000
+          - SLTLendToken = 1000000000
+      r3:
+        type: "creation info"
+      r4:
+        name: "creation info register"
+        type: "Coll[Long]"
+        values:
+          - creationHeight
+          - version
+      r5:
+        name: "service box info register"
+        type: "Coll[Coll[Byte]]"
+        values:
+          - boxName
+          - description
+      r6:
+        name: "boxInfo"
+        type: "Coll[Byte]"
+        value: "boxInfo"
+      r7:
+        name: "ergolend pub key"
+        type: "Coll[Byte]"
+        values:
+          - ergolendPK
+      r8:
+        name: "profit sharing percentage"
+        type: "Coll[Long]"
+        values:
+          - profitSharingPercentage
+          - serviceFeeAmount
+    action_conditions:

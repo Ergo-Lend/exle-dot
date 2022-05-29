@@ -1,6 +1,6 @@
 package SLErgs.registers
 
-import commons.boxes.registers.RegisterTypes.CollByteRegister
+import commons.boxes.registers.RegisterTypes.{CollByteRegister, LongRegister}
 import org.ergoplatform.appkit.ErgoValue
 import special.collection.Coll
 
@@ -23,7 +23,7 @@ class RepaymentDetailsRegister(
   val repaymentAmount: Long,
   val totalInterestAmount: Long,
   val repaymentHeightGoal: Long
-) extends CollByteRegister
+) extends LongRegister
     with RepaymentRegister {
 
   def toRegister: ErgoValue[Coll[Long]] = {

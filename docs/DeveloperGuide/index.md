@@ -31,10 +31,12 @@ The code base is a play app that depends on multiple modules that are built in-h
 
 ## Implementing a new Loan Feature
 Implementing a new loan feature would require a few components.
-1. Contracts
-2. Boxes
-3. Txs
-4. Tx Handlers
+1. System Design (ExIP)
+2. Boxes (yml files)
+3. Contracts (Template: exle-common/src/main/resources/ExleContracts/Templates)
+4. Boxes Case Classes 
+4. Txs
+5. Tx Handlers
 
 
 ## Before Submitting PR

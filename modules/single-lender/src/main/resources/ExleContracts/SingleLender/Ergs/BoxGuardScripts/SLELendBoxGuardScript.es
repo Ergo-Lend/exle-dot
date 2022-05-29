@@ -9,6 +9,8 @@
     // Type             : Guard Script
     // Author           : Kii
     // Last Modified    : May 8th 2022
+    // Version          : v 1.0
+    // Status           : Completed
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _MinFee:                     Long

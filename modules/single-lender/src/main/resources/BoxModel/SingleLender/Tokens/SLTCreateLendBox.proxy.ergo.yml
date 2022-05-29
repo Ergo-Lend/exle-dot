@@ -1,0 +1,58 @@
+# ================ Proxy Contract Info ================= #
+# Name      : SLT [Single Lender Tokens] Create Lend Box Proxy Contract
+# Type      : Proxy Contract
+# Author    : Kii
+# Version   : v 1.0
+
+proxy_contract:
+  slt_create_lend_box:
+    hard_coded_constants:
+      _BorrowerPk: Coll[Byte]
+      _LoanTokenId: Coll[Byte]
+      _MinFee: Long
+      _RefundHeightThreshold: Long
+      _Goal: Long
+      _DeadlineHeight: Long
+      _InterestRate: Long
+      _RepaymentHeightLength: Long
+      _SLTServiceNFTId: Coll[Byte]
+      _SLTLendTokenId: Coll[Byte]
+    action_conditions:
+      create:
+        boxes:
+          input_boxes:
+            0: slt_service_box
+            1: self
+          output_boxes:
+            0: slt_service_box
+            1: slt_lend_box
+            2: mining_fee
+        trigger_conditions:
+          outputs_more_than_2:
+            OUTPUTS.size != 2
+        condition_checks:
+          service_box_has_service_nft:
+            slt_service_box.tokens(0).id == _SLTServiceNFTId
+          slt_lend_box_instantiated_correctly:
+            - slt_lend_box.tokens(0).id == _SLTLendTokenId
+            - slt_lend_box.R4[Coll[Long]].get(0) == _Goal
+            - slt_lend_box.R4[Coll[Long]].get(1) == _DeadlineHeight
+            - slt_lend_box.R4[Coll[Long]].get(2) == _InterestRate
+            - slt_lend_box.R4[Coll[Long]].get(3) == _RepaymentHeightLength
+            - slt_lend_box.R6[Coll[Byte]].get == _BorrowerPk
+            - slt_lend_box.R7[Coll[Byte]].get == _LoanTokenId
+          slt_lend_box_has_enough_cover:
+            slt_lend_box.value == _MinFee
+          lender_undefined:
+            !slt_lend_box.R7[GroupElement].isDefined
+      refund:
+        boxes:
+          input_boxes:
+            0: self
+          output_boxes:
+            0: refund_to_lender_box
+            1: mining_fee
+        condition_checks:
+          fee_returned_to_borrower:
+            - refund_to_lender_box.value >= (self.value - _MinFee)
+            - refund_to_lender_box.propositionBytes == _BorrowerPk

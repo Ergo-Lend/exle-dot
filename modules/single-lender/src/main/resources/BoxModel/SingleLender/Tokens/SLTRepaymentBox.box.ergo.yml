@@ -1,0 +1,57 @@
+# ================ Box Info ================= #
+# Name      : SLT [Single Lender Ergs] Repayment Box
+# Type      : Box
+# Author    : Kii
+# Version   : v 1.0
+
+box:
+  slt_repayment_box:
+    registers:
+      r0:
+        type: "erg value"
+        value: "min box value"
+      r1:
+        type: "guardscript"
+      r2:
+        type: "token"
+        values:
+          - repaymentToken = 1
+          - loanedToken = 0 | repaymentGoal
+      r3:
+        type: "creation info"
+      r4:
+        name: "funding info register"
+        type: "Coll[Long]"
+        values:
+          - fundingGoal
+          - deadlineHeight
+          - interestRatePercent
+          - repaymentHeightLength
+          - creationHeight
+      r5:
+        name: "lending project details register"
+        type: "Coll[Coll[Byte]]"
+        values:
+          - projectName
+          - description
+      r6:
+        name: "borrower register"
+        type: "Coll[Byte]"
+        value: borrowerPk
+      r7:
+        name: "loan token type register"
+        type: "Coll[Byte]"
+        value: loanTokenId
+      r8:
+        name: "single lender register"
+        type: "Coll[Byte]"
+        value: lenderPk
+      r9:
+        name: "repayment details register"
+        type: "Coll[Long]"
+        values:
+          - fundedHeight
+          - repaymentAmount
+          - totalInterestAmount
+          - repaymentHeightGoal
+    action_conditions:

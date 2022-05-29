@@ -1,0 +1,75 @@
+# ================ Proxy Contract Info ================= #
+# Name      : SLT [Single Lender Tokens] Fund Repayment Box Proxy Contract
+# Type      : Proxy Contract
+# Author    : Kii
+# Version   : v 1.0
+
+proxy_contract:
+  slt_fund_repayment_box:
+    hard_coded_constants:
+      _BoxIdToFund: Coll[Byte]
+      _FunderPk: Coll[Byte]
+      _MinFee: Long
+      _SLERepaymentTokenId: Coll[Byte]
+    action_conditions:
+      refund:
+        boxes:
+          input_boxes:
+            0: self | payment_box
+          output_boxes:
+            0: refund_to_funder_box
+            1: mining_fee
+        trigger_conditions:
+          only_one_input:
+            INPUTS.size == 1
+        condition_checks:
+          token_id_same:
+            self.tokens(0).id == refund_to_funder_box.tokens(0).id
+          token_value_same:
+            self.tokens(0).value == refund_to_funder_box.tokens(0).value
+          refund_box_to_lender_pk:
+            refund_to_funder_box.id == _FunderPk
+      fundable:
+        boxes:
+          input_boxes:
+            0: input_slt_repayment_box
+            1: self | payment_box
+        contract_constants:
+          repaymentDetails: inputSltLendBox.R9[Coll[Long]]
+          repaymentGoal: repaymentDetails.get(1)
+          repaymentBoxId: inputSltRepaymentBox.id
+          amountRepaid : input_slt_repayment_box.tokens(1).value
+          allFundsOutput: amountRepaid + self.tokens(0).value
+        trigger_conditions:
+          repayment_goal_not_reached:
+            !(input_slt_repayment_box.repaymentGoal <= input_slt_repayment_box.tokens(0).value)
+          box_id_check:
+            _BoxIdToFund == input_slt_repayment_box.id
+          is_slt_repayment_box:
+            input_slt_repayment_box.tokens(0).id == _SLERepaymentTokenId
+        overfunded:
+          boxes:
+            output_boxes:
+              0: output_slt_repayment_box
+              1: refund_extra_to_funder_box
+              2: mining_fee
+          trigger_conditions:
+            is_repayment_box_overfunded:
+              # tokens(0) == RepaymentToken, tokens(1) == loanToken
+              (input_slt_repayment_box.tokens(1).value + self.tokens(0).value) > input_slt_repayment_box.repaymentGoal
+          condition_checks:
+            repayment_box_funded:
+              output_slt_repayment_box.tokens(1).value == input_slt_repayment_box.repaymentGoal
+            extra_funds_returned_to_funder:
+              - refund_extra_to_funder_box.tokens(1).value == (allFundsOutput - input_slt_repayment_box.repaymentGoal)
+              - refund_extra_to_funder_box.propositionBytes == _FunderPk
+        funded:
+          boxes:
+            output_boxes:
+              0: output_slt_repayment_box
+              2: mining_fee
+            condition_checks:
+              is_slt_repayment_box
+              value_transferred:
+                output_slt_repayment_box.tokens(1).value == allFundsOutput
+
