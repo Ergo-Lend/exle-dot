@@ -6,22 +6,26 @@
 
 box:
   slt_repayment_box:
-    registers:
-      r0:
-        type: "erg value"
-        value: "min box value"
-      r1:
-        type: "guardscript"
-      r2:
-        type: "token"
-        values:
-          - repaymentToken = 1
-          - loanedToken = 0 | repaymentGoal
-      r3:
-        type: "creation info"
+    hard_coded_constants:
+      _MinFee:
+        type: Long
+        value: minFee
+      _SLTServiceBoxNFTId:
+        type: Coll[Byte]
+      _SLTRepaymentTokenId:
+        type: Coll[Byte]
+    tokens:
+      0:
+        name: slt_repayment_token
+        amount: 1
+      1:
+        # if amount is not stated, it means its variable
+        name: loan_token
+        amount: 0 -> repaymentGoal
+    additional_registers:
       r4:
         name: "funding info register"
-        type: "Coll[Long]"
+        type: Coll[Long]
         values:
           - fundingGoal
           - deadlineHeight
@@ -30,28 +34,33 @@ box:
           - creationHeight
       r5:
         name: "lending project details register"
-        type: "Coll[Coll[Byte]]"
+        type: Coll[Coll[Byte]]
         values:
           - projectName
           - description
       r6:
         name: "borrower register"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         value: borrowerPk
       r7:
         name: "loan token type register"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         value: loanTokenId
       r8:
         name: "single lender register"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         value: lenderPk
       r9:
         name: "repayment details register"
-        type: "Coll[Long]"
+        type: Coll[Long]
         values:
           - fundedHeight
           - repaymentAmount
           - totalInterestAmount
           - repaymentHeightGoal
     action_conditions:
+      not_funded:
+        overfunded:
+        funding:
+      funded:
+        fund_success:

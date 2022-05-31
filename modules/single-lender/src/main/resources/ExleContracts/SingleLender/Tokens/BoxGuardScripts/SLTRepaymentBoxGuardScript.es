@@ -13,8 +13,8 @@
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _MinFee:                     Long
-    // val _SLEServiceBoxNFTId:         Coll[Byte]
-    // val _SLERepaymentTokenId:        Coll[Byte]
+    // val _SLTServiceBoxNFTId:         Coll[Byte]
+    // val _SLTRepaymentTokenId:        Coll[Byte]
 
     // ===== Contract Conditions ===== //
     // 1. Fund Repayment        - Fund the repayment box when it is still fundable.

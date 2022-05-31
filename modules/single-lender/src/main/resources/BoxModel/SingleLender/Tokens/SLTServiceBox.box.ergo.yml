@@ -5,46 +5,171 @@
 # Version   : v 1.0
 
 box:
-  slt_lend_box:
-    registers:
-      r0:
-        type: "erg value"
-        value: "min box value"
-      r1:
-        type: "guardscript"
-      r2:
-        type: "token"
-        values:
-          - SLTServiceNft = 1
-          - SLTRepaymentToken = 1000000000
-          - SLTLendToken = 1000000000
-      r3:
-        type: "creation info"
+  slt_service_box:
+    hard_coded_constants:
+      _MinFee:
+        type: Long
+        value: minFee
+      _OwnerPk:
+        type: Coll[Byte]
+        value: servicePk
+      _LendBoxHash:
+        type: Digest32
+        value: slt_lend_box.hash
+      _RepaymentBoxHash:
+        type: Digest32
+        value: slt_repayment_box.hash
+    value: min_box_value
+    tokens:
+      0:
+        name: slt_service_nft
+        amount: 1
+      1:
+        name: slt_lend_token
+        amount: 1000000000
+      2:
+        name: slt_repayment_token
+        amount: 1000000000
+    additional_registers:
       r4:
         name: "creation info register"
-        type: "Coll[Long]"
+        type: Coll[Long]
         values:
           - creationHeight
           - version
       r5:
         name: "service box info register"
-        type: "Coll[Coll[Byte]]"
+        type: Coll[Coll[Byte]]
         values:
           - boxName
           - description
       r6:
         name: "boxInfo"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         value: "boxInfo"
       r7:
         name: "ergolend pub key"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         values:
           - ergolendPK
       r8:
         name: "profit sharing percentage"
-        type: "Coll[Long]"
+        type: Coll[Long]
         values:
           - profitSharingPercentage
           - serviceFeeAmount
     action_conditions:
+      # conditions that are used throughout
+      contract_constants:
+        values:
+          input_slt_lend_token: self.tokens(1)
+          output_slt_lend_token: output_slt_service_box.tokens(1)
+          input_slt_repayment_token: self.tokens(2)
+          output_slt_repayment_token: output_slt_service_box.tokens(2)
+        conditions:
+          service_check:
+            boxes:
+              input_boxes:
+                0: self | input_slt_service_box
+              output_boxes:
+                0: output_slt_service_box
+            conditions:
+              - output_slt_service_box.propositionBytes == self.propositionBytes
+              - outputs_slt_service_box.tokens(0).id == self.tokens(0).id
+              - outputs_slt_service_box.tokens(1).id == self.tokens(1).id
+              - outputs_slt_service_box.tokens(2).id == self.tokens(2).id
+              - outputs_slt_service_box.value == self.value
+      mutate_service_box:
+        boxes:
+          input_boxes:
+            0: self | input_slt_service_box
+          output_boxes:
+            0: output_slt_service_box
+            1: mining_fee
+        trigger_conditions:
+          tokens_amount_unchanged:
+            - output_slt_lend_token.value == input_slt_lend_token.value
+            - output_slt_repayment_token.value == input_slt_repayment_token.value
+          outputs_only_two_boxes:
+            - OUTPUTS.size == 2
+      loan_boxes_interaction:
+        contract_constants:
+          values:
+            self_creation_info: SELF.R4[Coll[Long]].get
+            self_service_info: SELF.R5[Coll[Coll[Byte]]].get
+            self_box_info: SELF.R6[Coll[Byte]].get
+            self_service_owner_pub_key: SELF.R7[Coll[Byte]].get
+            self_profit_sharing_info: SELF.R8[Coll[Long]].get
+            output_creation_info: output_slt_service_box.R4[Coll[Long]].get
+            output_service_info: output_slt_service_box.R5[Coll[Coll[Byte]]].get
+            output_box_info: output_slt_service_box.R6[Coll[Byte]].get
+            output_service_owner_pub_key: output_slt_service_box.R7[Coll[Byte]].get
+            output_profit_sharing_info: output_slt_service_box.R8[Coll[Long]].get
+          conditions:
+            service_register_check:
+              condition_checks:
+                - self_creation_info == output_creation_info
+                - self_service_info == output_service_info
+                - self_box_info == output_box_info
+                - self_service_owner_pub_key == output_service_owner_pub_key
+                - self_profit_sharing_info == output_profit_sharing_info
+            service_full_check:
+              - service_register_check
+              - service_check
+        slt_lend_initiation:
+          boxes:
+            input_boxes:
+              0: self | input_slt_service_box
+              1: slt_create_lend_box_proxy_payment
+            output_boxes:
+              0: output_slt_service_box
+              1: slt_lend_box
+              2: mining_fee
+          trigger_conditions:
+          condition_checks:
+        slt_lend_success:
+          boxes:
+            input_boxes:
+              0: self | input_slt_service_box
+              1: slt_lend_box
+            output_boxes:
+              0: output_slt_service_box
+              1: slt_repayment_box
+              2: borrower_loaned_funds
+              3: mining_fee
+          trigger_conditions:
+          condition_checks:
+        slt_repayment_success:
+          no_default:
+            boxes:
+              input_boxes:
+                0: self | input_slt_service_box
+                1: slt_repayment_box
+              output_boxes:
+                0: output_slt_service_box
+                1: profit_sharing_box
+                2: lender_repaid_fund_box
+                3: mining_fee
+            trigger_conditions:
+            condition_checks:
+          defaulted | zero-interest:
+            boxes:
+              input_boxes:
+                0: self | input_slt_service_box
+                1: slt_repayment_box
+              output_boxes:
+                0: output_slt_service_box
+                1: lender_repaid_fund_box
+                2: mining_fee
+            trigger_conditions:
+            condition_checks:
+        reabsorbed_lend_box:
+          boxes:
+            input_boxes:
+              0: self | input_slt_service_box
+              1: slt_lend_box
+            output_boxes:
+              0: output_slt_service_box
+              1: mining_fee
+          trigger_conditions:
+          condition_checks:

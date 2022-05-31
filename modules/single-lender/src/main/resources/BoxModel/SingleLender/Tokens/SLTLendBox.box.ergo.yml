@@ -6,22 +6,31 @@
 
 box:
   slt_lend_box:
-    registers:
-      r0:
-        type: "erg value"
-        value: "min box value"
-      r1:
-        type: "guardscript"
-      r2:
-        type: "token"
-        values:
-          - lendToken = 1
-          - loanedToken = 0 | fundingGoal
-      r3:
-        type: "creation info"
+    hard_coded_constants:
+      _MinFee:
+        type: Long
+        value: minFee
+      _MinBoxAmount:
+        type: Long
+        value: minFee
+      _SLTServiceBoxNFTId:
+        type: Coll[Byte]
+      _SLTLendTokenId:
+        type: Coll[Byte]
+      _SLTRepaymentTokenId:
+        type: Coll[Byte]
+    tokens:
+      0:
+        name: slt_lend_token
+        amount: 1
+      1:
+        # if amount is not stated, it means its variable
+        name: loan_token
+        amount: 0 -> fundingGoal
+    additional_registers:
       r4:
         name: "funding info register"
-        type: "Coll[Long]"
+        type: Coll[Long]
         values:
           - fundingGoal
           - deadlineHeight
@@ -30,20 +39,141 @@ box:
           - creationHeight
       r5:
         name: "lending project details register"
-        type: "Coll[Coll[Byte]]"
+        type: Coll[Coll[Byte]]
         values:
           - projectName
           - description
       r6:
         name: "borrower register"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         value: borrowerPk
       r7:
         name: "loan token type register"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         value: loanTokenId
       r8:
         name: "single lender register"
-        type: "Coll[Byte]"
+        type: Coll[Byte]
         value: singleLenderPk
     action_conditions:
+      contract_constants:
+        values:
+          funding_info_register: self.R4[Coll[Long]]
+          project_detail_register: self.R5[Coll[Coll[Byte]]
+          borrower_register: self.R6[Coll[Byte]]
+          loan_token_id: self.R7[Coll[Byte]]
+          lender_register: self.R8[Coll[Byte]]
+          funding_goal: funding_info_register.get(0)
+          deadline_height: funding_info_register.get(1)
+          interest_rate: funding_info_register.get(2)
+          repayment_height_length: funding_info_register.get(3)
+      funded:
+        contract_constants:
+          values:
+            loan_token: self.tokens(1)
+            repayment_details: slt_repayment_box.R8[Coll[Long]]
+            repayment_box_funded_height: repayment_details.get(0)
+            repayment_box_repayment_amount: repayment_details.get(1)
+            repayment_box_interest_rate: repayment_details.get(2)
+            repayment_box_repayment_height_goal: repayment_details.get(3)
+            total_interest_amount: (funding_goal * interest_rate/1000)
+        lend_to_repayment:
+          boxes:
+            input_boxes:
+              0: input_slt_service_box
+              1: self | input_slt_lend_box
+            output_boxes:
+              0: output_slt_service_box
+              1: output_slt_repayment_box
+              2: funds_to_borrower_box
+              3: mining_fee
+          trigger_conditions:
+            loan_hit_funding_goal:
+              self.tokens.length > 2 && loan_token.value == funding_goal
+            lender_non_empty:
+              lender_register.isDefined
+          conditon_checks:
+            loan_to_borrower:
+              - funds_to_borrower_box.tokens(0).id == self.tokens(1).id
+              - funds_to_borrower_box.tokens(0).value == self.tokens(1).value
+              - funds_to_borrower_box.propositionBytes == borrower_register.get
+            repayment_box_creation:
+              - output_slt_repayment_box.tokens(0).id == _SLTRepaymentTokenId
+              - output_slt_repayment_box.tokens(0).value == 1
+            fund_details_replicated:
+              - output_slt_repayment_box.R4[Coll[Long]] == funding_info_register
+              - output_slt_repayment_box.R5[Coll[Coll[Byte]] == project_detail_register
+              - output_slt_repayment_box.R6[Coll[Byte]] == borrower_register
+              - output_slt_repayment_box.R7[Coll[Byte]] == loan_token_id
+              - output_slt_repayment_box.R8[Coll[Byte]] == lender_register
+            repayment_detail_created:
+              - repayment_box_funded_height == CONTEXT.HEIGHT
+              - repayment_box_repayment_amount == funding_goal + total_interest_amount
+              - repayment_box_interest_rate == total_interest_amount
+              - repayment_box_repayment_height_goal == CONTEXT.HEIGHT + repayment_height_length
+            service_box_verification:
+              - slt_service_box.tokens(0).id == _SLTServiceBoxNFTId
+      not_funded:
+        contract_constants:
+          values:
+            loan_token: self.tokens(1)
+            repayment_details: slt_repayment_box.R8[Coll[Long]]
+            repayment_box_funded_height: repayment_details.get(0)
+            repayment_box_repayment_amount: repayment_details.get(1)
+            repayment_box_interest_rate: repayment_details.get(2)
+            repayment_box_repayment_height_goal: repayment_details.get(3)
+            total_interest_amount: (funding_goal * interest_rate/1000)
+        refund_absorb_lend_box:
+          description: "absorb the lend box"
+          boxes:
+            input_boxes:
+              0: input_slt_service_box
+              1: self | input_slt_lend_box
+            output_boxes:
+              0: output_slt_service_box
+              1: mining_fee
+          trigger_conditions:
+            loan_did_not_hit_funding_goal:
+              loan_token.value <= funding_goal
+            deadline_passed:
+              CONTEXT.HEIGHT > deadline_height
+          condition_checks:
+            service_box_interaction:
+              - slt_service_box.tokens(0).id == _SLTServiceBoxNFTId
+        mistakenly_funded:
+          description: "refund the funds to borrower"
+          NOTE: Address issue in service box
+          boxes:
+            input_boxes:
+              0: input_slt_service_box
+              1: self | input_slt_lend_box
+            output_boxes:
+              0: output_slt_service_box
+              1: refund_to_borrower_box
+              2: mining_fee
+          trigger_conditions:
+            is_lender_empty:
+              !lender_register.isDefined
+            service_box_check:
+              INPUTS(0).tokens(0).id == _SLEServiceNFTId
+          condition_checks:
+            value_refunded:
+        funding:
+          boxes:
+            input_boxes:
+              0: self | input_slt_lend_box
+              1: payment_box
+            output_boxes:
+              0: output_slt_lend_box
+              1: mining_fee
+          condition_checks:
+            lender_register_defined:
+              output_slt_lend_box.R8[Coll[Byte]].isDefined
+            funded_value_transferred:
+              output_slt_lend_box.tokens(1).value == fundingGoal
+            lend_box_detail_replication:
+              - slt_lend_box.R4[Coll[Long]] == funding_info
+              - slt_lend_box.R5[Coll[Coll[Byte]] == project_detail
+              - slt_lend_box.R6[Coll[Byte]] == borrower_register
+              - slt_lend_box.R7[Coll[Byte]] == loan_token_id
+              - slt_lend_box.R8[Coll[Byte]] == lender_register
