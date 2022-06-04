@@ -1,0 +1,76 @@
+# ================ Proxy Contract Info ================= #
+# Name      : SLT [Single Lender Tokens] Fund Lend Box Proxy Contract
+# Type      : Proxy Contract
+# Author    : Kii
+# Version   : v 1.0
+
+proxy_contract:
+  slt_fund_lend_box:
+    hard_coded_constants:
+      _BoxIdToFund: Coll[Byte]
+      _LenderPk: Coll[Byte]
+      _MinFee: Long
+      _SLTLendTokenId: Coll[Byte]
+    actions_conditions:
+      refund:
+        boxes:
+          input_boxes:
+            0: self
+          output_boxes:
+            0: refund_to_lender_box
+            1: mining_fee
+        trigger_conditions:
+          only_one_input:
+            INPUTS.size == 1
+        condition_checks:
+          token_id_same:
+            self.tokens(0).id == refund_to_lender_box.tokens(0).id
+          token_value_same:
+            self.tokens(0).value == refund_to_lender_box.tokens(0).value
+          refund_box_to_lender_pk:
+            refund_to_lender_box.id == _LenderPk
+      fundable:
+        trigger_conditions:
+          deadline_not_reached:
+            input_slt_lend_box.deadlineHeight < CONTEXT.HEIGHT
+          correct_designated_lend_box:
+            input_slt_lend_box.id == _BoxIdToFund
+        overfunded:
+          boxes:
+            input_boxes:
+              0: input_slt_lend_box
+              1: self
+            output_boxes:
+              0: output_slt_lend_box
+              1: refund_extra_funds_to_lender_box
+              2: mining_fee
+          trigger_conditions:
+            token_value_overfunded:
+              self.tokens(0).value >= input_slt_lend_box.fundingGoal
+          condition_checks:
+            refund_to_lender:
+              extra_token_value_refunded:
+                  refund_extra_funds_to_lender_box.tokens(0).value == self.tokens(0).value - input_slt_lend_box.fundingGoal
+              extra_token_id_same:
+                refund_extra_funds_to_lender_box.tokens(0).id == self.tokens(0).id
+              extra_token_refund_box_is_lender:
+                refund_extra_funds_to_lender_box.id == _LenderPk
+            output_slt_lend_box_funded:
+              funded.condition_checks.funded
+        funded:
+          boxes:
+            input_boxes:
+              0: input_slt_lend_box
+              1: self
+            output_boxes:
+              0: output_slt_lend_box
+              2: mining_fee
+          trigger_conditions:
+          condition_checks:
+            funded:
+              token_value_funded:
+                output_slt_lend_box.tokens(0).value == input_slt_lend_box.fundingGoal
+              token_id_correct:
+                output_slt_lend_box.tokens(0).id == input_slt_lend_box.loanTokenId
+              extra_token_refund_box_is_lender:
+                refund_extra_funds_to_lender_box.id == _LenderPk

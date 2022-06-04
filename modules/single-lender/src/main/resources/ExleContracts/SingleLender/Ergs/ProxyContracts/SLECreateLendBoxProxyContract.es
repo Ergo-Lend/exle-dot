@@ -6,6 +6,8 @@
     // Type             : Proxy Contract
     // Author           : Kii
     // Last Modified    : May 8th 2022
+    // Version          : v 1.0
+    // Status           : Completed
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _BorrowerPk:                     Coll[Byte]
@@ -22,7 +24,7 @@
     // 1. Create Loan
     // 2. Refund
 
-    // the amount of lendcore.boxes as outputs, else return
+    // the amount of boxes as outputs, else return
     if (OUTPUTS.size != 2) {
         val isLenderPkDefined = OUTPUTS(1).R7[GroupElement].isDefined
         sigmaProp(
