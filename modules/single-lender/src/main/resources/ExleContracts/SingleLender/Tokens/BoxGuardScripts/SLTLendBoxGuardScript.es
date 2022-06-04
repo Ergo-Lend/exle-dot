@@ -8,7 +8,7 @@
     //                    lending.
     // Type             : Guard Script
     // Author           : Kii
-    // Last Modified    : May 8th 2022
+    // Last Modified    : June 4th 2022
     // Version          : v 1.0
     // Status           : 1st Draft Completed
 
