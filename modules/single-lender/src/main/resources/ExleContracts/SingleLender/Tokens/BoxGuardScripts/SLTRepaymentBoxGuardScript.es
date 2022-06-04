@@ -7,9 +7,9 @@
     //                    to the lender when the repayment amount is reached.
     // Type             : Guard Script
     // Author           : Kii
-    // Last Modified    : May 8th 2022
+    // Last Modified    : June 4th 2022
     // Version          : v 1.0
-    // Status           : In Progress
+    // Status           : 1st Draft without default
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _MinFee:                     Long
@@ -166,6 +166,9 @@
             //              the box kept so that default is kept on chain
             // Input Boxes  : 0 -> InputSLTServiceBox, 1 -> SELF, 2 -> LenderTriggerBox
             // Output Boxes : 0 -> OutputSLTServiceBox, 1 -> OutputRepaymentBox, 2 -> RepaymentToLenderBox, 3 -> MiningFee
+            //
+            // @todo kelim Leaving this open so that we can think about what
+            // we should do for default.
             val repaymentHeightGoalPassed: Boolean      = CONTEXT.HEIGHT > _repaymentHeightGoal
             if (repaymentHeightGoalPassed)
             {
