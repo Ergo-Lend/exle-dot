@@ -10,7 +10,7 @@
     // Author           : Kii
     // Last Modified    : May 8th 2022
     // Version          : v 1.0
-    // Status           : In Progress
+    // Status           : 1st Draft Completed
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _MinFee:                     Long
@@ -120,14 +120,91 @@
     else
     {
         // ===== Not Funded Actions ===== //
+        // Description  : A lend box can exists in 2 states. Funded, or not funded.
+        //              In this else bracket, we exists in the not funded state.
+        //              We can go through multiple steps within this stage.
+        //
+        // #### Not Funded Constants ####
+        val loanToken: (Coll[Byte], Long)           = SELF.tokens(1)
 
-            // ===== Refund: Deadline Passed ===== //
+        // ===== Refund: Deadline Passed ===== //
+        // Description  : When the deadline passed, the box will definitely be
+        //              in the state of not funded at all. Therefore we can
+        //              just consume the lend box
+        // Input Boxes  : 0 -> SLTServiceBox, 1 -> SELF
+        // Output Boxes : 0 -> SLTServiceBox, 1 -> MiningFee
+        val loanDidNotHitFundingGoal: Boolean       = loanToken._2 <= _fundingGoal
+        val deadlinePassed: Boolean                 = HEIGHT > _deadlineHeight
+        if (deadlinePassed && loanDidNotHitFundingGoal)
+        {
+            val serviceBoxInteraction: Boolean      = INPUTS(0).tokens(0)._1 == _SLTServiceNFTId
+
+            sigmaProp(allOf(Coll(
+                serviceBoxInteraction,
+                deadlinePassed,
+                loanDidNotHitFundingGoal)))
+        }
+        else
+        {
+            // #### Boxes #### //
+            val inputSLTServiceBox: Box         = INPUTS(0)
+
+            val outputSLTServiceBox: Box        = OUTPUTS(0)
 
             // ===== Mistakenly Funded: When Initiated ===== //
+            // Description  : Sometimes there will exists states where the lendbox is
+            //              mistakenly funded during the creation of the lendbox as
+            //              the lendbox is a new output box, therefore there is no
+            //              contract to control it's input. We have to refund this
+            //              type of boxes.
+            // Input Boxes  : 0 -> SLTServiceBox, 1 -> SELF
+            // Output Boxes : 0 -> SLTServiceBox, 1 -> RefundToBorrowerBox, 2 -> MiningFee
+            val isLenderEmpty: Boolean          = !_lenderRegister.isDefined
+            val serviceBoxCheck: Boolean        = inputSLTServiceBox.tokens(0)._1 == _SLTServiceNFTId
 
-            // ===== Fund Actions ===== //
+            val mistakenlyFunded: Boolean       = allOf(Coll(isLenderEmpty && serviceBoxCheck))
+            if (mistakenlyFunded)
+            {
+                val refundToBorrowerBox: Box    = OUTPUTS(1)
+                val valueRefunded: Boolean      = refundToBorrowerBox.value == SELF.value - _MinFee
 
-                // ===== Overfunded ===== //
-                // Will it get overfunded?
+                val refundBoxToLender: Boolean  = refundToBorrowerBox.propositionBytes == _borrowerRegister.get
+
+                sigmaProp(allOf(Coll(
+                    mistakenlyFunded,
+                    valueRefunded,
+                    refundBoxToLender
+                )))
+            }
+            else
+            {
+                // ===== Fund Actions ===== //
+                // Description  : If we do not get into any other situations, it means we
+                //              are open for business (funding). We handle funding situations
+                //              and edge cases in here.
+                // Input Boxes  : 0 -> SELF, 1 -> PaymentBox
+                // OutputBoxes  : 0 -> OutputSLTLendBox, 1 -> MiningFee
+                // #### Boxes #### //
+                val outputSLTLendBox: Box               = OUTPUTS(0)
+
+                val lenderRegisterDefined: Boolean      = _lenderRegister.isDefined
+                val fundedValueTransferred: Boolean     = outputSLTLendBox.tokens(1)._2 == _fundingGoal
+                val lendBoxDetailReplication: Boolean   = {
+                    allOf(Coll(
+                        outputSLTLendBox.R4[Coll[Long]]         == _fundingInfoRegister,
+                        outputSLTLendBox.R5[Coll[Coll[Byte]]]   == _projectDetailRegister,
+                        outputSLTLendBox.R6[Coll[Byte]]         == _borrowerRegister,
+                        outputSLTLendBox.R7[Coll[Byte]]         == _loanTokenId,
+                        outputSLTLendBox.R8[Coll[Byte]]         == _lenderRegister
+                    ))
+                }
+
+                sigmaProp(allOf(Coll(
+                    lenderRegisterDefined,
+                    fundedValueTransferred,
+                    lendBoxDetailReplication
+                )))
+            }
+        }
     }
 }

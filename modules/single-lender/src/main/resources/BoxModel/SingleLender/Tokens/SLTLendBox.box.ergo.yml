@@ -117,12 +117,6 @@ box:
         contract_constants:
           values:
             loan_token: self.tokens(1)
-            repayment_details: slt_repayment_box.R8[Coll[Long]]
-            repayment_box_funded_height: repayment_details.get(0)
-            repayment_box_repayment_amount: repayment_details.get(1)
-            repayment_box_interest_rate: repayment_details.get(2)
-            repayment_box_repayment_height_goal: repayment_details.get(3)
-            total_interest_amount: (funding_goal * interest_rate/1000)
         refund_absorb_lend_box:
           description: "absorb the lend box"
           boxes:
@@ -155,9 +149,12 @@ box:
             is_lender_empty:
               !lender_register.isDefined
             service_box_check:
-              INPUTS(0).tokens(0).id == _SLEServiceNFTId
+              INPUTS(0).tokens(0).id == _SLTServiceNFTId
           condition_checks:
             value_refunded:
+              refund_to_borrower_box.value == SELF.value - _MinFee
+            refund_box_is_lender:
+              refund_to_borrower_box.propositionBytes == borrower_register
         funding:
           boxes:
             input_boxes:
@@ -172,8 +169,8 @@ box:
             funded_value_transferred:
               output_slt_lend_box.tokens(1).value == fundingGoal
             lend_box_detail_replication:
-              - slt_lend_box.R4[Coll[Long]] == funding_info
-              - slt_lend_box.R5[Coll[Coll[Byte]] == project_detail
-              - slt_lend_box.R6[Coll[Byte]] == borrower_register
-              - slt_lend_box.R7[Coll[Byte]] == loan_token_id
-              - slt_lend_box.R8[Coll[Byte]] == lender_register
+              - output_slt_lend_box.R4[Coll[Long]] == funding_info_register
+              - output_slt_lend_box.R5[Coll[Coll[Byte]] == project_detail_register
+              - output_slt_lend_box.R6[Coll[Byte]] == borrower_register
+              - output_slt_lend_box.R7[Coll[Byte]] == loan_token_id
+              - output_slt_lend_box.R8[Coll[Byte]] == lender_register
