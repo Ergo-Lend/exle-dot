@@ -59,6 +59,9 @@ box:
           - totalInterestAmount
           - repaymentHeightGoal
     action_conditions:
+      contract_constants:
+        values:
+
       not_funded:
         overfunded:
         funding:

@@ -46,11 +46,12 @@ run:
 sbt scalafmtAll
 sbt scalafmtSbt
 sbt single-lender/scalafmt
-sbt single-lender/test:scalafmt
+sbt single-lender/Test/scalafmt
 sbt exle-common/scalafmt
-sbt exle-common/test:scalafmt
+sbt exle-common/Test/scalafmt
 ...
 ```
+or run ./exlefmt.sh (update sh file if adding modules)
 2. tests
 ```shell
 sbt "project {project name (f.e exle-chain)}" test

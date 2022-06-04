@@ -1,5 +1,3 @@
 package SLTokens.contracts.ErgoScript
 
-class SLTBoxGuardScriptsSpec {
-
-}
+class SLTBoxGuardScriptsSpec {}
