@@ -3,6 +3,8 @@
 # Type      : Box
 # Author    : Kii
 # Version   : v 1.0
+# Remarks   : This document is very confusing and not well written.
+#             but it gets the job done.
 
 box:
   slt_service_box:
@@ -13,10 +15,10 @@ box:
       _OwnerPk:
         type: Coll[Byte]
         value: servicePk
-      _LendBoxHash:
+      _SLTLendBoxHash:
         type: Digest32
         value: slt_lend_box.hash
-      _RepaymentBoxHash:
+      _SLTRepaymentBoxHash:
         type: Digest32
         value: slt_repayment_box.hash
     value: min_box_value
@@ -36,7 +38,8 @@ box:
         type: Coll[Long]
         values:
           - creationHeight
-          - version
+          - lastModifiedHeight
+          - modifiedTimes
       r5:
         name: "service box info register"
         type: Coll[Coll[Byte]]
@@ -44,9 +47,9 @@ box:
           - boxName
           - description
       r6:
-        name: "boxInfo"
+        name: "box version"
         type: Coll[Byte]
-        value: "boxInfo"
+        value: boxVersion
       r7:
         name: "ergolend pub key"
         type: Coll[Byte]
@@ -92,19 +95,24 @@ box:
             - output_slt_repayment_token.value == input_slt_repayment_token.value
           outputs_only_two_boxes:
             - OUTPUTS.size == 2
+        conditions_check:
+          owner_pk:
+            _OwnerPk
       loan_boxes_interaction:
         contract_constants:
           values:
-            self_creation_info: SELF.R4[Coll[Long]].get
-            self_service_info: SELF.R5[Coll[Coll[Byte]]].get
-            self_box_info: SELF.R6[Coll[Byte]].get
-            self_service_owner_pub_key: SELF.R7[Coll[Byte]].get
-            self_profit_sharing_info: SELF.R8[Coll[Long]].get
-            output_creation_info: output_slt_service_box.R4[Coll[Long]].get
-            output_service_info: output_slt_service_box.R5[Coll[Coll[Byte]]].get
-            output_box_info: output_slt_service_box.R6[Coll[Byte]].get
-            output_service_owner_pub_key: output_slt_service_box.R7[Coll[Byte]].get
-            output_profit_sharing_info: output_slt_service_box.R8[Coll[Long]].get
+            self_creation_info: SELF.R4[Coll[Long]]
+            self_service_info: SELF.R5[Coll[Coll[Byte]]]
+            self_box_info: SELF.R6[Coll[Byte]]
+            self_service_owner_pub_key: SELF.R7[Coll[Byte]]
+            self_profit_sharing_info: SELF.R8[Coll[Long]]
+            output_creation_info: output_slt_service_box.R4[Coll[Long]]
+            output_service_info: output_slt_service_box.R5[Coll[Coll[Byte]]]
+            output_box_info: output_slt_service_box.R6[Coll[Byte]]
+            output_service_owner_pub_key: output_slt_service_box.R7[Coll[Byte]]
+            output_profit_sharing_info: output_slt_service_box.R8[Coll[Long]]
+            profit_sharing_percentage: self_profit_sharing_info.get(0)
+            service_fee_amount: self_profit_sharing_info.get(1)
           conditions:
             service_register_check:
               condition_checks:
@@ -120,13 +128,32 @@ box:
           boxes:
             input_boxes:
               0: self | input_slt_service_box
-              1: slt_create_lend_box_proxy_payment
+              1: slt_create_lend_box_payment_box
             output_boxes:
               0: output_slt_service_box
-              1: slt_lend_box
-              2: mining_fee
+              1: service_fee_box
+              2: slt_lend_box
+              3: mining_fee
           trigger_conditions:
+            lend_box_token_distribution:
+              self.tokens(1)._2 - 1 == output_slt_service_box.tokens(1)._2
+            repayment_box_tokens_unchanged:
+              self.tokens(2)._2 == output_slt_service_box.tokens(2)._2
           condition_checks:
+            lend_box_created:
+              - slt_lend_box.tokens(0)._1 == self.tokens(1)._1
+              - slt_lend_box.tokens(0)._2 == 1
+              - blake2b256(slt_lend_box.propositionBytes) == _SLTLendBoxHash
+            lend_box_edge_cases_prevention:
+              - slt_lend_box.R4[Coll[Long]].get(0) > 0
+              - slt_lend_box.R4[Coll[Long]].get(1) - HEIGHT > 0
+              - slt_lend_box.R4[Coll[Long]].get(2) >= 0
+              - slt_lend_box.R4[Coll[Long]].get(3) > 0
+            service_full_check:
+              this.contract_constants.conditions.service_full_check
+            service_fee_paid:
+              - service_fee_box.value == service_fee_amount
+              - service_fee_box.propositionBytes == self_service_owner_pub_key.get
         slt_lend_success:
           boxes:
             input_boxes:
@@ -138,8 +165,67 @@ box:
               2: borrower_loaned_funds
               3: mining_fee
           trigger_conditions:
+            absorb_lend_token:
+              self.tokens(1)._2 + 1 == output_slt_service_box.tokens(1)._2
+            distribute_repayment_token:
+              self.tokens(2)._2 - 1 == output_slt_service_box.tokens(2)._2
           condition_checks:
+            lend_box_check:
+              reason: "To prevent malicious lend box to interact"
+              checks:
+                - slt_lend_box.tokens(0)._1 == self.tokens(1)._1
+                - blake2b256(slt_lend_box.propositionBytes) == _SLTLendBoxHash
+            repayment_box_created:
+              reason: "ensures that the repayment box is created correctly"
+              checks:
+                - blake2b256(slt_repayment_box.propositionBytes) == _SLTRepaymentBoxHash
+                - slt_repayment_box.tokens(0)._1 == self.tokens(2)._1
+                - slt_repayment_box.tokens(0)._2 == 1
+            service_full_check:
+              reason: "ensure service box is cloned exactly"
+              checks:
+                this.contract_constants.conditions.service_full_check
         slt_repayment_success:
+          trigger_conditions:
+            reabsorb_repayment_token:
+              self.tokens(2)._2 + 1 == output_slt_service_box.tokens(2)._2
+            lend_token_same:
+              self.tokens(1)._2 == output_slt_service_box.tokens(1)._2
+          defaulted | zero-interest:
+            contract_constants:
+              values:
+                repaymentDetailsRegister: slt_repayment_box.R9[Coll[Long]]
+                fundingInfoRegister: slt_repayment_box.R4[Coll[Long]]
+                loanInterestRate: fundingInfoRegister.get(2)
+                repaymentAmount: repaymentDetailsRegister.get(1)
+                repaymentInterestAmount: repaymentDetailsRegister.get(2)
+                repaymentHeightGoal: repaymentDetailsRegister.get(3)
+                self_profit_sharing_info: SELF.R8[Coll[Long]]
+                profitSharingPercentage: self_profit_sharing_info.get(0)
+                profitSharingAmount: (repaymentInterestAmount * profitSharingPercentage) / 1000
+            boxes:
+              input_boxes:
+                0: self | input_slt_service_box
+                1: slt_repayment_box
+              output_boxes:
+                0: output_slt_service_box
+                1: lender_repaid_fund_box
+                2: mining_fee
+            trigger_conditions:
+              interest_rate_0:
+                reason: "we don't take a cut if interest is 0 and its for charity"
+                checks:
+                   loanInterestRate == 0
+              defaulted:
+                reason: "we don't take a cut if the payment failed to be completed"
+                checks:
+                  - repaymentHeightGoal < HEIGHT
+                  - slt_repayment_box.value < repaymentAmount
+            condition_checks:
+              service_full_check:
+                reason: "ensure service box is cloned exactly"
+                checks:
+                  this.contract_constants.conditions.service_full_check
           no_default:
             boxes:
               input_boxes:
@@ -150,20 +236,18 @@ box:
                 1: profit_sharing_box
                 2: lender_repaid_fund_box
                 3: mining_fee
-            trigger_conditions:
-            condition_checks:
-          defaulted | zero-interest:
-            boxes:
-              input_boxes:
-                0: self | input_slt_service_box
-                1: slt_repayment_box
-              output_boxes:
-                0: output_slt_service_box
-                1: lender_repaid_fund_box
-                2: mining_fee
-            trigger_conditions:
-            condition_checks:
+              condition_checks:
+                profit_sharing_check:
+                  reason: "ensure that service owner receives profit sharing"
+                  checks:
+                    - profit_sharing_box.propositionByte == self_service_owner_pub_key.get
+                    - profit_sharing_box.tokens(0)._2 == profitSharingAmount
+                service_full_check:
+                  reason: "ensure service box is cloned exactly"
+                  checks:
+                    this.contract_constants.conditions.service_full_check
         reabsorbed_lend_box:
+          description: "lend box pass expiration date, so we reabsorbed to prevent crowded boxes"
           boxes:
             input_boxes:
               0: self | input_slt_service_box
@@ -172,4 +256,14 @@ box:
               0: output_slt_service_box
               1: mining_fee
           trigger_conditions:
+            absorb_lend_token:
+              self.tokens(1)._2 + 1 == output_slt_service_box.tokens(1)._2
+            repayment_equal:
+              self.tokens(2)._2 == output_slt_service_box.tokens(2)._2
           condition_checks:
+            absorb_lend_token:
+              self.tokens(1)._2 + 1 == output_slt_service_box.tokens(1)._2
+            service_full_check:
+              reason: "ensure service box is cloned exactly"
+              checks:
+                this.contract_constants.conditions.service_full_check
