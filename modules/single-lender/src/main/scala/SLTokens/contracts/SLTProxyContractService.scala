@@ -1,6 +1,6 @@
 package SLTokens.contracts
 
-import SLErgs.SLTTokens
+import SLTokens.SLTTokens
 import commons.contracts.{ExleContracts, ProxyContracts}
 import commons.node.Client
 import org.ergoplatform.appkit.{Address, ConstantsBuilder, ErgoContract, ErgoId}
@@ -19,8 +19,8 @@ class SLTProxyContractService @Inject() (client: Client)
     repaymentHeightLength: Long
   ): ErgoContract =
     try {
-      val sltServiceNFTId = SLTTokens.serviceNFT.getBytes
-      val sltLendTokenId = SLTTokens.lendToken.getBytes
+      val sltServiceNFTId = SLTTokens.serviceNFTId.getBytes
+      val sltLendTokenId = SLTTokens.lendTokenId.getBytes
       val loanTokenId = ErgoId.create(loanToken).getBytes
       val borrowerAddress =
         Address.create(borrowerPk).getErgoAddress.script.bytes
@@ -42,6 +42,58 @@ class SLTProxyContractService @Inject() (client: Client)
       val proxyContract = compile(
         contractConstants,
         ExleContracts.SLTCreateLendBoxProxyContract.contractScript
+      )
+
+      proxyContract
+    } catch {
+      case e: Exception => throw e
+    }
+
+  def getSLTFundLendBoxProxyContract(
+    lendBoxId: String,
+    lenderAddress: String
+  ): ErgoContract =
+    try {
+      val lenderPk =
+        Address.create(lenderAddress).getErgoAddress.script.bytes
+
+      val contractConstants = ConstantsBuilder
+        .create()
+        .item("_BoxIdToFund", ErgoId.create(lendBoxId).getBytes)
+        .item("_LenderPk", lenderPk)
+        .item("_MinFee", minFee)
+        .item("_SLTLendTokenId", SLTTokens.lendTokenId.getBytes)
+        .build()
+
+      val proxyContract = compile(
+        contractConstants,
+        ExleContracts.SLTFundLendBoxProxyContract.contractScript
+      )
+
+      proxyContract
+    } catch {
+      case e: Exception => throw e
+    }
+
+  def getSLTFundRepaymentBoxProxyContract(
+    repaymentBoxId: String,
+    funderAddress: String
+  ): ErgoContract =
+    try {
+      val funderPk =
+        Address.create(funderAddress).getErgoAddress.script.bytes
+
+      val contractConstants = ConstantsBuilder
+        .create()
+        .item("_BoxIdToFund", ErgoId.create(repaymentBoxId).getBytes)
+        .item("_FunderPk", funderPk)
+        .item("_MinFee", minFee)
+        .item("_SLTRepaymentTokenId", SLTTokens.repaymentTokenId.getBytes)
+        .build()
+
+      val proxyContract = compile(
+        contractConstants,
+        ExleContracts.SLTFundLendBoxProxyContract.contractScript
       )
 
       proxyContract
