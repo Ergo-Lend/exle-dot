@@ -106,6 +106,15 @@ lazy val tools = utils
   )
   .dependsOn(Seq(common, singleLender).map(_ % allConfigDependency): _*)
 
+lazy val generics = utils
+  .mkModule("exle-generics", "ExleGenerics")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing
+  )
+
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case x                             => MergeStrategy.first
