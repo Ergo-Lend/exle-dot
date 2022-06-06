@@ -14,7 +14,7 @@
     // val _BoxIdToFund:                    Coll[Byte]
     // val _FunderPk:                       Coll[Byte]
     // val _MinFee:                         Long
-    // val _SLERepaymentTokenId:            Coll[Byte]
+    // val _SLTRepaymentTokenId:            Coll[Byte]
 
     // ===== Contract Conditions ===== //
     // 1. Fund Repayment
@@ -55,7 +55,7 @@
         // ===== Fund ===== //
         val repaymentGoalReached: Boolean   = repaymentGoal <= amountRepaid
         val boxIdCheck: Boolean             = _BoxIdToFund == repaymentBoxId
-        val repaymentCheck: Boolean         = inputSltRepaymentBox.tokens(0)._1 == _SLERepaymentTokenId
+        val repaymentCheck: Boolean         = inputSltRepaymentBox.tokens(0)._1 == _SLTRepaymentTokenId
         val fundable: Boolean               = boxIdCheck && !repaymentGoalReached && repaymentCheck
 
         if (fundable) {
