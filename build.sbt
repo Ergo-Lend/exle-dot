@@ -32,6 +32,7 @@ lazy val commonSettings = List(
 
 lazy val allConfigDependency = "compile->compile;test->test"
 
+// ===================== Modules ===================== //
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .withId("lendbackend")
@@ -39,17 +40,18 @@ lazy val root = (project in file("."))
   .settings(moduleName := "lendbackend", name := "LendBackend")
   .dependsOn(chain, pay, singleLender)
 
-lazy val chain = utils
-  .mkModule("exle-chain", "ExleChain")
-  .settings(commonSettings)
-  .settings(
-    libraryDependencies ++=
-      Ergo ++
-        Testing ++
-        DependencyInjection
-  )
-  .dependsOn(common)
+// =================== Base Modules ====================== //
+// Description  : Base Modules are modules that is at the bottom
+//            of the module hierarchy, and normally other modules
+//            depends on it more, and have minimal dependencies
+//            other than test modules.
+//            Think Raw Materials, like Metal, Wood, Stone
 
+// #NOTE Don't add more stuff into commons unless it makes sense
+// We would like to shed out the unnecessary stuffs.
+//
+// What should commons have?
+//  Things that are exle specific, but not ergo specific.
 lazy val common = utils
   .mkModule("exle-common", "ExleCommon")
   .settings(commonSettings)
@@ -60,6 +62,32 @@ lazy val common = utils
         HttpDep ++
         DependencyInjection
   )
+
+lazy val generics = utils
+  .mkModule("exle-generics", "ExleGenerics")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing
+  )
+  .dependsOn(Seq(testCommons).map(_ % allConfigDependency): _*)
+
+// ======================== Tools & Utilities Modules ================== //
+// Description    : Modules that has certain utilities in it, are used by
+//              other modules. However, are not at the very bottom of the
+//              hierarchy.
+//              Think Tools, like Axe, Shovels
+lazy val chain = utils
+  .mkModule("exle-chain", "ExleChain")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing ++
+        DependencyInjection
+  )
+  .dependsOn(common)
 
 lazy val pay = utils
   .mkModule("exle-pay", "ExlePay")
@@ -86,16 +114,6 @@ lazy val db = utils
   )
   .dependsOn(common)
 
-lazy val singleLender = utils
-  .mkModule("single-lender", "SingleLender")
-  .settings(commonSettings)
-  .settings(
-    libraryDependencies ++=
-      Ergo ++
-        Testing
-  )
-  .dependsOn(Seq(common, chain, db).map(_ % allConfigDependency): _*)
-
 lazy val tools = utils
   .mkModule("exle-tools", "ExleTools")
   .settings(commonSettings)
@@ -106,14 +124,35 @@ lazy val tools = utils
   )
   .dependsOn(Seq(common, singleLender).map(_ % allConfigDependency): _*)
 
-lazy val generics = utils
-  .mkModule("exle-generics", "ExleGenerics")
+// ====================== Feature Modules ===================== //
+// Description    : Modules that carries out certain features, and does
+//                that job.
+//                Think a Business or System, like a Cashier system in a shop
+lazy val singleLender = utils
+  .mkModule("single-lender", "SingleLender")
   .settings(commonSettings)
   .settings(
     libraryDependencies ++=
       Ergo ++
         Testing
   )
+  .dependsOn(
+    Seq(common, chain, db, testCommons).map(_ % allConfigDependency): _*
+  )
+
+// =============== Test Modules ============== //
+// Description  : Base modules for testing
+lazy val testCommons = utils
+  .mkModule("exle-test-commons", "ExleTestCommons")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing
+  )
+  .dependsOn(common)
+
+// ==== Modules END ==== //
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

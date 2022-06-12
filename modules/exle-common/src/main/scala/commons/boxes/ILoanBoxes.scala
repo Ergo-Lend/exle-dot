@@ -1,6 +1,5 @@
 package commons.boxes
 
-import commons.ergo.Addresses
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{
   Address,
@@ -40,4 +39,10 @@ abstract class Contract {
 
   def getContractScriptHash(ctx: BlockchainContext): Digest32 =
     Addresses.getContractScriptHash(getContract(ctx))
+}
+
+object Addresses {
+
+  def getContractScriptHash(contract: ErgoContract): Digest32 =
+    scorex.crypto.hash.Blake2b256(contract.getErgoTree.bytes)
 }
