@@ -34,6 +34,16 @@ jobs:
         with:
           fail_ci_if_error: true
 
+      # Run Generics
+      - name: Run Generics
+        run: sbt "project exle-generics" coverage test
+      - name: Coverage Report
+        run: sbt "project exle-generics" coverageReport coverageAggregate
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+
       # Run App Test
       - name: Run tests
         run: sbt coverage test
@@ -110,6 +120,12 @@ jobs:
       # Format tools Check
       - name: Formatting Tools
         run: sbt "project exle-tools" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      # Format single-lender Check
+      - name: Formatting Single-Lender
+        run: sbt "project single-lender" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+      # Format generics Check
+      - name: Formatting Generics
+        run: sbt "project exle-generics" scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
 
 permissions:
   contents: read

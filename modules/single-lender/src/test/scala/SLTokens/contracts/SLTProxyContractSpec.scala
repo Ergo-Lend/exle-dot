@@ -1,6 +1,7 @@
 package SLTokens.contracts
 
 import SLErgs.boxes.FundsToAddressBox
+import common.ErgoTestBase
 import org.ergoplatform.appkit.{
   ErgoContract,
   InputBox,
@@ -13,8 +14,7 @@ import sigmastate.lang.exceptions.InterpreterException
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
-class SLTProxyContractSpec extends AnyWordSpec with Matchers {
-  client.setClient()
+class SLTProxyContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
   val SLTProxyContractService = new SLTProxyContractService(client)
 
   "SLT CreateLendBox ProxyContract" when {
@@ -57,7 +57,27 @@ class SLTProxyContractSpec extends AnyWordSpec with Matchers {
         }
       }
 
+      "Refund back to borrower" in {
+        client.getClient.execute { ctx =>
+          val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+          val outputBorrowerBox: OutBox = new FundsToAddressBox(
+            value = serviceFee - minFee,
+            address = dummyAddress
+          ).getOutputBox(ctx, txB)
+
+          val tx = txB
+            .boxesToSpend(Seq(createSLTLendPaymentBox).asJava)
+            .fee(minFee)
+            .outputs(outputBorrowerBox)
+            .sendChangeTo(dummyAddress.getErgoAddress)
+            .build()
+
+          dummyProver.sign(tx)
+        }
+      }
+
       "Ensure the box created details are correct" in {}
+
     }
   }
 
