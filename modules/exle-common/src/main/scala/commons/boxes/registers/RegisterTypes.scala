@@ -2,8 +2,7 @@ package commons.boxes.registers
 
 import commons.configs.Configs
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.JavaHelpers.{JByteRType, JLongRType}
-import org.ergoplatform.appkit.{Address, ErgoType, ErgoValue, JavaHelpers}
+import org.ergoplatform.appkit.{Address, ErgoType, ErgoValue}
 import sigmastate.serialization.ErgoTreeSerializer
 import special.collection.Coll
 
@@ -59,7 +58,7 @@ object RegisterTypes {
     )
 
     def toRegister: ErgoValue[Coll[java.lang.Byte]] =
-      ergoValueOf(value.getBytes("utf-8"))
+      ergoValueOf(value.getBytes(StandardCharsets.UTF_8).map(_.asInstanceOf[java.lang.Byte]))
   }
 
   class AddressRegister(val address: String) extends CollByteRegister {
@@ -70,7 +69,7 @@ object RegisterTypes {
       }
       val borrowerPk = Address.create(address).getErgoAddress.script.bytes
 
-      ergoValueOf(borrowerPk)
+      ergoValueOf(borrowerPk.map(_.asInstanceOf[java.lang.Byte]))
     }
   }
 
@@ -95,14 +94,12 @@ object RegisterTypes {
         ErgoType.collType(ErgoType.byteType())
       )
 
-    def ergoValueOf(elements: Array[Long]): ErgoValue[Coll[java.lang.Long]] = {
-      val longColl = elements.asInstanceOf[Array[java.lang.Long]]
-      ErgoValue.of(longColl, ErgoType.longType())
+    def ergoValueOf(elements: Array[java.lang.Long]): ErgoValue[Coll[java.lang.Long]] = {
+      ErgoValue.of(elements, ErgoType.longType())
     }
 
-    def ergoValueOf(elements: Array[Byte]): ErgoValue[Coll[java.lang.Byte]] = {
-      val byteColl = elements.asInstanceOf[Array[java.lang.Byte]]
-      ErgoValue.of(byteColl, ErgoType.byteType())
+    def ergoValueOf(elements: Array[java.lang.Byte]): ErgoValue[Coll[java.lang.Byte]] = {
+      ErgoValue.of(elements, ErgoType.byteType())
     }
 
     def ergoValueOf(elements: Long): ErgoValue[java.lang.Long] =
