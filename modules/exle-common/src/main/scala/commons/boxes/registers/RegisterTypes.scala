@@ -85,12 +85,14 @@ object RegisterTypes {
 
   class Register {
 
-    def ergoValueOf(elements: Array[Array[Byte]]): ErgoValue[Coll[Coll[java.lang.Byte]]] =
+    def ergoValueOf(
+      elements: Array[Array[Byte]]
+    ): ErgoValue[Coll[Coll[java.lang.Byte]]] =
       ErgoValue.of(
         elements
           .map(item => ErgoValue.of(IndexedSeq(item: _*).toArray))
           .map(item => item.getValue.asInstanceOf[Coll[java.lang.Byte]]),
-            ErgoType.collType(ErgoType.byteType())
+        ErgoType.collType(ErgoType.byteType())
       )
 
     def ergoValueOf(elements: Array[Long]): ErgoValue[Coll[java.lang.Long]] = {
@@ -103,8 +105,7 @@ object RegisterTypes {
       ErgoValue.of(byteColl, ErgoType.byteType())
     }
 
-    def ergoValueOf(elements: Long): ErgoValue[java.lang.Long] = {
+    def ergoValueOf(elements: Long): ErgoValue[java.lang.Long] =
       ErgoValue.of(elements.asInstanceOf[java.lang.Long])
-    }
   }
 }

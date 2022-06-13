@@ -2,12 +2,33 @@ package runners.serviceBox
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLEServiceBoxContract
-import SLErgs.registers.{CreationInfoRegister, ProfitSharingRegister, ServiceBoxInfoRegister, SingleAddressRegister}
+import SLErgs.registers.{
+  CreationInfoRegister,
+  ProfitSharingRegister,
+  ServiceBoxInfoRegister,
+  SingleAddressRegister
+}
 import commons.boxes.registers.RegisterTypes.StringRegister
 import commons.configs.{NodeConfig, ServiceConfig}
 import commons.configs.NodeConfig.SystemNodeConfig
 import commons.ergo.{ContractUtils, ErgCommons}
-import org.ergoplatform.appkit.{Address, BlockchainContext, BoxOperations, Eip4Token, ErgoClient, ErgoId, ErgoProver, ErgoToken, InputBox, OutBox, Parameters, RestApiErgoClient, SecretString, SignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  BoxOperations,
+  Eip4Token,
+  ErgoClient,
+  ErgoId,
+  ErgoProver,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  Parameters,
+  RestApiErgoClient,
+  SecretString,
+  SignedTransaction,
+  UnsignedTransactionBuilder
+}
 import org.ergoplatform.appkit.config.{ErgoNodeConfig, ErgoToolConfig}
 
 import java.util.stream.Collectors
@@ -107,9 +128,24 @@ object SLEServiceBoxHandler {
     val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
 
     val token = tokenCreate match {
-      case "service"   => new Eip4Token(directBox.get(0).getId.toString, 1L, nftName, nftDesc, 0)
-      case "lend"      => new Eip4Token(directBox.get(0).getId.toString, 1000000000L, lendTokenName, lendTokenDesc, 0)
-      case "repayment" => new Eip4Token(directBox.get(0).getId.toString, 1000000000L, repaymentTokenName, repaymentTokenDesc, 0)
+      case "service" =>
+        new Eip4Token(directBox.get(0).getId.toString, 1L, nftName, nftDesc, 0)
+      case "lend" =>
+        new Eip4Token(
+          directBox.get(0).getId.toString,
+          1000000000L,
+          lendTokenName,
+          lendTokenDesc,
+          0
+        )
+      case "repayment" =>
+        new Eip4Token(
+          directBox.get(0).getId.toString,
+          1000000000L,
+          repaymentTokenName,
+          repaymentTokenDesc,
+          0
+        )
     }
 
     val tokenBox: OutBox = tokenCreate match {

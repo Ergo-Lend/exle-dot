@@ -5,7 +5,16 @@ import commons.configs.NodeConfig.SystemNodeConfig
 import commons.ergo.ErgCommons
 import commons.errors.ConnectionException
 import org.ergoplatform.appkit.BoxOperations.ExplorerApiUnspentLoader
-import org.ergoplatform.appkit.{Address, BoxOperations, CoveringBoxes, ErgoClient, ErgoToken, InputBox, NetworkType, RestApiErgoClient}
+import org.ergoplatform.appkit.{
+  Address,
+  BoxOperations,
+  CoveringBoxes,
+  ErgoClient,
+  ErgoToken,
+  InputBox,
+  NetworkType,
+  RestApiErgoClient
+}
 import play.api.Logger
 
 import javax.inject.Singleton
@@ -72,11 +81,7 @@ class Client() {
           boxOperations.withAmountToSpend(amountMinusMinerFee).loadTop()
 
         val coveringBoxes =
-          new CoveringBoxes(
-            amount,
-            inputBoxList,
-            null,
-            false)
+          new CoveringBoxes(amount, inputBoxList, null, false)
 
         coveringBoxes
       } catch {

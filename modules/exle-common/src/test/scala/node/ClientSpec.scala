@@ -16,7 +16,9 @@ class ClientSpec extends AnyWordSpec with Matchers {
     "get unspent boxes" in {
       try {
         val boxes: List[InputBox] = client.getAllUnspentBox(trueAndFalseAddress)
-        assert(boxes.head.getId.toString == "ce7df858a94a0bc189befc80d5f627d9bdee042693802831fdef313ab4a821c8")
+        assert(
+          boxes.head.getId.toString == "ce7df858a94a0bc189befc80d5f627d9bdee042693802831fdef313ab4a821c8"
+        )
       }
     }
   }

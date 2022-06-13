@@ -21,6 +21,7 @@ object Time {
 }
 
 object ErgoValidator {
+
   def validateErgValue(value: Long): Unit =
     if (value < 10000) throw new Throwable("Minimum value is 0.00001 Erg")
 
