@@ -33,7 +33,7 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
 
       "have the same values" in {
         assert(contract.ergoTree == testContract.getErgoTree)
-        assert(contract.address == testContract.getAddress)
+        assert(contract.address == testContract.toAddress)
         assert(contract.ergoConstants == testContract.getConstants)
       }
 
@@ -42,13 +42,13 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
 
       "different from the test contract" in {
         assert(substContract.ergoTree != testContract.getErgoTree)
-        assert(substContract.address != testContract.getAddress)
+        assert(substContract.address != testContract.toAddress)
         assert(substContract.ergoConstants != testContract.getConstants)
       }
 
       "same as new subst test contract" in {
         assert(substContract.ergoTree == substTestContract.getErgoTree)
-        assert(substContract.address == substTestContract.getAddress)
+        assert(substContract.address == substTestContract.toAddress)
         assert(substContract.ergoConstants == substTestContract.getConstants)
       }
     }}
@@ -60,7 +60,7 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
 
       "have the same values but constants can't be evaluated" in {
         assert(contract.ergoTree == testContract.getErgoTree)
-        assert(contract.address == testContract.getAddress)
+        assert(contract.address == testContract.toAddress)
         // @todo Cheese, can this constants be retrieved if it's not created
         intercept[RuntimeException] {
           assert(contract.ergoConstants == testContract.getConstants)

@@ -9,7 +9,7 @@ import sigmastate.Values
   */
 case class Contract(ergoContract: ErgoContract, constantMap: Option[Seq[(String, Any)]] = None) {
   def ergoTree:   Values.ErgoTree = ergoContract.getErgoTree
-  def address:    Address         = ergoContract.getAddress
+  def address:    Address         = ergoContract.toAddress
   def ergoConstants:  Constants   = ergoContract.getConstants
 
   def substConstants(name: String, value: String): Contract = {

@@ -1,9 +1,7 @@
 package commons.common
 
 import commons.configs.Configs
-import org.ergoplatform.appkit.{ErgoType, ErgoValue, JavaHelpers}
 import sigmastate.Values.ErgoTree
-import special.collection.Coll
 
 import java.io.{PrintWriter, StringWriter}
 import java.util.Calendar
@@ -23,12 +21,6 @@ object Time {
 }
 
 object ErgoValidator {
-
-  def longListToErgoValue(elements: Array[Long]): ErgoValue[Coll[Long]] = {
-    val longColl = JavaHelpers.SigmaDsl.Colls.fromArray(elements)
-    ErgoValue.of(longColl, ErgoType.longType())
-  }
-
   def validateErgValue(value: Long): Unit =
     if (value < 10000) throw new Throwable("Minimum value is 0.00001 Erg")
 

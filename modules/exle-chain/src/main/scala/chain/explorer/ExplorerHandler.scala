@@ -64,7 +64,7 @@ class ExplorerHandler(networkType: NetworkType) {
   ): Option[Seq[TransactionData]] = {
     val opt = asOption[Items[TransactionInfo]](
       apiService
-        .getApiV1AddressesP1Transactions(addr.toString, offset, limit)
+        .getApiV1AddressesP1Transactions(addr.toString, offset, limit, true)
         .execute()
     )
     TransactionData.fromOptionSeq(itemSeq[TransactionInfo](opt))

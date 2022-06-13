@@ -44,9 +44,9 @@ object ErgoPayUtils {
         val recipientContract: ErgoContract = ContractUtils.sendToPK(recipient)
         val unsignedTransaction: UnsignedTransaction =
           BoxOperations
-            .createForSender(sender)
+            .createForSender(sender, ctx)
             .withAmountToSpend(amountToSend)
-            .putToContractTxUnsigned(ctx, recipientContract)
+            .putToContractTxUnsigned(recipientContract)
 
         ctx.newProverBuilder().build().reduce(unsignedTransaction, 0)
       }
@@ -80,10 +80,10 @@ object ErgoPayUtils {
         val recipientContract: ErgoContract = ContractUtils.sendToPK(recipient)
         val unsignedTransaction: UnsignedTransaction =
           BoxOperations
-            .createForSender(sender)
+            .createForSender(sender, ctx)
             .withAmountToSpend(amountToSend)
             .withTokensToSpend(tokensToSpend)
-            .putToContractTxUnsigned(ctx, recipientContract)
+            .putToContractTxUnsigned(recipientContract)
 
         ctx.newProverBuilder().build().reduce(unsignedTransaction, 0)
       }
@@ -117,11 +117,11 @@ object ErgoPayUtils {
         val recipientContract: ErgoContract = ContractUtils.sendToPK(recipient)
         val unsignedTransaction: UnsignedTransaction =
           BoxOperations
-            .createForSender(sender)
+            .createForSender(sender, ctx)
             // @todo kii, check if we need this min box
             .withAmountToSpend(ErgCommons.MinBoxFee)
             .withTokensToSpend(tokensToSpend)
-            .putToContractTxUnsigned(ctx, recipientContract)
+            .putToContractTxUnsigned(recipientContract)
 
         ctx.newProverBuilder().build().reduce(unsignedTransaction, 0)
       }

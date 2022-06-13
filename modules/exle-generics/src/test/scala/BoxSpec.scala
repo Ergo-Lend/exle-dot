@@ -19,11 +19,11 @@ class BoxSpec extends AnyWordSpec with Matchers with ErgoTestBase {
 
   "Box" should {
     client.getClient.execute(ctx => {
-      val r4: ErgoValue[Int] = ErgoValue.of(123)
-      val r5: ErgoValue[Coll[Byte]] = ErgoValue.of("hello".getBytes)
-      val r6: ErgoValue[Long] = ErgoValue.of(123L)
-      val r8: ErgoValue[Boolean] = ErgoValue.of(true)
-      val r9: ErgoValue[Short] = ErgoValue.of(123.toShort)
+      val r4: ErgoValue[Integer] = ErgoValue.of(123)
+      val r5: ErgoValue[Coll[java.lang.Byte]] = ErgoValue.of("hello".getBytes)
+      val r6: ErgoValue[java.lang.Long] = ErgoValue.of(123L)
+      val r8: ErgoValue[java.lang.Boolean] = ErgoValue.of(true)
+      val r9: ErgoValue[java.lang.Short] = ErgoValue.of(123.toShort)
 
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
       val inputBox: InputBox = txB.outBoxBuilder()

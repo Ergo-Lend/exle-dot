@@ -2,7 +2,7 @@ object versions {
   // Ergo
   val SigmaStateVersion = "4.0.3"
   val ErgoContractsVersion = "1.0.0"
-  val ErgoAppKitVersion = "develop-d90135c5-SNAPSHOT"
+  val ErgoAppKitVersion = "4.0.9"
   val ScryptoVersion = "2.1.10"
 
   // API
