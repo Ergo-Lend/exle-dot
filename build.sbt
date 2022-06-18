@@ -134,10 +134,23 @@ lazy val singleLender = utils
   .settings(
     libraryDependencies ++=
       Ergo ++
-        Testing
+        Testing ++
+        Cats
   )
   .dependsOn(
     Seq(common, chain, db, testCommons).map(_ % allConfigDependency): _*
+  )
+
+lazy val exleBot = utils
+  .mkModule("exle-bot", "ExleBot")
+  .settings(commonSettings)
+  .settings(
+    libraryDependencies ++=
+      Ergo ++
+        Testing
+  )
+  .dependsOn(
+    Seq(common, db, singleLender).map(_ % allConfigDependency): _*
   )
 
 // =============== Test Modules ============== //
