@@ -2,7 +2,8 @@ package commons.boxes.registers
 
 import commons.configs.Configs
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{Address, ErgoType, ErgoValue}
+import org.ergoplatform.appkit.JavaHelpers.JByteRType
+import org.ergoplatform.appkit.{Address, ErgoType, ErgoValue, JavaHelpers}
 import sigmastate.serialization.ErgoTreeSerializer
 import special.collection.Coll
 
@@ -23,8 +24,8 @@ object RegisterTypes {
     def arrayByteToString(arrayByte: Array[Byte]): String =
       new String(arrayByte, StandardCharsets.UTF_8)
 
-    def stringToCollByte(str: String): Array[Byte] =
-      str.getBytes("utf-8")
+    def stringToCollByte(str: String): Array[java.lang.Byte] =
+      str.getBytes("utf-8").map(item => item.asInstanceOf[java.lang.Byte])
   }
 
   object CollByte {
@@ -85,14 +86,20 @@ object RegisterTypes {
   class Register {
 
     def ergoValueOf(
-      elements: Array[Array[Byte]]
-    ): ErgoValue[Coll[Coll[java.lang.Byte]]] =
+      elements: Array[Array[java.lang.Byte]]
+    ): ErgoValue[Coll[Coll[java.lang.Byte]]] = {
+      val elementsInColl: Array[Coll[java.lang.Byte]] = elements.map(
+        innerArray => ergoValueOf(innerArray).getValue
+      )
+
+      val elementsInCollEntirely: Coll[Coll[java.lang.Byte]] =
+        JavaHelpers.SigmaDsl.Colls.fromArray(elementsInColl)
+
       ErgoValue.of(
-        elements
-          .map(item => ErgoValue.of(IndexedSeq(item: _*).toArray))
-          .map(item => item.getValue.asInstanceOf[Coll[java.lang.Byte]]),
+        elementsInCollEntirely,
         ErgoType.collType(ErgoType.byteType())
       )
+    }
 
     def ergoValueOf(elements: Array[java.lang.Long]): ErgoValue[Coll[java.lang.Long]] = {
       ErgoValue.of(elements, ErgoType.longType())

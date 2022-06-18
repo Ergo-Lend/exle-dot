@@ -70,7 +70,7 @@ case class LendingProjectDetailsRegister(
   )
 
   def toRegister: ErgoValue[Coll[Coll[java.lang.Byte]]] = {
-    val register: Array[Array[Byte]] = new Array[Array[Byte]](2)
+    val register: Array[Array[java.lang.Byte]] = new Array[Array[java.lang.Byte]](2)
 
     register(0) = stringToCollByte(projectName)
     register(1) = stringToCollByte(description)
@@ -104,7 +104,7 @@ case class ServiceBoxInfoRegister(name: String, description: String)
   )
 
   def toRegister: ErgoValue[Coll[Coll[java.lang.Byte]]] = {
-    val register: Array[Array[Byte]] = new Array[Array[Byte]](2)
+    val register: Array[Array[java.lang.Byte]] = new Array[Array[java.lang.Byte]](2)
 
     register(0) = stringToCollByte(name)
     register(1) = stringToCollByte(description)
