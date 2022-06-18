@@ -16,6 +16,7 @@ import org.ergoplatform.appkit.{
   Address,
   BlockchainContext,
   BoxOperations,
+  Eip4Token,
   ErgoClient,
   ErgoId,
   ErgoProver,
@@ -127,9 +128,24 @@ object SLEServiceBoxHandler {
     val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
 
     val token = tokenCreate match {
-      case "service"   => new ErgoToken(directBox.get(0).getId, 1L)
-      case "lend"      => new ErgoToken(directBox.get(0).getId, 1000000000L)
-      case "repayment" => new ErgoToken(directBox.get(0).getId, 1000000000L)
+      case "service" =>
+        new Eip4Token(directBox.get(0).getId.toString, 1L, nftName, nftDesc, 0)
+      case "lend" =>
+        new Eip4Token(
+          directBox.get(0).getId.toString,
+          1000000000L,
+          lendTokenName,
+          lendTokenDesc,
+          0
+        )
+      case "repayment" =>
+        new Eip4Token(
+          directBox.get(0).getId.toString,
+          1000000000L,
+          repaymentTokenName,
+          repaymentTokenDesc,
+          0
+        )
     }
 
     val tokenBox: OutBox = tokenCreate match {
@@ -137,7 +153,7 @@ object SLEServiceBoxHandler {
         txB
           .outBoxBuilder()
           .value(ErgCommons.MinBoxFee)
-          .mintToken(token, nftName, nftDesc, 0)
+          .mintToken(token)
           .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
 
@@ -145,7 +161,7 @@ object SLEServiceBoxHandler {
         txB
           .outBoxBuilder()
           .value(ErgCommons.MinBoxFee)
-          .mintToken(token, lendTokenName, lendTokenDesc, 0)
+          .mintToken(token)
           .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
 
@@ -153,7 +169,7 @@ object SLEServiceBoxHandler {
         txB
           .outBoxBuilder()
           .value(ErgCommons.MinBoxFee)
-          .mintToken(token, repaymentTokenName, repaymentTokenDesc, 0)
+          .mintToken(token)
           .contract(ContractUtils.sendToPK(ownerAddress))
           .build()
 
@@ -314,9 +330,9 @@ object SLEServiceBoxHandler {
     val txB = ctx.newTxBuilder()
     val serviceBox = spendingBoxes.get(0)
 
-    val boxOperations = BoxOperations.createForSender(ownerAddress)
+    val boxOperations = BoxOperations.createForSender(ownerAddress, ctx)
     val coveringBoxes =
-      boxOperations.withAmountToSpend(Parameters.MinFee).loadTop(ctx)
+      boxOperations.withAmountToSpend(Parameters.MinFee).loadTop()
 
     val inputBoxes = List(serviceBox).asJava
     inputBoxes.addAll(coveringBoxes)

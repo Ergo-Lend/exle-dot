@@ -12,6 +12,7 @@ import org.ergoplatform.appkit.{
   ErgoClient,
   ErgoToken,
   InputBox,
+  NetworkType,
   RestApiErgoClient
 }
 import play.api.Logger
@@ -35,7 +36,7 @@ class Client() {
       )
       client.execute { ctx =>
         System.out.println(
-          s"Client Instantiated, Current Height: ${ctx.getHeight}" +
+          s"Client Instantiated, Current Height: ${ctx.getHeight} " +
             s"Network: ${NodeConfig.networkType}"
         )
         ctx.getHeight
@@ -59,29 +60,12 @@ class Client() {
       case _: Throwable => throw ConnectionException()
     }
 
-  def getUnspentBox(address: Address): List[InputBox] =
-    client.execute(ctx =>
-      try {
-        ctx.getUnspentBoxesFor(address, 0, 100).asScala.toList
-      } catch {
-        case _: Throwable => throw ConnectionException()
-      }
-    )
-
   def getAllUnspentBox(address: Address): List[InputBox] =
     client.execute(ctx =>
       try {
-        val nullToken: java.util.List[ErgoToken] = List.empty[ErgoToken].asJava
-        val inputBoxesLoader = new ExplorerApiUnspentLoader()
+        val unspent = ctx.getDataSource.getUnspentBoxesFor(address, 0, 100)
 
-        inputBoxesLoader.prepare(ctx, List(address).asJava, 0, nullToken)
-        val unspent = BoxOperations.getCoveringBoxesFor(
-          (1e9 * 1e8).toLong,
-          nullToken,
-          (page: Integer) => inputBoxesLoader.loadBoxesPage(ctx, address, page)
-        )
-
-        unspent.getBoxes.asScala.toList
+        unspent.asScala.toList
       } catch {
         case e: Throwable =>
           throw ConnectionException(e.getMessage)
@@ -92,11 +76,12 @@ class Client() {
     client.execute(ctx =>
       try {
         val amountMinusMinerFee: Long = amount - ErgCommons.MinMinerFee
-        val boxOperations = BoxOperations.createForSender(address)
+        val boxOperations = BoxOperations.createForSender(address, ctx)
         val inputBoxList =
-          boxOperations.withAmountToSpend(amountMinusMinerFee).loadTop(ctx)
+          boxOperations.withAmountToSpend(amountMinusMinerFee).loadTop()
 
-        val coveringBoxes = new CoveringBoxes(amount, inputBoxList)
+        val coveringBoxes =
+          new CoveringBoxes(amount, inputBoxList, null, false)
 
         coveringBoxes
       } catch {
@@ -112,11 +97,11 @@ class Client() {
     client.execute(ctx =>
       try {
         val amountMinusMinerFee: Long = amount - ErgCommons.MinMinerFee
-        val boxOperations = BoxOperations.createForSender(address)
+        val boxOperations = BoxOperations.createForSender(address, ctx)
         val coveringBoxes = boxOperations
           .withAmountToSpend(amountMinusMinerFee)
           .withTokensToSpend(tokensToSpend)
-          .loadTop(ctx)
+          .loadTop()
 
         coveringBoxes.asScala.toList
       } catch {

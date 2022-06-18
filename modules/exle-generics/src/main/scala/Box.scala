@@ -1,5 +1,12 @@
 import org.ergoplatform.appkit.impl.ErgoTreeContract
-import org.ergoplatform.appkit.{BlockchainContext, ErgoId, ErgoToken, InputBox, OutBox, Parameters}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  ErgoId,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  Parameters
+}
 import registers.{RegVal, Register}
 import sigmastate.Values
 
@@ -18,18 +25,21 @@ case class Box(input: InputBox) {
   def R8: RegVal[_] = RegVal(input.getRegisters.get(4).getValue)
   def R9: RegVal[_] = RegVal(input.getRegisters.get(5).getValue)
 
-  def tokens:   Seq[ErgoToken]  = input.getTokens.asScala.toSeq
-  def value:    Long            = input.getValue.longValue()
-  def id:       ErgoId          = input.getId
-  def bytes:    Array[Byte]     = input.getBytes
+  def tokens: Seq[ErgoToken] = input.getTokens.asScala.toSeq
+  def value: Long = input.getValue.longValue()
+  def id: ErgoId = input.getId
+  def bytes: Array[Byte] = input.getBytes
   def ergoTree: Values.ErgoTree = input.getErgoTree
 
-  def contract(implicit ctx: BlockchainContext): Contract = Contract.fromErgoTree(input.getErgoTree)
+  def contract(implicit ctx: BlockchainContext): Contract =
+    Contract.fromErgoTree(input.getErgoTree)
 
-  def getErgValue: Double = (BigDecimal(value) / Parameters.OneErg).doubleValue()
+  def getErgValue: Double =
+    (BigDecimal(value) / Parameters.OneErg).doubleValue()
 }
 
 object Box {
+
   /**
     * Create a Box from an OutBox by converting to an InputBox and wrapping
     * @param output OutBox to convert
@@ -37,7 +47,6 @@ object Box {
     * @param index Output index used to convert output
     * @return A Box wrapping the converted output
     */
-  def ofOutBox(output: OutBox, txId: String, index: Int): Box = {
+  def ofOutBox(output: OutBox, txId: String, index: Int): Box =
     Box(output.convertToInputWith(txId, index.shortValue()))
-  }
 }

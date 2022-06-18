@@ -1,12 +1,8 @@
 package SLErgs.registers
 
-import commons.boxes.registers.RegisterTypes.{
-  CollByte,
-  CollByteRegister,
-  LongRegister
-}
+import commons.boxes.registers.RegisterTypes.{CollByte, CollByteRegister, LongRegister}
 import org.ergoplatform.appkit.ErgoValue
-import special.collection.Coll
+import special.collection.{Coll, CollType}
 
 // We want an input and output.
 // Created with data,
@@ -38,8 +34,8 @@ case class FundingInfoRegister(
       creationHeight = registerData(4)
     )
 
-  def toRegister: ErgoValue[Coll[Long]] = {
-    val register: Array[Long] = new Array[Long](5)
+  def toRegister: ErgoValue[Coll[java.lang.Long]] = {
+    val register: Array[java.lang.Long] = new Array[java.lang.Long](5)
 
     register(0) = fundingGoal
     register(1) = deadlineHeight
@@ -73,8 +69,8 @@ case class LendingProjectDetailsRegister(
     description = CollByte.collByteToString(registerData(1))
   )
 
-  def toRegister: ErgoValue[Coll[Coll[Byte]]] = {
-    val register: Array[Array[Byte]] = new Array[Array[Byte]](2)
+  def toRegister: ErgoValue[Coll[Coll[java.lang.Byte]]] = {
+    val register: Array[Array[java.lang.Byte]] = new Array[Array[java.lang.Byte]](2)
 
     register(0) = stringToCollByte(projectName)
     register(1) = stringToCollByte(description)
@@ -89,8 +85,8 @@ case class CreationInfoRegister(creationHeight: Long, version: Long = 1)
   def this(registerData: Array[Long]) =
     this(creationHeight = registerData(0), version = registerData(1))
 
-  def toRegister: ErgoValue[Coll[Long]] = {
-    val register: Array[Long] = new Array[Long](2)
+  def toRegister: ErgoValue[Coll[java.lang.Long]] = {
+    val register: Array[java.lang.Long] = new Array[java.lang.Long](2)
 
     register(0) = creationHeight
     register(1) = version
@@ -107,8 +103,8 @@ case class ServiceBoxInfoRegister(name: String, description: String)
     description = CollByte.collByteToString(registerData(1))
   )
 
-  def toRegister: ErgoValue[Coll[Coll[Byte]]] = {
-    val register: Array[Array[Byte]] = new Array[Array[Byte]](2)
+  def toRegister: ErgoValue[Coll[Coll[java.lang.Byte]]] = {
+    val register: Array[Array[java.lang.Byte]] = new Array[Array[java.lang.Byte]](2)
 
     register(0) = stringToCollByte(name)
     register(1) = stringToCollByte(description)
@@ -128,8 +124,8 @@ case class ProfitSharingRegister(
       serviceFeeAmount = registerData(1)
     )
 
-  def toRegister: ErgoValue[Coll[Long]] = {
-    val register: Array[Long] = new Array[Long](2)
+  def toRegister: ErgoValue[Coll[java.lang.Long]] = {
+    val register: Array[java.lang.Long] = new Array[java.lang.Long](2)
 
     register(0) = profitSharingPercentage
     register(1) = serviceFeeAmount

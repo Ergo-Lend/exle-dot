@@ -26,8 +26,8 @@ class RepaymentDetailsRegister(
 ) extends LongRegister
     with RepaymentRegister {
 
-  def toRegister: ErgoValue[Coll[Long]] = {
-    val register: Array[Long] = new Array[Long](4)
+  def toRegister: ErgoValue[Coll[java.lang.Long]] = {
+    val register: Array[java.lang.Long] = new Array[java.lang.Long](4)
 
     register(0) = fundedHeight
     register(1) = repaymentAmount

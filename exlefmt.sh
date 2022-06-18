@@ -10,5 +10,7 @@ exle-pay/scalafmt;
 exle-pay/Test/scalafmt;
 exle-tools/scalafmt;
 exle-tools/Test/scalafmt;
+exle-generics/scalafmt;
+exle-generics/Test/scalafmt;
 single-lender/scalafmt;
 single-lender/Test/scalafmt;"

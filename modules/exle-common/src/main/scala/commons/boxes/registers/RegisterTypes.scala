@@ -2,6 +2,7 @@ package commons.boxes.registers
 
 import commons.configs.Configs
 import org.ergoplatform.ErgoAddress
+import org.ergoplatform.appkit.JavaHelpers.JByteRType
 import org.ergoplatform.appkit.{Address, ErgoType, ErgoValue, JavaHelpers}
 import sigmastate.serialization.ErgoTreeSerializer
 import special.collection.Coll
@@ -23,8 +24,8 @@ object RegisterTypes {
     def arrayByteToString(arrayByte: Array[Byte]): String =
       new String(arrayByte, StandardCharsets.UTF_8)
 
-    def stringToCollByte(str: String): Array[Byte] =
-      str.getBytes("utf-8")
+    def stringToCollByte(str: String): Array[java.lang.Byte] =
+      str.getBytes("utf-8").map(item => item.asInstanceOf[java.lang.Byte])
   }
 
   object CollByte {
@@ -48,7 +49,7 @@ object RegisterTypes {
 
   class NumberRegister(val value: Long) extends LongRegister {
 
-    def toRegister: ErgoValue[Long] =
+    def toRegister: ErgoValue[java.lang.Long] =
       ergoValueOf(value)
   }
 
@@ -57,19 +58,19 @@ object RegisterTypes {
       new String(collByte.toArray, StandardCharsets.UTF_8)
     )
 
-    def toRegister: ErgoValue[Coll[Byte]] =
-      ergoValueOf(value.getBytes("utf-8"))
+    def toRegister: ErgoValue[Coll[java.lang.Byte]] =
+      ergoValueOf(value.getBytes(StandardCharsets.UTF_8).map(_.asInstanceOf[java.lang.Byte]))
   }
 
   class AddressRegister(val address: String) extends CollByteRegister {
 
-    def toRegister: ErgoValue[Coll[Byte]] = {
+    def toRegister: ErgoValue[Coll[java.lang.Byte]] = {
       if (address.isEmpty) {
         throw new RuntimeException("Address Register: Found an empty address");
       }
       val borrowerPk = Address.create(address).getErgoAddress.script.bytes
 
-      ergoValueOf(borrowerPk)
+      ergoValueOf(borrowerPk.map(_.asInstanceOf[java.lang.Byte]))
     }
   }
 
@@ -84,26 +85,31 @@ object RegisterTypes {
 
   class Register {
 
-    def ergoValueOf(elements: Array[Array[Byte]]): ErgoValue[Coll[Coll[Byte]]] =
-      ErgoValue.of(
-        elements
-          .map(item => ErgoValue.of(IndexedSeq(item: _*).toArray))
-          .map(item => item.getValue)
-          .toArray,
-        ErgoType.collType(ErgoType.byteType())
+    def ergoValueOf(
+      elements: Array[Array[java.lang.Byte]]
+    ): ErgoValue[Coll[Coll[java.lang.Byte]]] = {
+      val elementsInColl: Array[Coll[java.lang.Byte]] = elements.map(
+        innerArray => ergoValueOf(innerArray).getValue
       )
 
-    def ergoValueOf(elements: Array[Long]): ErgoValue[Coll[Long]] = {
-      val longColl = JavaHelpers.SigmaDsl.Colls.fromArray(elements)
-      ErgoValue.of(longColl, ErgoType.longType())
+      val elementsInCollEntirely: Coll[Coll[java.lang.Byte]] =
+        JavaHelpers.SigmaDsl.Colls.fromArray(elementsInColl)
+
+      ErgoValue.of(
+        elementsInCollEntirely,
+        ErgoType.collType(ErgoType.byteType())
+      )
     }
 
-    def ergoValueOf(elements: Array[Byte]): ErgoValue[Coll[Byte]] = {
-      val byteColl = JavaHelpers.SigmaDsl.Colls.fromArray(elements)
-      ErgoValue.of(byteColl, ErgoType.byteType())
+    def ergoValueOf(elements: Array[java.lang.Long]): ErgoValue[Coll[java.lang.Long]] = {
+      ErgoValue.of(elements, ErgoType.longType())
     }
 
-    def ergoValueOf(elements: Long): ErgoValue[Long] =
-      ErgoValue.of(elements)
+    def ergoValueOf(elements: Array[java.lang.Byte]): ErgoValue[Coll[java.lang.Byte]] = {
+      ErgoValue.of(elements, ErgoType.byteType())
+    }
+
+    def ergoValueOf(elements: Long): ErgoValue[java.lang.Long] =
+      ErgoValue.of(elements.asInstanceOf[java.lang.Long])
   }
 }
