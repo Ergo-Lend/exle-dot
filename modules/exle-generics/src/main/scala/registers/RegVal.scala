@@ -7,7 +7,7 @@ import special.sigma.SigmaProp
 import java.math.BigInteger
 
 /**
-  * A register value used in the Box wrapper class.
+  * A register value used in the boxes.Box wrapper class.
   * CAUTION: Broken for empty arrays until I find a good fix for type matching
   * @param value Value to be held in the register
   * @tparam T type of underlying value in register

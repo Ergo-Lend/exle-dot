@@ -1,6 +1,8 @@
-import org.ergoplatform.appkit.impl.ErgoTreeContract
-import org.ergoplatform.appkit.{BlockchainContext, ErgoId, ErgoToken, InputBox, OutBox, Parameters}
-import registers.{RegVal, Register}
+package boxes
+
+import contracts.Contract
+import org.ergoplatform.appkit._
+import registers.RegVal
 import sigmastate.Values
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
@@ -31,11 +33,11 @@ case class Box(input: InputBox) {
 
 object Box {
   /**
-    * Create a Box from an OutBox by converting to an InputBox and wrapping
+    * Create a boxes.Box from an OutBox by converting to an InputBox and wrapping
     * @param output OutBox to convert
     * @param txId Transaction id used to convert output
     * @param index Output index used to convert output
-    * @return A Box wrapping the converted output
+    * @return A boxes.Box wrapping the converted output
     */
   def ofOutBox(output: OutBox, txId: String, index: Int): Box = {
     Box(output.convertToInputWith(txId, index.shortValue()))

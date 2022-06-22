@@ -1,3 +1,4 @@
+import boxes.Box
 import common.ErgoTestBase
 import org.ergoplatform.appkit.{BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, ErgoValue, InputBox, OutBox, UnsignedTransactionBuilder}
 import org.scalatest.matchers.should.Matchers

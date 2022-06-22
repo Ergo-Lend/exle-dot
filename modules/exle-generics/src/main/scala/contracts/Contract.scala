@@ -1,4 +1,6 @@
-import org.ergoplatform.appkit.{Address, BlockchainContext, Constants, ConstantsBuilder, ErgoContract}
+package contracts
+
+import org.ergoplatform.appkit._
 import sigmastate.Values
 
 /**
