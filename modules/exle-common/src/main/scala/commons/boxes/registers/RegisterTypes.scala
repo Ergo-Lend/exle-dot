@@ -53,6 +53,10 @@ object RegisterTypes {
   }
 
   class StringRegister(val value: String) extends CollByteRegister {
+    def this(bytes: Array[Byte]) = this(
+      new String(bytes, StandardCharsets.UTF_8)
+    )
+
     def this(collByte: Coll[Byte]) = this(
       new String(collByte.toArray, StandardCharsets.UTF_8)
     )
@@ -71,6 +75,9 @@ object RegisterTypes {
 
       ergoValueOf(borrowerPk)
     }
+
+    def isEmpty: Boolean =
+      address.isEmpty
   }
 
   object AddressRegister {

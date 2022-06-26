@@ -2,7 +2,7 @@ package SLErgs.boxes
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLELendBoxContract
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
   LendingProjectDetailsRegister,
@@ -39,7 +39,7 @@ case class SLELendBox(
   lendingProjectDetailsRegister: LendingProjectDetailsRegister,
   borrowerRegister: BorrowerRegister,
   singleLenderRegister: SingleLenderRegister,
-  val lendToken: ErgoToken = new ErgoToken(LendServiceTokens.lendToken, 1),
+  val lendToken: ErgoToken = new ErgoToken(LendServiceTokens.lendTokenId, 1),
   id: ErgoId = ErgoId.create("")
 ) extends LendBox {
 

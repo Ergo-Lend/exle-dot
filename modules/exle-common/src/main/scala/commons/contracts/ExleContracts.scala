@@ -67,12 +67,12 @@ object ExleContracts extends Enum[ExleContract] {
   // SLT Proxy Contracts
   case object SLTCreateLendBoxProxyContract extends SLTProxyContract
   case object SLTFundLendBoxProxyContract extends SLTProxyContract
-//  case object SLTFundRepaymentBoxProxyContract extends SLTProxyContract
+  case object SLTFundRepaymentBoxProxyContract extends SLTProxyContract
 
   // SLT Box Guard Scripts
-//  case object SLTServiceBoxGuardScript extends SLTBoxGuardScript
-//  case object SLTLendBoxGuardScript extends SLTBoxGuardScript
-//  case object SLTRepaymentBoxGuardScript extends SLTBoxGuardScript
+  case object SLTServiceBoxGuardScript extends SLTBoxGuardScript
+  case object SLTLendBoxGuardScript extends SLTBoxGuardScript
+  case object SLTRepaymentBoxGuardScript extends SLTBoxGuardScript
 
   // ===== Test Assets ===== //
   case object DummyErgoScript extends TestAssetsContract

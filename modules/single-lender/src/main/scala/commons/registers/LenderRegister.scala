@@ -1,6 +1,7 @@
-package SLErgs.registers
+package commons.registers
 
 import commons.boxes.registers.RegisterTypes.AddressRegister
+import org.ergoplatform.appkit.Address
 
 trait LenderRegister
 
@@ -8,15 +9,19 @@ trait LenderRegister
   * SingleLenderRegister
   * @param lendersAddress Pubkey of Lender
   */
-class SingleLenderRegister(val lendersAddress: String)
+final case class SingleLenderRegister(lendersAddress: String)
     extends AddressRegister(lendersAddress)
     with LenderRegister {
   def this(registerData: Array[Byte]) = this(
     lendersAddress = AddressRegister.getAddress(registerData).toString
   )
+
+  def this(address: Address) = this(
+    lendersAddress = address.getErgoAddress.toString
+  )
 }
 
-class BorrowerRegister(val borrowersAddress: String)
+final class BorrowerRegister(val borrowersAddress: String)
     extends SingleAddressRegister(borrowersAddress) {
   def this(registerData: Array[Byte]) = this(
     borrowersAddress = AddressRegister.getAddress(registerData).toString

@@ -9,11 +9,11 @@
     // Author           : Kii
     // Last Modified    : May 8th 2022
     // Version          : v 1.0
-    // Status           : 1st Draft Done
+    // Status           : 1st Draft Completed
 
     // ===== Contract Hard-Coded Constants ===== //
     // val _MinFee:                         Long
-    // val _OwnerPk:                        Coll[Byte]
+    // val _OwnerPK:                        Coll[Byte]
     // val _SLTLendBoxHash:                 Digest32
     // val _SLTRepaymentBoxHash:            Digest32
 
@@ -26,22 +26,6 @@
     //      b. Completed                        - Repayment Success
     // 5. Lend Box Absorption           - Absorbing a lend box due to inactivity
 
-    // ===== Service Check ===== //
-    def serviceCheck(inputBox: Box, outputBox: Box): Boolean = {
-        allOf(Coll(
-            outputBox.propositionBytes      == inputBox.propositionBytes,
-            outputBox.tokens(0).id          == inputBox.tokens(0).id,
-            outputBox.tokens(1).id          == inputBox.tokens(1).id,
-            outputBox.tokens(2).id          == inputBox.tokens(2).id,
-            outputBox.value                 == inputBox.value,
-            outputBox.R4[Coll[Long]]        == inputBox.R4[Coll[Long]],
-            outputBox.R5[Coll[Coll[Byte]]]  == inputBox.R5[Coll[Coll[Byte]]],
-            outputBox.R6[Coll[Byte]]        == inputBox.R6[Coll[Byte]],
-            outputBox.R7[Coll[Byte]]        == inputBox.R7[Coll[Byte]],
-            outputBox.R8[Coll[Long]]        == inputBox.R8[Coll[Long]]
-        ))
-    }
-
     // ===== Contract Constants ===== //
     // ##### Boxes ##### //
     val _inputServiceBox: Box                   = INPUTS(0)
@@ -52,9 +36,23 @@
     val _serviceBoxInfo: Coll[Coll[Byte]]       = SELF.R5[Coll[Coll[Byte]]]
     val _serviceOwnerPubKey: Coll[Byte]         = SELF.R7[Coll[Byte]]
     val _serviceProfitSharingInfo: Coll[Long]   = SELF.R8[Coll[Long]]
+    val _serviceFee: Long                       = _serviceProfitSharingInfo.get(1)
 
     // ##### Conditions ##### //
-    val _serviceFullCheck: Boolean              = serviceCheck(_inputServiceBox, _outputServiceBox)
+    val _serviceFullCheck: Boolean              = {
+        allOf(Coll(
+            _outputServiceBox.propositionBytes      == _inputServiceBox.propositionBytes,
+            _outputServiceBox.tokens(0)._1          == _inputServiceBox.tokens(0)._1,
+            _outputServiceBox.tokens(1)._1          == _inputServiceBox.tokens(1)._1,
+            _outputServiceBox.tokens(2)._1          == _inputServiceBox.tokens(2)._1,
+            _outputServiceBox.value                 == _inputServiceBox.value,
+            _outputServiceBox.R4[Coll[Long]]        == _inputServiceBox.R4[Coll[Long]],
+            _outputServiceBox.R5[Coll[Coll[Byte]]]  == _inputServiceBox.R5[Coll[Coll[Byte]]],
+            _outputServiceBox.R6[Coll[Byte]]        == _inputServiceBox.R6[Coll[Byte]],
+            _outputServiceBox.R7[Coll[Byte]]        == _inputServiceBox.R7[Coll[Byte]],
+            _outputServiceBox.R8[Coll[Long]]        == _inputServiceBox.R8[Coll[Long]]
+        ))
+    }
 
     val _lendBoxTokensUnchanged: Boolean        = _inputServiceBox.tokens(1)._2 == _outputServiceBox.tokens(1)._2
     val _lendBoxTokenAbsorbed: Boolean          = _inputServiceBox.tokens(1)._2 + 1 == _outputServiceBox.tokens(1)._2
@@ -71,24 +69,28 @@
             _repaymentBoxTokensUnchanged
         ))
     }
+
     val _SLTLoanCreation: Boolean               = {
         allOf(Coll(
             _lendBoxTokenDistribution,
             _repaymentBoxTokensUnchanged
         ))
     }
+
     val _SLTLendToRepaymentConversion: Boolean  = {
         allOf(Coll(
             _lendBoxTokenAbsorbed,
             _repaymentBoxTokenDistribution
         ))
     }
+
     val _SLTRepaymentCompletion: Boolean        = {
         allOf(Coll(
             _lendBoxTokensUnchanged,
             _repaymentBoxTokenAbsorbed
         ))
     }
+
     val _SLTLoanAbsorption: Boolean             = {
         allOf(Coll(
             _lendBoxTokenAbsorbed,
@@ -102,7 +104,7 @@
     // Output Boxes : 0 -> OutputSLTServiceBox, 1 -> MiningFee
     if (_mutateServiceBox)
     {
-        _OwnerPk
+        _OwnerPK
     }
     else
     {
@@ -115,6 +117,33 @@
             // ##### Boxes ##### //
             val serviceFeeBox: Box      = OUTPUTS(1)
             val sltLendBox: Box         = OUTPUTS(2)
+
+            // ##### Constants Declaration ##### //
+            val fundingInfoRegister: Coll[Long]         = sltLendBox.R4[Coll[Long]]
+            val fundingGoal: Long                       = fundingInfoRegister.get(0)
+            val deadlineHeight: Long                    = fundingInfoRegister.get(1)
+            val interestRate: Long                      = fundingInfoRegister.get(2)
+            val repaymentHeightLength: Long             = fundingInfoRegister.get(3)
+
+            val lendBoxCheck: Boolean                   = {
+                allOf(Coll(
+                    fundingGoal > 0,
+                    deadlineHeight - HEIGHT > 0,
+                    interestRate >= 0,
+                    repaymentHeightLength > 0
+                ))
+            }
+
+            val isLendInitiationServiceCheck: Boolean   = {
+                allOf(Coll(
+                    blake2b256(sltLendBox.propositionBytes) == _SLTLendBoxHash,
+                    _serviceFullCheck,
+                    serviceFeeBox.value >= _serviceFee,
+                    serviceFeeBox.propositionBytes == _serviceOwnerPubKey.get
+                ))
+            }
+
+            sigmaProp(isLendInitiationServiceCheck && lendBoxCheck)
         }
         else
         {

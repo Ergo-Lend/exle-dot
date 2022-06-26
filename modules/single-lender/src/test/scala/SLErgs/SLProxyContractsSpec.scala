@@ -8,7 +8,7 @@ import SLErgs.boxes.{
 }
 import commons.configs.{Configs, ServiceConfig}
 import SLErgs.contracts._
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
   LendingProjectDetailsRegister,
@@ -107,13 +107,13 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             assert(
               outputServiceBox.getTokens
                 .get(0)
-                .getId == LendServiceTokens.serviceNFT
+                .getId == LendServiceTokens.serviceNFTId
             )
             assert(outputServiceBox.getTokens.get(0).getValue == 1)
             assert(
               outputServiceBox.getTokens
                 .get(1)
-                .getId == LendServiceTokens.lendToken
+                .getId == LendServiceTokens.lendTokenId
             )
             assert(
               outputServiceBox.getTokens
@@ -123,7 +123,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             assert(
               outputServiceBox.getTokens
                 .get(2)
-                .getId == LendServiceTokens.repaymentToken
+                .getId == LendServiceTokens.repaymentTokenId
             )
             assert(
               outputServiceBox.getTokens
@@ -145,7 +145,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             assert(
               outputLendBox.getTokens
                 .get(0)
-                .getId == LendServiceTokens.lendToken,
+                .getId == LendServiceTokens.lendTokenId,
               "The instantiated lendBox token is incorrect"
             )
           }

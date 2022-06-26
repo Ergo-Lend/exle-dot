@@ -20,7 +20,7 @@ class ServiceBoxSpec extends AnyWordSpec with Matchers {
           assert(
             inputServiceBox.getTokens
               .get(0)
-              .getId == LendServiceTokens.serviceNFT
+              .getId == LendServiceTokens.serviceNFTId
           )
         }
 
@@ -34,7 +34,7 @@ class ServiceBoxSpec extends AnyWordSpec with Matchers {
           assert(
             inputServiceBox.getTokens
               .get(1)
-              .getId == LendServiceTokens.lendToken
+              .getId == LendServiceTokens.lendTokenId
           )
 
           // Repayment Tokens
@@ -46,7 +46,7 @@ class ServiceBoxSpec extends AnyWordSpec with Matchers {
           assert(
             inputServiceBox.getTokens
               .get(2)
-              .getId == LendServiceTokens.repaymentToken
+              .getId == LendServiceTokens.repaymentTokenId
           )
         }
       }
