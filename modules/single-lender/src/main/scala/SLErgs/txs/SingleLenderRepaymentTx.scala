@@ -5,7 +5,7 @@ import SLErgs.boxes.{
   SLEServiceBox,
   SingleLenderFundRepaymentPaymentBox
 }
-import SLErgs.registers.SingleAddressRegister
+import commons.registers.SingleAddressRegister
 import commons.ergo.ErgCommons
 import commons.errors.{ProveException}
 import db.models.FundRepaymentReq

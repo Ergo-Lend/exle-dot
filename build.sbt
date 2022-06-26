@@ -137,7 +137,8 @@ lazy val singleLender = utils
         Testing
   )
   .dependsOn(
-    Seq(generics, common, chain, db, testCommons).map(_ % allConfigDependency): _*
+    Seq(generics, common, chain, db, testCommons)
+      .map(_ % allConfigDependency): _*
   )
 
 // =============== Test Modules ============== //

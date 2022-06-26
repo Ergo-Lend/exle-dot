@@ -1,4 +1,4 @@
-package SLErgs.registers
+package commons.registers
 
 import commons.boxes.registers.RegisterTypes.{CollByteRegister, LongRegister}
 import org.ergoplatform.appkit.ErgoValue
@@ -18,11 +18,11 @@ import special.collection.Coll
   * @param totalInterestAmount total Interest
   * @param repaymentHeightGoal the optimal time for repayment to be paid (can be used for Credit system)
   */
-class RepaymentDetailsRegister(
-  val fundedHeight: Long,
-  val repaymentAmount: Long,
-  val totalInterestAmount: Long,
-  val repaymentHeightGoal: Long
+final case class RepaymentDetailsRegister(
+  fundedHeight: Long,
+  repaymentAmount: Long,
+  totalInterestAmount: Long,
+  repaymentHeightGoal: Long
 ) extends LongRegister
     with RepaymentRegister {
 

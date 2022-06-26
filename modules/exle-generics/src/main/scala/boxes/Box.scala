@@ -43,3 +43,16 @@ object Box {
     Box(output.convertToInputWith(txId, index.shortValue()))
   }
 }
+
+abstract class BoxWrapper {
+  val id: ErgoId
+  val box: Option[Box]
+  val tokens: Seq[ErgoToken]
+  val value: Long
+
+  def getOutBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
+  def getContract(ctx: BlockchainContext): ErgoContract
+  def toInputBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder, txId: String, index: Int): InputBox = {
+    getOutBox(ctx, txB).convertToInputWith(txId, index.shortValue())
+  }
+}

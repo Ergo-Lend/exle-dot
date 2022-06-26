@@ -2,7 +2,7 @@ package runners.serviceBox
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLEServiceBoxContract
-import SLErgs.registers.{
+import commons.registers.{
   CreationInfoRegister,
   ProfitSharingRegister,
   ServiceBoxInfoRegister,

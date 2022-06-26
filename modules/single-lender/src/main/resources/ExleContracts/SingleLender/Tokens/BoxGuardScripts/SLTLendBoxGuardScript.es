@@ -51,7 +51,8 @@
     //      1. Loan hit funding goal
     //      2. Lender Register not empty
 
-    val loanHitFundingGoal: Boolean             = SELF.tokens.length > 2 && SELF.tokens(1)._2 == _fundingGoal
+    val isMoreThanOneToken: Boolean             = SELF.tokens.size == 2
+    val loanHitFundingGoal: Boolean             = isMoreThanOneToken && SELF.tokens(1)._2 == _fundingGoal
     val lenderNonEmpty: Boolean                 = _lenderRegister.isDefined
     val isFunded: Boolean                       = loanHitFundingGoal && lenderNonEmpty
 

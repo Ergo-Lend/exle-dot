@@ -5,4 +5,5 @@ import boxes.Box
 import org.ergoplatform.appkit.InputBox
 import registers.RegVal
 
-case class SLTFundLendBox(inputBox: InputBox, contractData: SLTFundLendBoxContract) extends Box(inputBox)
+class SLTFundLendBox(inputBox: InputBox, contractData: SLTFundLendBoxContract)
+    extends Box(inputBox)

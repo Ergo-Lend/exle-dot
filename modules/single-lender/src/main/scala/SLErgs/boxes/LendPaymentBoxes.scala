@@ -1,6 +1,6 @@
 package SLErgs.boxes
 
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
   LendingProjectDetailsRegister,

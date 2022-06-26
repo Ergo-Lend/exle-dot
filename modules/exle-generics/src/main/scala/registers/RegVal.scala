@@ -33,6 +33,11 @@ case class RegVal[T](value: T) extends Register[T] {
   }
 
   // TODO: Fix values for empty arrays
+
+  /**
+   * Used for converting values to box ready value
+   * @return
+   */
   override def toErgoValue: ErgoValue[_] = {
     value match {
       case i: Int           => ErgoValue.of(value.asInstanceOf[Int])

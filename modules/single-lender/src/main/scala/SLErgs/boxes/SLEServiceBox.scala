@@ -2,7 +2,7 @@ package SLErgs.boxes
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLEServiceBoxContract
-import SLErgs.registers.{
+import commons.registers.{
   CreationInfoRegister,
   ProfitSharingRegister,
   ServiceBoxInfoRegister,
@@ -52,9 +52,9 @@ class SLEServiceBox(
   val ergoLendPubKey: SingleAddressRegister,
   override val profitSharingPercentage: ProfitSharingRegister
 ) extends ServiceBox(ergoLendPubKey, profitSharingPercentage) {
-  override val nft: ErgoId = LendServiceTokens.serviceNFT
-  val lendToken: ErgoId = LendServiceTokens.lendToken
-  val repaymentToken: ErgoId = LendServiceTokens.repaymentToken
+  override val nft: ErgoId = LendServiceTokens.serviceNFTId
+  val lendToken: ErgoId = LendServiceTokens.lendTokenId
+  val repaymentToken: ErgoId = LendServiceTokens.repaymentTokenId
 
   def this(inputBox: InputBox) = this(
     value = inputBox.getValue,
@@ -90,11 +90,11 @@ class SLEServiceBox(
   ): OutBox = {
     val serviceBoxContract = SLEServiceBoxContract.getContract(ctx)
 
-    val lendServiceNft = new ErgoToken(LendServiceTokens.serviceNFT, 1)
+    val lendServiceNft = new ErgoToken(LendServiceTokens.serviceNFTId, 1)
     val lendServiceTokens =
-      new ErgoToken(LendServiceTokens.lendToken, lendTokenAmount)
+      new ErgoToken(LendServiceTokens.lendTokenId, lendTokenAmount)
     val repaymentServiceTokens =
-      new ErgoToken(LendServiceTokens.repaymentToken, repaymentTokenAmount)
+      new ErgoToken(LendServiceTokens.repaymentTokenId, repaymentTokenAmount)
     val outputServiceBox = txB
       .outBoxBuilder()
       .value(value)

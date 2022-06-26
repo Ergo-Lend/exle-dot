@@ -13,7 +13,7 @@ import java.math.BigInteger
   * @param collType ErgoType to be used with RegColl
   * @tparam T type of underlying value in register
   */
-case class RegColl[T](override val value: Array[T], collType: ErgoType[T]) extends RegVal[Array[T]](value) {
+class RegColl[T](override val value: Array[T], collType: ErgoType[T]) extends RegVal[Array[T]](value) {
 
   override def ergoType: ErgoType[_] = {
     collType

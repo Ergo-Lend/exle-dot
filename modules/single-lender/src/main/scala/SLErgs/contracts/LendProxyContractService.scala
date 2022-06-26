@@ -41,9 +41,9 @@ class LendProxyContractService @Inject() (client: Client) {
     try {
       client.getClient.execute { (ctx: BlockchainContext) =>
         val serviceNftToken =
-          ErgoId.create(LendServiceTokens.serviceNFT.toString).getBytes
+          ErgoId.create(LendServiceTokens.serviceNFTId.toString).getBytes
         val lendToken =
-          ErgoId.create(LendServiceTokens.lendToken.toString).getBytes
+          ErgoId.create(LendServiceTokens.lendTokenId.toString).getBytes
         val borrowerPk = Address.create(pk).getErgoAddress.script.bytes
 
         val createLendBoxScript =
@@ -98,7 +98,7 @@ class LendProxyContractService @Inject() (client: Client) {
               Address.create(lenderAddress).getErgoAddress.script.bytes
             )
             .item("_MinFee", Parameters.MinFee)
-            .item("_SLELendTokenId", LendServiceTokens.lendToken.getBytes)
+            .item("_SLELendTokenId", LendServiceTokens.lendTokenId.getBytes)
             .build(),
           fundLendProxyContractScript
         )
@@ -135,7 +135,7 @@ class LendProxyContractService @Inject() (client: Client) {
           .item("_MinFee", Parameters.MinFee)
           .item(
             "_SLERepaymentTokenId",
-            LendServiceTokens.repaymentToken.getBytes
+            LendServiceTokens.repaymentTokenId.getBytes
           )
           .build(),
         repaymentProxyContractScript
