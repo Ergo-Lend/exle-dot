@@ -6,6 +6,8 @@ exle-chain/scalafmt;
 exle-chain/Test/scalafmt;
 exle-common/scalafmt;
 exle-common/Test/scalafmt;
+exle-generics/scalafmt;
+exle-generics/Test/scalafmt;
 exle-pay/scalafmt;
 exle-pay/Test/scalafmt;
 exle-tools/scalafmt;

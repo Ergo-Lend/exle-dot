@@ -1,6 +1,16 @@
 import boxes.Box
 import common.ErgoTestBase
-import org.ergoplatform.appkit.{BlockchainContext, ConstantsBuilder, ErgoContract, ErgoId, ErgoToken, ErgoValue, InputBox, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  ConstantsBuilder,
+  ErgoContract,
+  ErgoId,
+  ErgoToken,
+  ErgoValue,
+  InputBox,
+  OutBox,
+  UnsignedTransactionBuilder
+}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import special.collection.Coll
@@ -8,18 +18,20 @@ import special.collection.Coll
 import java.math.BigInteger
 
 class BoxSpec extends AnyWordSpec with Matchers with ErgoTestBase {
+
   val dummyContract: String =
     """
       |{
       |   sigmaProp(true)
       |}
       |""".stripMargin
-  val testContract: ErgoContract = client.getClient.execute(ctx => {
+
+  val testContract: ErgoContract = client.getClient.execute { ctx =>
     ctx.compileContract(new ConstantsBuilder().build(), dummyContract)
-  })
+  }
 
   "Box" should {
-    client.getClient.execute(ctx => {
+    client.getClient.execute { ctx =>
       val r4: ErgoValue[Int] = ErgoValue.of(123)
       val r5: ErgoValue[Coll[Byte]] = ErgoValue.of("hello".getBytes)
       val r6: ErgoValue[Long] = ErgoValue.of(123L)
@@ -27,7 +39,8 @@ class BoxSpec extends AnyWordSpec with Matchers with ErgoTestBase {
       val r9: ErgoValue[Short] = ErgoValue.of(123.toShort)
 
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-      val inputBox: InputBox = txB.outBoxBuilder()
+      val inputBox: InputBox = txB
+        .outBoxBuilder()
         .value(oneErg)
         .registers(
           r4,
@@ -53,6 +66,6 @@ class BoxSpec extends AnyWordSpec with Matchers with ErgoTestBase {
 //        assert(box.R5.toErgoValue == r5)
 //        assert(box.R7.toErgoValue == ErgoValue.of(new BigInteger("123")))
       }
-    })
+    }
   }
 }
