@@ -18,9 +18,12 @@ object SLELendBoxContract extends Contract {
         .create()
         .item("_MinFee", Parameters.MinFee)
         .item("_MinBoxAmount", Parameters.MinFee)
-        .item("_SLEServiceNFTId", LendServiceTokens.serviceNFT.getBytes)
-        .item("_SLELendTokenId", LendServiceTokens.lendToken.getBytes)
-        .item("_SLERepaymentTokenId", LendServiceTokens.repaymentToken.getBytes)
+        .item("_SLEServiceNFTId", LendServiceTokens.serviceNFTId.getBytes)
+        .item("_SLELendTokenId", LendServiceTokens.lendTokenId.getBytes)
+        .item(
+          "_SLERepaymentTokenId",
+          LendServiceTokens.repaymentTokenId.getBytes
+        )
         .build(),
       sleLendBoxGuardScript
     )
@@ -37,8 +40,11 @@ object SLERepaymentBoxContract extends Contract {
       ConstantsBuilder
         .create()
         .item("_MinFee", Parameters.MinFee)
-        .item("_SLEServiceBoxNFTId", LendServiceTokens.serviceNFT.getBytes)
-        .item("_SLERepaymentTokenId", LendServiceTokens.repaymentToken.getBytes)
+        .item("_SLEServiceBoxNFTId", LendServiceTokens.serviceNFTId.getBytes)
+        .item(
+          "_SLERepaymentTokenId",
+          LendServiceTokens.repaymentTokenId.getBytes
+        )
         .build(),
       sleRepaymentBoxScript
     )

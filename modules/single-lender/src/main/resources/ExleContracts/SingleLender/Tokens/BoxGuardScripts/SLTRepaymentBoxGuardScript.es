@@ -22,19 +22,6 @@
     // 2. Process Repayment     - When Repayment is fully funded, the box ensures that
     //                            the funds are returned to the lender.
 
-    // ===== Contract Functions ===== //
-    // 1. Repayment Details Check
-    def repaymentInputOutputCheck(inputBox: Box, outputBox: Box): Boolean = {
-        allOf(Coll(
-            outputBox.R4[Coll[Long]] == inputBox.R4[Coll[Long]],
-            outputBox.R5[Coll[Coll[Byte]]] == inputBox.R5[Coll[Coll[Byte]]],
-            outputBox.R6[Coll[Byte]] == inputBox.R6[Coll[Byte]],
-            outputBox.R7[Coll[Byte]] == inputBox.R7[Coll[Byte]],
-            outputBox.R8[Coll[Byte]] == inputBox.R8[Coll[Byte]],
-            outputBox.R9[Coll[Long]] == inputBox.R9[Coll[Long]],
-        ))
-    }
-
     // ===== Contract Constants ===== //
     // ##### Values ##### //
     val _fundingInfoRegister: Coll[Long]            = SELF.R4[Coll[Long]]
@@ -68,7 +55,16 @@
 
         // ##### Conditions ##### //
         val paymentBoxIsRightToken: Boolean     = paymentBox.tokens(0)._1 == _loanTokenId.get
-        val repaymentBoxDetailCheck: Boolean    = repaymentInputOutputCheck(SELF, outputRepaymentBox)
+        val repaymentBoxDetailCheck: Boolean    = {
+            allOf(Coll(
+                outputRepaymentBox.R4[Coll[Long]].get        == SELF.R4[Coll[Long]].get,
+                outputRepaymentBox.R5[Coll[Coll[Byte]]].get  == SELF.R5[Coll[Coll[Byte]]].get,
+                outputRepaymentBox.R6[Coll[Byte]].get        == SELF.R6[Coll[Byte]].get,
+                outputRepaymentBox.R7[Coll[Byte]].get        == SELF.R7[Coll[Byte]].get,
+                outputRepaymentBox.R8[Coll[Byte]].get        == SELF.R8[Coll[Byte]].get,
+                outputRepaymentBox.R9[Coll[Long]].get        == SELF.R9[Coll[Long]].get
+            ))
+        }
 
         // ===== Overfunded ===== //
         // Description  : The payment box has more funds than needed.
@@ -112,7 +108,7 @@
             val valueTransferred: Boolean       = {
                 allOf(Coll(
                     outputRepaymentBox.tokens(1)._2     == totalInputTokenAmount,
-                    outputRepaymentBox.tokens(1)._1     == _loanTokenId
+                    outputRepaymentBox.tokens(1)._1     == _loanTokenId.get
                 ))
             }
 
@@ -148,7 +144,7 @@
 
             val repaymentToLenderBoxFunded: Boolean = {
                 allOf(Coll(
-                    repaymentToLenderBox.tokens(0)._1       == _loanTokenId,
+                    repaymentToLenderBox.tokens(0)._1       == _loanTokenId.get,
                     repaymentToLenderBox.tokens(0)._2       == repaymentToLenderValue,
                     repaymentToLenderBox.propositionBytes   == _lenderRegister.get
                 ))
@@ -172,6 +168,7 @@
             val repaymentHeightGoalPassed: Boolean      = CONTEXT.HEIGHT > _repaymentHeightGoal
             if (repaymentHeightGoalPassed)
             {
+                sigmaProp(true)
             }
             else
             {

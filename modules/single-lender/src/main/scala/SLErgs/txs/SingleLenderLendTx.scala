@@ -8,7 +8,7 @@ import SLErgs.boxes.{
   SingleLenderFundLendPaymentBox,
   SingleLenderInitiationPaymentBox
 }
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
   LendingProjectDetailsRegister,

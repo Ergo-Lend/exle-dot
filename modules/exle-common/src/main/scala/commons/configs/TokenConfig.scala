@@ -1,8 +1,24 @@
 package commons.configs
 
 import commons.configs.Configs.readKey
+import org.ergoplatform.appkit.{ErgoId, ErgoToken}
 
-trait Token
+trait Token {
+  val id: ErgoId
+  val value: Long
+
+  def toErgoToken: ErgoToken =
+    new ErgoToken(id, value)
+}
+
+/**
+  * This trait is for Classes which holds tokens strings
+  */
+trait LendTokens {
+  val serviceNFTId: ErgoId
+  val lendTokenId: ErgoId
+  val repaymentTokenId: ErgoId
+}
 
 object SLETokensConfig {
   lazy val service: String = readKey("lend.token.service")

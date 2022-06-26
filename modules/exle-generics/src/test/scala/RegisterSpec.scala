@@ -22,7 +22,6 @@ class RegisterSpec extends AnyWordSpec with Matchers {
     val byteRegVal: RegVal[Byte] = RegVal(byteVal)
     val emptyRegVal: RegVal[Array[Int]] = RegVal(Array.emptyIntArray)
 
-
     "int val convert to int ergo types" in {
       assert(intRegVal.value == 123)
       assert(intRegVal.ergoType == ErgoType.integerType())
@@ -36,9 +35,11 @@ class RegisterSpec extends AnyWordSpec with Matchers {
     }
 
     "array byte val convert to array byte ergo types" in {
-      assert(arrayByteRegVal.value sameElements arrayByteVal)
+      assert(arrayByteRegVal.value.sameElements(arrayByteVal))
       assert(arrayByteRegVal.ergoType == ErgoType.byteType())
-      assert(arrayByteRegVal.toErgoValue == ErgoValue.of(arrayByteVal.headOption.get))
+      assert(
+        arrayByteRegVal.toErgoValue == ErgoValue.of(arrayByteVal.headOption.get)
+      )
     }
 
     "bigInt val convert to bigInt ergo types" in {
@@ -66,7 +67,7 @@ class RegisterSpec extends AnyWordSpec with Matchers {
     }
 
     "empty array throws exception" in {
-      assert(emptyRegVal.value sameElements Array.emptyIntArray)
+      assert(emptyRegVal.value.sameElements(Array.emptyIntArray))
       intercept[RegisterTypeException] {
         emptyRegVal.toErgoValue
       }

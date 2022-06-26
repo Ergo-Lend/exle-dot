@@ -1,6 +1,6 @@
 import SLErgs.boxes.{SLELendBox, SLERepaymentBox, SLEServiceBox}
 import SLErgs.contracts.SLELendBoxContract
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   CreationInfoRegister,
   FundingInfoRegister,
@@ -163,7 +163,7 @@ package object SLErgs {
       val borrowerRegister = new BorrowerRegister(borrowerAddress.toString)
 
       val lendBoxContract = SLELendBoxContract.getContract(ctx)
-      val lendToken: ErgoToken = new ErgoToken(LendServiceTokens.lendToken, 1)
+      val lendToken: ErgoToken = new ErgoToken(LendServiceTokens.lendTokenId, 1)
 
       val lendBox = txB
         .outBoxBuilder()

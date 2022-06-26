@@ -138,7 +138,8 @@ lazy val singleLender = utils
         Cats
   )
   .dependsOn(
-    Seq(common, chain, db, testCommons).map(_ % allConfigDependency): _*
+    Seq(generics, common, chain, db, testCommons)
+      .map(_ % allConfigDependency): _*
   )
 
 lazy val exleBot = utils

@@ -1,4 +1,4 @@
-package SLErgs.registers
+package commons.registers
 
 import commons.boxes.registers.RegisterTypes.{
   CollByte,
@@ -21,7 +21,7 @@ import special.collection.Coll
   * @param repaymentHeightLength
   * @param creationHeight
   */
-case class FundingInfoRegister(
+final case class FundingInfoRegister(
   fundingGoal: Long,
   deadlineHeight: Long,
   interestRatePercent: Long,
@@ -63,7 +63,7 @@ case class FundingInfoRegister(
   }
 }
 
-case class LendingProjectDetailsRegister(
+final case class LendingProjectDetailsRegister(
   projectName: String,
   description: String
 ) extends CollByteRegister {
@@ -83,7 +83,7 @@ case class LendingProjectDetailsRegister(
   }
 }
 
-case class CreationInfoRegister(creationHeight: Long, version: Long = 1)
+final case class CreationInfoRegister(creationHeight: Long, version: Long = 1)
     extends LongRegister {
 
   def this(registerData: Array[Long]) =
@@ -99,7 +99,7 @@ case class CreationInfoRegister(creationHeight: Long, version: Long = 1)
   }
 }
 
-case class ServiceBoxInfoRegister(name: String, description: String)
+final case class ServiceBoxInfoRegister(name: String, description: String)
     extends CollByteRegister {
 
   def this(registerData: Array[Coll[Byte]]) = this(
@@ -118,7 +118,7 @@ case class ServiceBoxInfoRegister(name: String, description: String)
 }
 
 // For Percentage, we're using /1000 rather than /100, so that we can get 1 decimal
-case class ProfitSharingRegister(
+final case class ProfitSharingRegister(
   profitSharingPercentage: Long,
   serviceFeeAmount: Long
 ) extends LongRegister {

@@ -1,7 +1,7 @@
 package SLErgs
 
 import SLErgs.boxes.{SLELendBox, SLERepaymentBox}
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
   LendingProjectDetailsRegister,
@@ -27,7 +27,7 @@ class LendBoxExplorer @Inject() (client: Client) extends Explorer {
     try {
       client.getClient.execute { (ctx: BlockchainContext) =>
         val serviceBoxciJson =
-          getUnspentTokenBoxes(LendServiceTokens.serviceNFT.toString, 0, 100)
+          getUnspentTokenBoxes(LendServiceTokens.serviceNFTId.toString, 0, 100)
         val serviceBoxId = serviceBoxciJson.hcursor
           .downField("items")
           .as[List[ciJson]]
@@ -121,12 +121,12 @@ class LendBoxExplorer @Inject() (client: Client) extends Explorer {
   def getLendBoxes(offset: Int, limit: Int): List[SLELendBox] =
     try {
       val boxes = getUnspentTokenBoxes(
-        LendServiceTokens.lendToken.toString,
+        LendServiceTokens.lendTokenId.toString,
         offset,
         limit
       )
       val lendBoxes =
-        getJsonBoxesViaId(boxes, LendServiceTokens.lendToken.toString)
+        getJsonBoxesViaId(boxes, LendServiceTokens.lendTokenId.toString)
           .map(jsonToWrappedLendBox(_))
 
       lendBoxes.toList
@@ -144,12 +144,12 @@ class LendBoxExplorer @Inject() (client: Client) extends Explorer {
   def getRepaymentBoxes(offset: Int, limit: Int): List[SLERepaymentBox] =
     try {
       val boxes = getUnspentTokenBoxes(
-        LendServiceTokens.repaymentToken.toString,
+        LendServiceTokens.repaymentTokenId.toString,
         offset,
         limit
       )
       val repaymentBoxes =
-        getJsonBoxesViaId(boxes, LendServiceTokens.repaymentToken.toString)
+        getJsonBoxesViaId(boxes, LendServiceTokens.repaymentTokenId.toString)
           .map(jsonToWrappedRepaymentBox(_))
 
       repaymentBoxes.toList

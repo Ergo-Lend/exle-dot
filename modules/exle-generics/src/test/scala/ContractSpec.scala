@@ -1,5 +1,10 @@
 import common.ErgoTestBase
-import org.ergoplatform.appkit.{BlockchainContext, ConstantsBuilder, ErgoContract}
+import contracts.Contract
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  ConstantsBuilder,
+  ErgoContract
+}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -7,6 +12,7 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
   val dummyConstant1: (String, Long) = ("_DummyConstants1", 123)
   val dummyConstant2: (String, String) = ("_DummyConstants2", "abc")
   val dummyConstant2Subst: (String, String) = ("_DummyConstants2", "321")
+
   val dummyContractWithConstants: String =
     """
       |{
@@ -20,16 +26,17 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
       .item(dummyConstant2._1, dummyConstant2._2)
       .build()
 
-  val testContract: ErgoContract = client.getClient.execute(ctx => {
+  val testContract: ErgoContract = client.getClient.execute { ctx =>
     ctx.compileContract(constantsBuilder, dummyContractWithConstants)
-  })
+  }
 
   "Building a Contract" should {
-    client.getClient.execute{ implicit ctx: BlockchainContext => {
+    client.getClient.execute { implicit ctx: BlockchainContext =>
       val constants: List[(String, Any)] = List(dummyConstant1, dummyConstant2)
       val contract: Contract = Contract.build(
         script = dummyContractWithConstants,
-        constants = constants: _*)
+        constants = constants: _*
+      )
 
       "have the same values" in {
         assert(contract.ergoTree == testContract.getErgoTree)
@@ -37,8 +44,12 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
         assert(contract.ergoConstants == testContract.getConstants)
       }
 
-      val substContract: Contract = contract.substConstants(dummyConstant2Subst._1, dummyConstant2Subst._2)
-      val substTestContract: ErgoContract = testContract.substConstant(dummyConstant2Subst._1, dummyConstant2Subst._2)
+      val substContract: Contract =
+        contract.substConstants(dummyConstant2Subst._1, dummyConstant2Subst._2)
+      val substTestContract: ErgoContract = testContract.substConstant(
+        dummyConstant2Subst._1,
+        dummyConstant2Subst._2
+      )
 
       "different from the test contract" in {
         assert(substContract.ergoTree != testContract.getErgoTree)
@@ -51,11 +62,11 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
         assert(substContract.address == substTestContract.getAddress)
         assert(substContract.ergoConstants == substTestContract.getConstants)
       }
-    }}
+    }
   }
 
   "Getting a Contract from ErgoTree" should {
-    client.getClient.execute{ implicit ctx: BlockchainContext => {
+    client.getClient.execute { implicit ctx: BlockchainContext =>
       val contract: Contract = Contract.fromErgoTree(testContract.getErgoTree)
 
       "have the same values but constants can't be evaluated" in {
@@ -66,6 +77,6 @@ class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
           assert(contract.ergoConstants == testContract.getConstants)
         }
       }
-    }}
+    }
   }
 }

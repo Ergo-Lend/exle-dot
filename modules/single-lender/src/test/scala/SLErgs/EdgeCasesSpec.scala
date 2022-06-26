@@ -3,7 +3,7 @@ package SLErgs
 import SLErgs.boxes.{FundsToAddressBox, SLELendBox, SLEServiceBox}
 import commons.configs.{Configs, ServiceConfig}
 import SLErgs.contracts._
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
   LendingProjectDetailsRegister,

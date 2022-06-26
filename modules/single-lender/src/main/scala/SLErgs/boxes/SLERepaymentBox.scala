@@ -2,7 +2,7 @@ package SLErgs.boxes
 
 import SLErgs.LendServiceTokens
 import SLErgs.contracts.SLERepaymentBoxContract
-import SLErgs.registers.{
+import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
   LendingProjectDetailsRegister,
@@ -37,11 +37,11 @@ case class SLERepaymentBox(
   singleLenderRegister: SingleLenderRegister,
   repaymentDetailsRegister: RepaymentDetailsRegister,
   repaymentToken: ErgoToken =
-    new ErgoToken(LendServiceTokens.repaymentToken, 1),
+    new ErgoToken(LendServiceTokens.repaymentTokenId, 1),
   id: ErgoId = ErgoId.create("")
 ) extends RepaymentBox {
 
-  val repaymentBoxToken = new ErgoToken(LendServiceTokens.repaymentToken, 1)
+  val repaymentBoxToken = new ErgoToken(LendServiceTokens.repaymentTokenId, 1)
 
   def this(inputBox: InputBox) = this(
     value = inputBox.getValue,
