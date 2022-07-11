@@ -10,22 +10,7 @@ import java.nio.charset.StandardCharsets
 
 object RegisterTypes {
 
-  class CollByteRegister extends Register {
-
-    /**
-      * Turns a Coll[Byte] to a string
-      * @param collByte
-      * @return
-      */
-    def collByteToString(collByte: Coll[Byte]): String =
-      new String(collByte.toArray, StandardCharsets.UTF_8)
-
-    def arrayByteToString(arrayByte: Array[Byte]): String =
-      new String(arrayByte, StandardCharsets.UTF_8)
-
-    def stringToCollByte(str: String): Array[Byte] =
-      str.getBytes("utf-8")
-  }
+  class RegisterHelpers extends Register
 
   object CollByte {
 
@@ -52,7 +37,7 @@ object RegisterTypes {
       ergoValueOf(value)
   }
 
-  class StringRegister(val value: String) extends CollByteRegister {
+  class StringRegister(val value: String) extends Register {
     def this(bytes: Array[Byte]) = this(
       new String(bytes, StandardCharsets.UTF_8)
     )
@@ -62,10 +47,16 @@ object RegisterTypes {
     )
 
     def toRegister: ErgoValue[Coll[Byte]] =
-      ergoValueOf(value.getBytes("utf-8"))
+      ErgoValue.of(value.getBytes("utf-8"))
   }
 
-  class AddressRegister(val address: String) extends CollByteRegister {
+  class CollByteRegister(val value: Array[Byte]) extends Register {
+
+    def toRegister: ErgoValue[Coll[Byte]] =
+      ergoValueOf(value)
+  }
+
+  class AddressRegister(val address: String) extends Register {
 
     def toRegister: ErgoValue[Coll[Byte]] = {
       if (address.isEmpty) {
@@ -89,7 +80,21 @@ object RegisterTypes {
     }
   }
 
-  class Register {
+  sealed class Register {
+
+    /**
+      * Turns a Coll[Byte] to a string
+      * @param collByte
+      * @return
+      */
+    def collByteToString(collByte: Coll[Byte]): String =
+      new String(collByte.toArray, StandardCharsets.UTF_8)
+
+    def arrayByteToString(arrayByte: Array[Byte]): String =
+      new String(arrayByte, StandardCharsets.UTF_8)
+
+    def stringToCollByte(str: String): Array[Byte] =
+      str.getBytes("utf-8")
 
     def ergoValueOf(elements: Array[Array[Byte]]): ErgoValue[Coll[Coll[Byte]]] =
       ErgoValue.of(

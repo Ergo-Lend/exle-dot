@@ -52,6 +52,13 @@ abstract class BoxWrapper {
   val tokens: Seq[ErgoToken]
   val value: Long
 
+  /**
+    * Get Outbox returns the immediate Outbox of the wrapper.
+    * This means it does not go through any modification
+    * @param ctx Blockchain Context
+    * @param txB TxBuilder
+    * @return
+    */
   def getOutBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
   def getContract(ctx: BlockchainContext): ErgoContract
 

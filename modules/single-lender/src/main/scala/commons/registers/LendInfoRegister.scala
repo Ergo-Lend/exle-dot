@@ -2,8 +2,8 @@ package commons.registers
 
 import commons.boxes.registers.RegisterTypes.{
   CollByte,
-  CollByteRegister,
-  LongRegister
+  LongRegister,
+  RegisterHelpers
 }
 import org.ergoplatform.appkit.ErgoValue
 import special.collection.Coll
@@ -66,7 +66,7 @@ final case class FundingInfoRegister(
 final case class LendingProjectDetailsRegister(
   projectName: String,
   description: String
-) extends CollByteRegister {
+) extends RegisterHelpers {
 
   def this(registerData: Array[Coll[Byte]]) = this(
     projectName = CollByte.collByteToString(registerData(0)),
@@ -100,7 +100,7 @@ final case class CreationInfoRegister(creationHeight: Long, version: Long = 1)
 }
 
 final case class ServiceBoxInfoRegister(name: String, description: String)
-    extends CollByteRegister {
+    extends RegisterHelpers {
 
   def this(registerData: Array[Coll[Byte]]) = this(
     name = CollByte.collByteToString(registerData(0)),

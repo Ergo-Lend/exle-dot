@@ -54,3 +54,15 @@ final case class PaymentAddressException(
 final case class PaymentBoxInfoNotFoundException(
   private val message: String = "Payment box info cannot be found"
 ) extends Throwable(message)
+
+/**
+  * There is an incompatibility of the token
+  * @param message
+  */
+final case class IncompatibleTokenException(
+  token: String,
+  targetToken: String,
+  private val message: String = "Token is incompatible"
+) extends Throwable(
+      s"Incompatible Token: TargetToken -> $targetToken, TokenReceived -> $token"
+    )

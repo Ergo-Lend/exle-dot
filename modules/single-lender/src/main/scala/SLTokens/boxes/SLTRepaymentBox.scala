@@ -3,8 +3,9 @@ package SLTokens.boxes
 import SLTokens.SLTTokens
 import SLTokens.contracts.SLTRepaymentBoxContract
 import boxes.{Box, BoxWrapper}
-import commons.boxes.registers.RegisterTypes.StringRegister
+import commons.boxes.registers.RegisterTypes.{CollByteRegister, StringRegister}
 import commons.configs.Tokens
+import commons.errors.IncompatibleTokenException
 import commons.registers.{
   BorrowerRegister,
   FundingInfoRegister,
@@ -32,7 +33,7 @@ case class SLTRepaymentBox(
   fundingInfoRegister: FundingInfoRegister,
   lendingProjectDetailsRegister: LendingProjectDetailsRegister,
   borrowerRegister: BorrowerRegister,
-  loanTokenIdRegister: StringRegister,
+  loanTokenIdRegister: CollByteRegister,
   singleLenderRegister: SingleLenderRegister,
   repaymentDetailsRegister: RepaymentDetailsRegister,
   override val id: ErgoId = ErgoId.create(""),
@@ -56,7 +57,7 @@ case class SLTRepaymentBox(
     borrowerRegister = new BorrowerRegister(
       inputBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray
     ),
-    loanTokenIdRegister = new StringRegister(
+    loanTokenIdRegister = new CollByteRegister(
       inputBox.getRegisters.get(3).getValue.asInstanceOf[Coll[Byte]].toArray
     ),
     singleLenderRegister = new SingleLenderRegister(
@@ -130,5 +131,27 @@ object SLTRepaymentBox {
 
       sltRepaymentBox.copy(tokens = fundedTokenList)
     }
+  }
+
+  def fundBox(
+    sltRepaymentBox: SLTRepaymentBox,
+    paymentBox: InputBox
+  ): SLTRepaymentBox = {
+    // @todo, check if there are token
+    val token: ErgoToken = paymentBox.getTokens.asScala.toSeq(0)
+    if (!token.getId.getBytes.sameElements(
+          sltRepaymentBox.loanTokenIdRegister.value
+        )) {
+      val receivedTokenId: ErgoId = new ErgoId(
+        sltRepaymentBox.loanTokenIdRegister.value
+      )
+      throw IncompatibleTokenException(
+        token.getId.toString,
+        receivedTokenId.toString
+      )
+    }
+
+    val tokenAmount: Long = token.getValue
+    fundBox(sltRepaymentBox, tokenAmount)
   }
 }

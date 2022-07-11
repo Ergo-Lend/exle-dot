@@ -5,11 +5,11 @@ import org.ergoplatform.ErgoBox.TokenId
 import org.ergoplatform.appkit.{ErgoId, ErgoToken}
 
 case class SigUSD(override val value: Long) extends Token {
-  override val id: ErgoId = new ErgoId(Tokens.sigUSD.getBytes)
+  override val id: String = Tokens.sigUSD
 }
 
 object SigUSD {
-  val id: ErgoId = new ErgoId(Tokens.sigUSD.getBytes)
+  val id: ErgoId = ErgoId.create(Tokens.sigUSD)
 }
 
 object TokenHelper {

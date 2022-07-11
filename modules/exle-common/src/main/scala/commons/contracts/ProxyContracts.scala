@@ -1,6 +1,7 @@
 package commons.contracts
 
 import commons.configs.Configs
+import commons.ergo.ErgCommons
 import commons.node.Client
 import org.ergoplatform.appkit.{
   BlockchainContext,
@@ -10,7 +11,7 @@ import org.ergoplatform.appkit.{
 }
 
 class ProxyContracts(client: Client) {
-  val minFee: Long = Parameters.MinFee
+  val minFee: Long = ErgCommons.MinBoxFee
 
   val refundHeightThresholdValue: Long =
     ((Configs.creationDelay / 60 / 2) + 1).toLong

@@ -10,7 +10,7 @@ import commons.registers.{
 }
 import commons.boxes.Box
 import commons.boxes.registers.RegisterTypes.{
-  CollByteRegister,
+  AddressRegister,
   LongRegister,
   StringRegister
 }
@@ -267,7 +267,7 @@ class SLEServiceBox(
   * @param profitSharingPercentage
   */
 abstract class ServiceBox(
-  val pubKey: CollByteRegister,
+  val pubKey: AddressRegister,
   val profitSharingPercentage: LongRegister
 ) extends Box {
   val nft: ErgoId

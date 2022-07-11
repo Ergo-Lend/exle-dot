@@ -115,8 +115,8 @@
         if (_SLTLoanCreation)
         {
             // ##### Boxes ##### //
-            val serviceFeeBox: Box      = OUTPUTS(1)
-            val sltLendBox: Box         = OUTPUTS(2)
+            val serviceFeeBox: Box      = OUTPUTS(2)
+            val sltLendBox: Box         = OUTPUTS(1)
 
             // ##### Constants Declaration ##### //
             val fundingInfoRegister: Coll[Long]         = sltLendBox.R4[Coll[Long]]

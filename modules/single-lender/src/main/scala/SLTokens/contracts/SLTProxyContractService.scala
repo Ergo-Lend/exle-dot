@@ -93,7 +93,7 @@ class SLTProxyContractService @Inject() (client: Client)
 
       val proxyContract = compile(
         contractConstants,
-        ExleContracts.SLTFundLendBoxProxyContract.contractScript
+        ExleContracts.DummyErgoScript.contractScript
       )
 
       proxyContract

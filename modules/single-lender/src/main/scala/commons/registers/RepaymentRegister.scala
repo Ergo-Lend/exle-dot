@@ -1,6 +1,6 @@
 package commons.registers
 
-import commons.boxes.registers.RegisterTypes.{CollByteRegister, LongRegister}
+import commons.boxes.registers.RegisterTypes.{LongRegister}
 import org.ergoplatform.appkit.ErgoValue
 import special.collection.Coll
 

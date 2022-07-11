@@ -17,7 +17,7 @@ import special.collection.Coll
 
 import java.math.BigInteger
 
-class BoxSpec extends AnyWordSpec with Matchers with ErgoTestBase {
+class BoxSpec extends ErgoTestBase {
 
   val dummyContract: String =
     """

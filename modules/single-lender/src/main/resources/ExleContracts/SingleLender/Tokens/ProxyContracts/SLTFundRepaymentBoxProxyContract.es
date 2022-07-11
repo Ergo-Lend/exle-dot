@@ -36,7 +36,7 @@
                 OUTPUTS(0).tokens(0)._2 == INPUTS(0).tokens(0)._2
             ))
         }
-        val refundToFunder: Boolean     = OUTPUTS(0).propositionBytes == _FunderPk,
+        val refundToFunder: Boolean     = OUTPUTS(0).propositionBytes == _FunderPk
 
         sigmaProp(tokenValueRefunded && refundToFunder)
     } else {
@@ -45,12 +45,12 @@
         val fundRepaymentProxy: Box     = SELF
         val outputSltRepaymentBox: Box  = OUTPUTS(0)
 
-        val repaymentDetails: Long      = inputSltLendBox.R9[Coll[Long]]
+        val repaymentDetails: Coll[Long]= inputSltRepaymentBox.R9[Coll[Long]]
         val repaymentGoal: Long         = repaymentDetails.get(1)
         val repaymentBoxId: Coll[Byte]  = inputSltRepaymentBox.id
 
         val amountRepaid: Long          = inputSltRepaymentBox.tokens(1)._2
-        val allFundsOutput: Long        = amountRepaid + self.tokens(0)._2
+        val allFundsOutput: Long        = amountRepaid + SELF.tokens(0)._2
 
         // ===== Fund ===== //
         val repaymentGoalReached: Boolean   = repaymentGoal <= amountRepaid
@@ -63,8 +63,8 @@
             // ===== OverFunded ===== //
             // Input Boxes      -> 0: InputSltRepaymentBox, 1: SELF | PaymentBox
             // Output Boxes     -> 0: OutputSltRepaymentBox, 1: RefundExtraToFunderBox, 2: MiningFee
-            val overfunded = allFundsOutput > repaymentGoal
-            if (isOverfunded) {
+            val isOverFunded = allFundsOutput > repaymentGoal
+            if (isOverFunded) {
                 val refundExtraToFunderBox: Box             = OUTPUTS(1)
 
                 val repaymentBoxFunded: Boolean             = outputSltRepaymentBox.tokens(1)._2 == repaymentGoal

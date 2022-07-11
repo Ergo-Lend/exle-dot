@@ -14,7 +14,7 @@ import sigmastate.lang.exceptions.InterpreterException
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
-class SLTProxyContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
+class SLTProxyContractSpec extends ErgoTestBase {
   val SLTProxyContractService = new SLTProxyContractService(client)
 
   "SLT CreateLendBox ProxyContract" when {

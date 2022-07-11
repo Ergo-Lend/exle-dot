@@ -35,7 +35,7 @@ class Client() {
       )
       client.execute { ctx =>
         System.out.println(
-          s"Client Instantiated, Current Height: ${ctx.getHeight}" +
+          s"Client Instantiated, Current Height: ${ctx.getHeight} " +
             s"Network: ${NodeConfig.networkType}"
         )
         ctx.getHeight

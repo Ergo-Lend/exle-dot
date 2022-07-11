@@ -91,7 +91,7 @@ object SLTServiceBox {
 
   def createLendBox(sltServiceBox: SLTServiceBox): SLTServiceBox = {
     val newTokenList: Seq[ErgoToken] =
-      sltServiceBox.tokens.map(TokenHelper.increment(_, SLTTokens.lendTokenId))
+      sltServiceBox.tokens.map(TokenHelper.decrement(_, SLTTokens.lendTokenId))
     sltServiceBox.copy(tokens = newTokenList)
   }
 

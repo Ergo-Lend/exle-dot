@@ -10,7 +10,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 abstract class UnitSpec extends AnyWordSpec with Matchers {}
 
-trait ErgoTestBase {
+trait ErgoTestBase extends UnitSpec {
   val client: Client = new Client()
   client.setClient()
   val networkType: NetworkType = NetworkType.TESTNET

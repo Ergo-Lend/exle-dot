@@ -35,7 +35,7 @@
                 OUTPUTS(0).tokens(0)._2     == INPUTS(0).tokens(0)._2
             ))
         }
-        val refundToLender: Boolean     = OUTPUTS(0).propositionBytes == _LenderPk,
+        val refundToLender: Boolean     = OUTPUTS(0).propositionBytes == _LenderPk
 
         sigmaProp(tokenValueRefunded && refundToLender)
     } else {
@@ -44,12 +44,14 @@
         val paymentBox: Box                     = SELF
         val outputSltLendBox: Box               = OUTPUTS(0)
 
-        val deadlineHeight: Long        = inputSltLendBox.R4[Coll[Long]].get(1)
-        val fundingGoal: Long           = inputSltLendBox.R4[Coll[Long]].get(0)
-        val loanTokenId: Coll[Byte]     = inputSltLendBox.R7[Coll[Byte]].get
-        val lendBoxId: Coll[Byte]       = inputLendBox.id
+        val deadlineHeight: Long                = inputSltLendBox.R4[Coll[Long]].get(1)
+        val fundingGoal: Long                   = inputSltLendBox.R4[Coll[Long]].get(0)
+        val loanTokenId: Coll[Byte]             = inputSltLendBox.R7[Coll[Byte]].get
+        val lendBoxId: Coll[Byte]               = inputSltLendBox.id
 
+        val inputLoanToken: (Coll[Byte], Long)              = inputSltLendBox.tokens(0)
         val outputSltLendBoxLoanToken: (Coll[Byte], Long)   = outputSltLendBox.tokens(1)
+        val outputSltLendBoxLenderPk: Coll[Byte]            = outputSltLendBox.R8[Coll[Byte]].get
         val paymentBoxToken: Coll[Byte]                     = paymentBox.tokens(0)
 
         // ===== Fundable ===== //
@@ -70,7 +72,7 @@
                     // token_id_correct
                     outputSltLendBoxLoanToken._1        == loanTokenId,
                     // extra_token_refund_box_is_lender
-                    outputSltLendBoxLenderPk.get        == _LenderPk,
+                    outputSltLendBoxLenderPk            == _LenderPk
                 ))
             }
 
@@ -79,22 +81,22 @@
             //              to lender.
             // Input Boxes      -> (0: SLTLendBox, 1: PaymentBox)
             // Output Boxes     -> (0: SLTLendBox, 1: RefundOverfundedToLenderBox)
-            val isOverFunded: Boolean   = (SELF.value - newFundedValue) > 0
+            val isOverFunded: Boolean   = (inputLoanToken._2 - fundingGoal) > 0
 
-            if (isOverfunded) {
+            if (isOverFunded) {
                 val refundExtraFundsToLenderBox: Box        = OUTPUTS(1)
-                val overfundedCheck: Boolean                = {
+                val overFundedCheck: Boolean                = {
                     allOf(Coll(
                         // extra_token_value_refunded
                         refundExtraFundsToLenderBox.tokens(0)._2        == SELF.tokens(0)._2 - fundingGoal,
                         // extra_token_id_same
-                        refundExtraFundsToLenderBox.tokens(0)._1        == SELF.tokens(0)._1
+                        refundExtraFundsToLenderBox.tokens(0)._1        == SELF.tokens(0)._1,
                         // extra_token_refund_box_is_lender
-                        refundExtraFundsToLenderBox.propositionBytes    == _LenderPk,
+                        refundExtraFundsToLenderBox.propositionBytes    == _LenderPk
                     ))
                 }
 
-                sigmaProp(overfundedCheck && lendBoxFunded)
+                sigmaProp(overFundedCheck && lendBoxFunded)
             } else {
                 // ===== Fund Success ===== //
                 // Input Boxes      -> (0: SLTLendBox, 1: PaymentBox)
