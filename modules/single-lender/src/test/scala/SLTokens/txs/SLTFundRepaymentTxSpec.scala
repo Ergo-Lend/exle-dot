@@ -35,7 +35,7 @@ class SLTFundRepaymentTxSpec extends ErgoTestBase {
 
       val outRepaymentBox: SLTLendBox = new SLTLendBox(outBoxAsInputBox.head)
 
-      "lend box correct" in {
+      "repayment box correct" in {
         assert(inRepaymentBox.tokens.length == 1)
         assert(inRepaymentBox.tokens.head.getId == SLTTokens.repaymentTokenId)
         assert(inRepaymentBox.tokens.head.getValue == 1)
