@@ -11,7 +11,7 @@ import SLTokens.{
 import common.ErgoTestBase
 import org.ergoplatform.appkit.{InputBox, UnsignedTransactionBuilder}
 
-class SLTFundRepaymentTxSpec extends ErgoTestBase {
+class SLTRepaymentFundTxSpec extends ErgoTestBase {
   "Fund Repayment Tx" should {
     client.getClient.execute { implicit ctx =>
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()

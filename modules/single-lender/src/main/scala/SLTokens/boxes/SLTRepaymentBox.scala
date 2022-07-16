@@ -2,27 +2,12 @@ package SLTokens.boxes
 
 import SLTokens.SLTTokens
 import SLTokens.contracts.SLTRepaymentBoxContract
-import boxes.{Box, BoxWrapper}
-import commons.boxes.registers.RegisterTypes.{CollByteRegister, StringRegister}
+import boxes.{Box, BoxWrapper, FundsToAddressBox}
+import commons.boxes.registers.RegisterTypes.CollByteRegister
 import commons.configs.Tokens
 import commons.errors.IncompatibleTokenException
-import commons.registers.{
-  BorrowerRegister,
-  FundingInfoRegister,
-  LendingProjectDetailsRegister,
-  RepaymentDetailsRegister,
-  SingleLenderRegister
-}
-import org.ergoplatform.appkit.{
-  BlockchainContext,
-  ErgoContract,
-  ErgoId,
-  ErgoToken,
-  InputBox,
-  OutBox,
-  Parameters,
-  UnsignedTransactionBuilder
-}
+import commons.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegisterV2, SingleLenderRegister}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
 import special.collection.Coll
 import tokens.SigUSD
 
@@ -35,7 +20,7 @@ case class SLTRepaymentBox(
   borrowerRegister: BorrowerRegister,
   loanTokenIdRegister: CollByteRegister,
   singleLenderRegister: SingleLenderRegister,
-  repaymentDetailsRegister: RepaymentDetailsRegister,
+  repaymentDetailsRegister: RepaymentDetailsRegisterV2,
   override val id: ErgoId = ErgoId.create(""),
   override val tokens: Seq[ErgoToken] = Seq(
     new ErgoToken(SLTTokens.repaymentTokenId, 1)
@@ -63,7 +48,7 @@ case class SLTRepaymentBox(
     singleLenderRegister = new SingleLenderRegister(
       inputBox.getRegisters.get(4).getValue.asInstanceOf[Coll[Byte]].toArray
     ),
-    repaymentDetailsRegister = new RepaymentDetailsRegister(
+    repaymentDetailsRegister = new RepaymentDetailsRegisterV2(
       inputBox.getRegisters.get(5).getValue.asInstanceOf[Coll[Long]].toArray
     ),
     id = inputBox.getId,
@@ -78,11 +63,10 @@ case class SLTRepaymentBox(
     borrowerRegister = sltLendBox.borrowerRegister,
     loanTokenIdRegister = sltLendBox.loanTokenIdRegister,
     singleLenderRegister = sltLendBox.singleLenderRegister,
-    repaymentDetailsRegister = RepaymentDetailsRegister.apply(
+    repaymentDetailsRegister = RepaymentDetailsRegisterV2.apply(
       fundedHeight,
       sltLendBox.fundingInfoRegister
-    ),
-    id = sltLendBox.id
+    )
   )
 
   override def getContract(ctx: BlockchainContext): ErgoContract =
@@ -138,7 +122,7 @@ object SLTRepaymentBox {
     paymentBox: InputBox
   ): SLTRepaymentBox = {
     // @todo, check if there are token
-    val token: ErgoToken = paymentBox.getTokens.asScala.toSeq(0)
+    val token: ErgoToken = paymentBox.getTokens.asScala.toSeq.head
     if (!token.getId.getBytes.sameElements(
           sltRepaymentBox.loanTokenIdRegister.value
         )) {
@@ -153,5 +137,66 @@ object SLTRepaymentBox {
 
     val tokenAmount: Long = token.getValue
     fundBox(sltRepaymentBox, tokenAmount)
+  }
+
+  def fromFundedLendBox(
+    sltLendBox: SLTLendBox,
+    fundedHeight: Long): SLTRepaymentBox = {
+    new SLTRepaymentBox(sltLendBox, fundedHeight)
+  }
+}
+
+object SLTRepaymentDistribution {
+  /**
+   * Increment the Repayment Register with the new funded value
+   * and remove the sigUSD token
+   * @param sltRepaymentBox slt repayment box
+   * @return
+   */
+  def getOutRepaymentBox(sltRepaymentBox: SLTRepaymentBox): SLTRepaymentBox = {
+    val loanTokenId: ErgoId = new ErgoId(sltRepaymentBox.loanTokenIdRegister.value)
+    val sigUSDToken: ErgoToken = sltRepaymentBox.tokens.filter(_.getId.equals(loanTokenId)).head
+    val repaymentAddedSLTRepaymentBox: SLTRepaymentBox = sltRepaymentBox.copy(
+      tokens = sltRepaymentBox.tokens.filter(!_.getId.equals(loanTokenId)),
+      repaymentDetailsRegister = sltRepaymentBox.repaymentDetailsRegister.copy(repaymentPaid = sigUSDToken.getValue)
+    )
+
+    repaymentAddedSLTRepaymentBox
+  }
+
+  def getFundsRepaidBox(sltRepaymentBox: SLTRepaymentBox, sltServiceBox: SLTServiceBox): Seq[FundsToAddressBox] = {
+    val repaymentShare: Seq[ErgoToken] = calculateRepayment(
+        sltRepaymentBox.tokens(1).getValue,
+        sltRepaymentBox.fundingInfoRegister.interestRatePercent,
+        sltServiceBox.profitSharingRegister.profitSharingPercentage)
+      .map(
+        new ErgoToken(sltRepaymentBox.loanTokenIdRegister.value, _))
+    val fundsToLenderBox: FundsToAddressBox = FundsToAddressBox(
+      address = Address.create(sltRepaymentBox.singleLenderRegister.address),
+      tokens = Seq(repaymentShare.head))
+    val fundsToProfitSharingBox: FundsToAddressBox = FundsToAddressBox(
+      address = Address.create(sltServiceBox.exlePubKey.address),
+      tokens = Seq(repaymentShare(1)))
+
+    Seq(fundsToLenderBox, fundsToProfitSharingBox)
+  }
+
+  /**
+   *
+   * @param totalAmount Amount to be repaid
+   * @param interestRatePercent Interest rate of the loan
+   * @param profitSharingPercent Profit Sharing Percentage for owner
+   * @return Seq[LendersShare, ProtocolOwnerShare]
+   */
+  def calculateRepayment(totalAmount: Long, interestRatePercent: Long, profitSharingPercent: Long, percentageDenominator: Long): Seq[Long] = {
+    val interestAmount = (totalAmount * interestRatePercent) / percentageDenominator
+    val protocolOwnerShare: Long = (interestAmount * profitSharingPercent) / percentageDenominator
+    val lendersShare: Long = totalAmount - protocolOwnerShare
+
+    Seq(lendersShare, protocolOwnerShare)
+  }
+
+  def calculateRepayment(totalAmount: Long, interestRatePercent: Long, profitSharingPercent: Long): Seq[Long] = {
+    calculateRepayment(totalAmount, interestRatePercent, profitSharingPercent, 1000L)
   }
 }

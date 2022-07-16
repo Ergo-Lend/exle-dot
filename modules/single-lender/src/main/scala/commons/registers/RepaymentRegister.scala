@@ -74,4 +74,59 @@ object RepaymentDetailsRegister {
   }
 }
 
+final case class RepaymentDetailsRegisterV2(
+                                             fundedHeight: Long,
+                                             repaymentAmount: Long,
+                                             totalInterestAmount: Long,
+                                             repaymentHeightGoal: Long,
+                                             repaymentPaid: Long
+                                           ) extends LongRegister
+  with RepaymentRegister {
+
+  def toRegister: ErgoValue[Coll[Long]] = {
+    val register: Array[Long] = new Array[Long](5)
+
+    register(0) = fundedHeight
+    register(1) = repaymentAmount
+    register(2) = totalInterestAmount
+    register(3) = repaymentHeightGoal
+    register(4) = repaymentPaid
+
+    ergoValueOf(register)
+  }
+
+  def this(values: Array[Long]) = this(
+    fundedHeight = values(0),
+    repaymentAmount = values(1),
+    totalInterestAmount = values(2),
+    repaymentHeightGoal = values(3),
+    repaymentPaid = values(4)
+  )
+}
+
+object RepaymentDetailsRegisterV2 {
+
+  def apply(
+             fundedHeight: Long,
+             fundingInfoRegister: FundingInfoRegister
+           ): RepaymentDetailsRegisterV2 = {
+    val fundingGoal: Long = fundingInfoRegister.fundingGoal
+    val interestRate: Long = fundingInfoRegister.interestRatePercent
+    val repaymentHeightLength: Long = fundingInfoRegister.repaymentHeightLength
+
+    val repaymentHeightGoal: Long = fundedHeight + repaymentHeightLength
+    val totalInterestAmount: Long = (fundingGoal * interestRate) / 1000
+    val repaymentAmount: Long = fundingGoal + totalInterestAmount
+    val repaymentPaid: Long = 0L
+
+    new RepaymentDetailsRegisterV2(
+      fundedHeight,
+      repaymentAmount,
+      totalInterestAmount,
+      repaymentHeightGoal,
+      repaymentPaid
+    )
+  }
+}
+
 trait RepaymentRegister

@@ -17,6 +17,7 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 trait Tx {
   var signedTx: Option[SignedTransaction] = None
   val inputBoxes: Seq[InputBox]
+  val dataInputs: Seq[InputBox] = Seq.empty
   implicit val ctx: BlockchainContext
 
   def getOutBoxes: Seq[OutBox]
@@ -31,13 +32,23 @@ trait Tx {
     val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
     val outBoxes: Seq[OutBox] = getOutBoxes
 
-    val tx: UnsignedTransaction = txB
-      .boxesToSpend(inputBoxes.asJava)
-      .outputs(outBoxes: _*)
-      .fee(ErgCommons.MinMinerFee)
-      .sendChangeTo(ServiceConfig.serviceOwner.getErgoAddress)
-      .build()
-
+    val tx: UnsignedTransaction = dataInputs match {
+      case Nil =>
+        txB
+          .boxesToSpend(inputBoxes.asJava)
+          .outputs(outBoxes: _*)
+          .fee(ErgCommons.MinMinerFee)
+          .sendChangeTo(ServiceConfig.serviceOwner.getErgoAddress)
+          .build()
+      case _ =>
+        txB
+          .boxesToSpend(inputBoxes.asJava)
+          .outputs(outBoxes: _*)
+          .withDataInputs(dataInputs.asJava)
+          .fee(ErgCommons.MinMinerFee)
+          .sendChangeTo(ServiceConfig.serviceOwner.getErgoAddress)
+          .build()
+    }
     tx
   }
 

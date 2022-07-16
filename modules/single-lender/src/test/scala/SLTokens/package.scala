@@ -1,38 +1,11 @@
-import SLErgs.{
-  client,
-  deadlineHeightLength,
-  dummyAddress,
-  dummyTxId,
-  goal,
-  interestRate,
-  loanDescription,
-  loanName,
-  repaymentHeightLength
-}
+import SLErgs.{client, deadlineHeightLength, dummyAddress, dummyTxId, goal, interestRate, loanDescription, loanName, repaymentHeightLength}
 import SLTokens.boxes.{SLTLendBox, SLTRepaymentBox, SLTServiceBox}
 import SLTokens.contracts.{SLTCreateLendBoxContract, SLTProxyContractService}
 import commons.boxes.registers.RegisterTypes.{CollByteRegister, StringRegister}
 import commons.configs.{ServiceConfig, Tokens}
 import commons.ergo.ErgCommons
-import commons.registers.{
-  BorrowerRegister,
-  CreationInfoRegister,
-  FundingInfoRegister,
-  LendingProjectDetailsRegister,
-  ProfitSharingRegister,
-  RepaymentDetailsRegister,
-  ServiceBoxInfoRegister,
-  SingleAddressRegister,
-  SingleLenderRegister
-}
-import org.ergoplatform.appkit.{
-  Address,
-  ErgoToken,
-  InputBox,
-  OutBoxBuilder,
-  Parameters,
-  UnsignedTransactionBuilder
-}
+import commons.registers.{BorrowerRegister, CreationInfoRegister, FundingInfoRegister, LendingProjectDetailsRegister, ProfitSharingRegister, RepaymentDetailsRegisterV2, ServiceBoxInfoRegister, SingleAddressRegister, SingleLenderRegister}
+import org.ergoplatform.appkit.{Address, ErgoToken, InputBox, OutBoxBuilder, Parameters, UnsignedTransactionBuilder}
 import tokens.SigUSD
 
 package object SLTokens {
@@ -139,7 +112,7 @@ package object SLTokens {
       val borrowerRegister = new BorrowerRegister(borrowerAddress.toString)
       val lenderRegister = new SingleLenderRegister(lenderAddress.toString)
 
-      val repaymentDetailsRegister = RepaymentDetailsRegister.apply(
+      val repaymentDetailsRegister = RepaymentDetailsRegisterV2.apply(
         fundedHeight = ctx.getHeight + deadlineHeightLength - 10,
         fundingInfoRegister
       )

@@ -1,29 +1,13 @@
 package SLTokens.boxes
 
-import commons.registers.{
-  BorrowerRegister,
-  FundingInfoRegister,
-  LendingProjectDetailsRegister,
-  RepaymentDetailsRegister,
-  SingleLenderRegister
-}
+import commons.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
 import SLTokens.SLTTokens
 import SLTokens.contracts.SLTLendBoxContract
-import boxes.{Box, BoxWrapper}
-import commons.boxes.registers.RegisterTypes.{CollByteRegister}
+import boxes.{Box, BoxWrapper, FundsToAddressBox}
+import commons.boxes.registers.RegisterTypes.CollByteRegister
 import commons.configs.ServiceConfig
 import commons.ergo.ErgCommons
-import org.ergoplatform.appkit.{
-  Address,
-  BlockchainContext,
-  ErgoContract,
-  ErgoId,
-  ErgoToken,
-  InputBox,
-  OutBox,
-  OutBoxBuilder,
-  UnsignedTransactionBuilder
-}
+import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, OutBoxBuilder, UnsignedTransactionBuilder}
 import special.collection.Coll
 import tokens.SigUSD
 
@@ -137,4 +121,11 @@ object SLTLendBox {
         paymentInputBox.getValue - ServiceConfig.serviceFee - ErgCommons.MinMinerFee,
       tokens = Seq(new ErgoToken(SLTTokens.lendTokenId, 1))
     )
+
+  def getBorrowerFundedBox(sltLendBox: SLTLendBox): FundsToAddressBox = {
+    val tokenId: ErgoId = new ErgoId(sltLendBox.loanTokenIdRegister.value)
+    FundsToAddressBox(
+      Address.create(sltLendBox.borrowerRegister.address),
+      tokens = sltLendBox.tokens.filter(_.getId.equals(tokenId)))
+  }
 }

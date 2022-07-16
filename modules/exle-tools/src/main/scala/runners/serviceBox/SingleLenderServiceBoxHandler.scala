@@ -177,9 +177,9 @@ object SLEServiceBoxHandler {
     config: ErgoToolConfig,
     nodeConfig: ErgoNodeConfig
   ): SignedTransaction = {
-    val serviceNftBoxId: String = LendServiceTokens.serviceNFT.toString
-    val lendTokenId: String = LendServiceTokens.lendToken.toString
-    val repaymentTokenId: String = LendServiceTokens.repaymentToken.toString
+    val serviceNftBoxId: String = LendServiceTokens.serviceNFTId.toString
+    val lendTokenId: String = LendServiceTokens.lendTokenId.toString
+    val repaymentTokenId: String = LendServiceTokens.repaymentTokenId.toString
 
     val addressIndex: Int = config.getParameters.get("addressIndex").toInt
     val ownerAddress: Address = Address.createEip3Address(

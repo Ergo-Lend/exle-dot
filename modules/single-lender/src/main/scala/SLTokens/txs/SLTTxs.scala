@@ -1,17 +1,10 @@
 package SLTokens.txs
 
-import SLErgs.boxes.FundsToAddressBox
 import SLTokens.SLTTokens
-import SLTokens.boxes.{SLTLendBox, SLTRepaymentBox, SLTServiceBox}
+import SLTokens.boxes.{SLTLendBox, SLTRepaymentBox, SLTRepaymentDistribution, SLTServiceBox}
+import boxes.FundsToAddressBox
 import commons.configs.ServiceConfig
-import org.ergoplatform.appkit.{
-  BlockchainContext,
-  InputBox,
-  OutBox,
-  SignedTransaction,
-  UnsignedTransaction,
-  UnsignedTransactionBuilder
-}
+import org.ergoplatform.appkit.{BlockchainContext, InputBox, OutBox, UnsignedTransactionBuilder}
 import txs.Tx
 
 // <editor-fold desc="SLT LEND INITIATION TX">
@@ -57,7 +50,7 @@ case class SLTLendInitiationTx(inputBoxes: Seq[InputBox])(
       val serviceFeeOutBox: OutBox = FundsToAddressBox(
         value = ServiceConfig.serviceFee,
         address = ServiceConfig.serviceOwner
-      ).getOutputBox(ctx, txB)
+      ).getOutBox(ctx, txB)
 
       Seq(
         wrappedSLTServiceOutBox.getOutBox(ctx, txB),
@@ -118,15 +111,15 @@ case class SLTRepaymentFundTx(inputBoxes: Seq[InputBox])(
 ) extends Tx {
 
   /**
-    * SLTLendBox check
-    * 1. Does it have the lend box token
-    * @param inputBoxes 1. SLTLendBox 2. Fund Lend Payment Box
+    * SLTRepaymentBox check
+    * 1. Does it have the repayment box token
+    * @param inputBoxes 1. SLTRepaymentBox 2. Fund Repayment Payment Box
     * @return
     */
   def checkInputBoxes(inputBoxes: Seq[InputBox]): Boolean =
     try {
-      val lendBox: SLTRepaymentBox = new SLTRepaymentBox(inputBoxes.head)
-      lendBox.tokens.head.getId == SLTTokens.repaymentTokenId
+      val repaymentBox: SLTRepaymentBox = new SLTRepaymentBox(inputBoxes.head)
+      repaymentBox.tokens.head.getId == SLTTokens.repaymentTokenId
     } catch {
       case _: Throwable => false
     }
@@ -136,23 +129,116 @@ case class SLTRepaymentFundTx(inputBoxes: Seq[InputBox])(
     else {
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
       val paymentBox: InputBox = inputBoxes(1)
-      val wrappedSLTLendBox: SLTRepaymentBox = new SLTRepaymentBox(
+      val wrappedSLTRepaymentBox: SLTRepaymentBox = new SLTRepaymentBox(
         inputBoxes.head
       )
 
-      val wrappedOutSLTLendBox: SLTRepaymentBox =
-        SLTRepaymentBox.fundBox(wrappedSLTLendBox, paymentBox)
+      val wrappedOutSLTRepaymentBox: SLTRepaymentBox =
+        SLTRepaymentBox.fundBox(wrappedSLTRepaymentBox, paymentBox)
 
-      Seq(wrappedOutSLTLendBox.getOutBox(ctx, txB))
+      Seq(wrappedOutSLTRepaymentBox.getOutBox(ctx, txB))
     }
 }
 // </editor-fold>
 
 // <editor-fold desc="SLT LEND FUND SUCCESS TX">
+/**
+ * // ================== SLT LEND To Repayment TX ================ //
+ * @param inputBoxes 1. SLTServiceBox 2. SLTLendBox
+ */
+case class SLTLendToRepaymentTx(inputBoxes: Seq[InputBox])(
+  implicit val ctx: BlockchainContext
+) extends Tx {
+
+  def checkInputBoxes(inputBoxes: Seq[InputBox]): Boolean =
+    try {
+      val serviceBox: SLTServiceBox = new SLTServiceBox(inputBoxes.head)
+      val lendBox: SLTLendBox = new SLTLendBox(inputBoxes(1))
+      lendBox.tokens.head.getId == SLTTokens.lendTokenId &&
+        serviceBox.tokens.head.getId == SLTTokens.serviceNFTId
+    } catch {
+      case _: Throwable => false
+    }
+
+  override def getOutBoxes: Seq[OutBox] =
+    if (!checkInputBoxes(inputBoxes)) throw new IllegalArgumentException()
+    else {
+      val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+      val wrappedSLTLendBox: SLTLendBox = new SLTLendBox(inputBoxes(1))
+
+      val wrappedOutSLTServiceBox: SLTServiceBox = SLTServiceBox.mutateLendToRepaymentBox(new SLTServiceBox(inputBoxes.head))
+      val wrappedOutSLTRepaymentBox: SLTRepaymentBox = SLTRepaymentBox.fromFundedLendBox(
+        wrappedSLTLendBox, ctx.getHeight.toLong)
+      val wrappedOutBorrowerFundedBox: FundsToAddressBox = SLTLendBox.getBorrowerFundedBox(wrappedSLTLendBox)
+
+      Seq(wrappedOutSLTServiceBox.getOutBox(ctx, txB), wrappedOutSLTRepaymentBox.getOutBox(ctx, txB), wrappedOutBorrowerFundedBox.getOutBox(ctx, txB))
+    }
+}
 // </editor-fold>
 
-// <editor-fold desc="SLT REPAYMENT FUND SUCCESS TX">
+// <editor-fold desc="SLT REPAYMENT FULLY FUND SUCCESS TX">
+/**
+ * // ================== SLT REPAYMENT FULLY FUNDED TX ================ //
+ * @param inputBoxes 1. SLTServiceBox 2. SLTRepaymentBox
+ * OutBox: 1. SLTServiceBox 2. MiningFee
+ */
+case class SLTRepaymentFullyFundedTx(inputBoxes: Seq[InputBox])(implicit val ctx: BlockchainContext) extends Tx {
+  override def getOutBoxes: Seq[OutBox] = {
+    val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+    val wrappedSLTServiceBox: SLTServiceBox = SLTServiceBox.absorbRepaymentBox(new SLTServiceBox(inputBoxes.head))
+
+    Seq(wrappedSLTServiceBox.getOutBox(ctx, txB))
+  }
+}
+// </editor-fold>
+
+// <editor-fold desc="SLT REPAYMENT FUND DISTRIBUTION TX">
+/**
+ * // ================== SLT REPAYMENT FUND DISTRIBUTION TX ================ //
+ * @param inputBoxes 1. SLTRepaymentBox
+ * OutBox: 1. SLTRepaymentBox 2. FundsToLenderBox 3. FundsToExle 4. MiningFee
+ * DataInputs: 1. SLTServiceBox
+ */
+case class SLTRepaymentFundDistributionTx(inputBoxes: Seq[InputBox], override val dataInputs: Seq[InputBox])(implicit val ctx: BlockchainContext) extends Tx {
+  override def getOutBoxes: Seq[OutBox] = {
+    val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+    val wrappedSLTRepaymentBox: SLTRepaymentBox = new SLTRepaymentBox(inputBoxes.head)
+    val wrappedSLTServiceBox: SLTServiceBox = new SLTServiceBox(dataInputs.head)
+
+    val outSLTRepaymentBox: SLTRepaymentBox = SLTRepaymentDistribution.getOutRepaymentBox(wrappedSLTRepaymentBox)
+    val outFundsToAddressesBox: Seq[FundsToAddressBox] = SLTRepaymentDistribution.getFundsRepaidBox(wrappedSLTRepaymentBox, wrappedSLTServiceBox)
+
+    Seq(outSLTRepaymentBox.getOutBox(ctx, txB), outFundsToAddressesBox.head.getOutBox(ctx, txB), outFundsToAddressesBox(1).getOutBox(ctx, txB))
+  }
+}
 // </editor-fold>
 
 // <editor-fold desc="SLT REFUND TX">
+/**
+ * // ================== SLT LEND REFUND TX ================ //
+ * @param inputBoxes 1. SLTServiceBox 2. SLTLendBox
+ * OutBox: 1. SLTServiceBox 2. MiningFee
+ */
+case class SLTLendRefundTx(inputBoxes: Seq[InputBox])(
+  implicit val ctx: BlockchainContext
+) extends Tx {
+
+  def checkInputBoxes(inputBoxes: Seq[InputBox]): Boolean =
+    try {
+      val serviceBox: SLTServiceBox = new SLTServiceBox(inputBoxes.head)
+      val lendBox: SLTLendBox = new SLTLendBox(inputBoxes(1))
+      serviceBox.tokens.head.getId == SLTTokens.serviceNFTId && lendBox.tokens.head.getId == SLTTokens.lendTokenId
+    } catch {
+      case _: Throwable => false
+    }
+
+  override def getOutBoxes: Seq[OutBox] =
+    if (!checkInputBoxes(inputBoxes)) throw new IllegalArgumentException()
+    else {
+      val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+      val wrappedOutSLTServiceBox: SLTServiceBox = SLTServiceBox.absorbLendBox(new SLTServiceBox(inputBoxes.head))
+
+      Seq(wrappedOutSLTServiceBox.getOutBox(ctx, txB))
+    }
+}
 // </editor-fold>

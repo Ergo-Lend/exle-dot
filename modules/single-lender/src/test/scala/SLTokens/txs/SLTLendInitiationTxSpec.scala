@@ -6,7 +6,7 @@ import common.ErgoTestBase
 import commons.configs.ServiceConfig
 import org.ergoplatform.appkit.{InputBox, OutBox, UnsignedTransactionBuilder}
 
-class SLTInitiationTxSpec extends ErgoTestBase {
+class SLTLendInitiationTxSpec extends ErgoTestBase {
 
   "Initiation Tx" should {
     client.getClient.execute { implicit ctx =>
