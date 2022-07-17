@@ -95,6 +95,8 @@ package object SLTokens {
     loanName: String = loanName,
     loanDescription: String = loanDescription,
     borrowerAddress: Address = dummyAddress,
+    repaymentTokenAmount: Long = 1,
+    sigUSDAmount: Long = 0,
     lenderAddress: Address = dummyAddress
   ): SLTRepaymentBox =
     client.getClient.execute { ctx =>
@@ -118,6 +120,13 @@ package object SLTokens {
       )
       val loanTokenIdRegister = new CollByteRegister(SigUSD.id.getBytes)
 
+      val lendToken: ErgoToken =
+        new ErgoToken(SLTTokens.lendTokenId, repaymentTokenAmount)
+      val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, sigUSDAmount)
+      val tokens: Seq[ErgoToken] = {
+        if (sigUSDAmount != 0) Seq(lendToken, sigUSD) else Seq(lendToken)
+      }
+
       val wrappedInputRepaymentBox = SLTRepaymentBox(
         value = value,
         fundingInfoRegister = fundingInfoRegister,
@@ -125,7 +134,8 @@ package object SLTokens {
         borrowerRegister = borrowerRegister,
         loanTokenIdRegister = loanTokenIdRegister,
         singleLenderRegister = lenderRegister,
-        repaymentDetailsRegister = repaymentDetailsRegister
+        repaymentDetailsRegister = repaymentDetailsRegister,
+        tokens = tokens
       )
 
       wrappedInputRepaymentBox
@@ -154,7 +164,7 @@ package object SLTokens {
         description = loanDescription
       )
       val borrowerRegister = new BorrowerRegister(borrowerAddress.toString)
-      val loanTokenIdRegister = new StringRegister(Tokens.sigUSD)
+      val loanTokenIdRegister = new CollByteRegister(SigUSD.id.getBytes)
 
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
       val contractValueBoxBuilder: OutBoxBuilder = txB
@@ -162,7 +172,7 @@ package object SLTokens {
         .contract(
           sltProxyContractService.getSLTLendCreateProxyContract(
             borrowerPk = borrowerAddress.getErgoAddress.toString,
-            loanToken = SigUSD.id.toString,
+            loanToken = SigUSD.id.getBytes,
             ctx.getHeight + deadlineHeightLength,
             goal = goal,
             interestRate = interestRate,

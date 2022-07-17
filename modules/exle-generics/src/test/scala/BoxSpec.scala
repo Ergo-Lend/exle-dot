@@ -56,6 +56,8 @@ class BoxSpec extends ErgoTestBase {
         .convertToInputWith(dummyTxId, 0)
 
       val box: Box = Box(inputBox)
+      val tokens: Seq[ErgoToken] = box.tokens
+      val primaryToken: ErgoToken = tokens.head
 
       "registers populated correctly" in {
         assert(box.R4.toErgoValue == r4)

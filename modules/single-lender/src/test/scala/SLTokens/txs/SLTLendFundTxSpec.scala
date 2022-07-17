@@ -14,7 +14,7 @@ class SLTLendFundTxSpec extends ErgoTestBase {
   "Fund Lend Tx" should {
     client.getClient.execute { implicit ctx =>
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-      val inLendBox: SLTRepaymentBox = createWrappedSLTRepaymentBox()
+      val inLendBox: SLTLendBox = createWrappedSLTLendBox()
       val lendInputBox: InputBox =
         inLendBox.getOutBox(ctx, txB).convertToInputWith(dummyTxId, 0)
       val fundLendPaymentInputBox: InputBox = createFundLendPaymentBox(

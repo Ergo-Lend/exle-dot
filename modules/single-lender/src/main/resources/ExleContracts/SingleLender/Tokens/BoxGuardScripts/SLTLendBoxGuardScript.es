@@ -66,7 +66,7 @@
         val fundsToBorrowerBox: Box                 = OUTPUTS(2)
 
         val loanToken: (Coll[Byte], Long)           = SELF.tokens(1)
-        val repaymentDetails: Coll[Long]            = outputSLTRepaymentBox.R8[Coll[Long]]
+        val repaymentDetails: Coll[Long]            = outputSLTRepaymentBox.R9[Coll[Long]]
         val repaymentBoxFundedHeight: Long          = repaymentDetails.get(0)
         val repaymentBoxRepaymentAmount: Long       = repaymentDetails.get(1)
         val repaymentBoxInterestRate: Long          = repaymentDetails.get(2)
@@ -137,9 +137,11 @@
         if (deadlinePassed)
         {
             // #### Not Funded Constants ####
-            val loanToken: (Coll[Byte], Long)           = SELF.tokens(1)
-            val loanDidNotHitFundingGoal: Boolean       = loanToken._2 < _fundingGoal
-            val serviceBoxInteraction: Boolean      = INPUTS(0).tokens(0)._1 == _SLTServiceNFTId
+            val loanDidNotHitFundingGoal: Boolean       =
+                if (SELF.tokens.size > 1) {
+                    SELF.tokens(1)._2 < _fundingGoal
+                } else true
+            val serviceBoxInteraction: Boolean          = INPUTS(0).tokens(0)._1 == _SLTServiceNFTId
 
             sigmaProp(allOf(Coll(
                 serviceBoxInteraction,
@@ -204,7 +206,6 @@
                         outputSLTLendBox.R5[Coll[Coll[Byte]]]   == _projectDetailRegister,
                         outputSLTLendBox.R6[Coll[Byte]]         == _borrowerRegister,
                         outputSLTLendBox.R7[Coll[Byte]]         == _loanTokenId,
-                        outputSLTLendBox.R8[Coll[Byte]]         == INPUTS(1).R4[Coll[Byte]]
                     ))
                 }
 

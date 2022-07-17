@@ -18,11 +18,18 @@ case class FundsToAddressBox(
    * @return
    */
   override def getOutBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox = {
-    txB.outBoxBuilder()
-      .value(value)
-      .tokens(tokens: _*)
-      .contract(getContract(ctx))
-      .build()
+    if (tokens.isEmpty) {
+      txB.outBoxBuilder()
+        .value(value)
+        .contract(getContract(ctx))
+        .build()
+    } else {
+      txB.outBoxBuilder()
+        .value(value)
+        .tokens(tokens: _*)
+        .contract(getContract(ctx))
+        .build()
+    }
   }
 
   override def getContract(ctx: BlockchainContext): ErgoContract = {

@@ -8,8 +8,6 @@ import org.ergoplatform.appkit.{
   OutBox,
   UnsignedTransactionBuilder
 }
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import sigmastate.lang.exceptions.InterpreterException
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
@@ -39,7 +37,7 @@ class SLTProxyContractSpec extends ErgoTestBase {
         client.getClient.execute { ctx =>
           // TxB create for other address
           val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-          val outputHackerBox: OutBox = new FundsToAddressBox(
+          val outputHackerBox: OutBox = FundsToAddressBox(
             value = serviceFee - minFee,
             address = hackerAddress
           ).getOutputBox(ctx, txB)
@@ -60,7 +58,7 @@ class SLTProxyContractSpec extends ErgoTestBase {
       "Refund back to borrower" in {
         client.getClient.execute { ctx =>
           val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-          val outputBorrowerBox: OutBox = new FundsToAddressBox(
+          val outputBorrowerBox: OutBox = FundsToAddressBox(
             value = serviceFee - minFee,
             address = dummyAddress
           ).getOutputBox(ctx, txB)

@@ -13,6 +13,7 @@ import tokens.SigUSD
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 
+
 case class SLTLendBox(
   value: Long,
   fundingInfoRegister: FundingInfoRegister,

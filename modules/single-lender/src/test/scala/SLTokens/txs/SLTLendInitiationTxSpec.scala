@@ -23,18 +23,22 @@ class SLTLendInitiationTxSpec extends ErgoTestBase {
       val serviceInputBox: InputBox =
         inSLTServiceBox.getOutBox(ctx, txB).convertToInputWith(dummyTxId, 0)
 
+      // Create InputBoxes
       val inputBoxes: Seq[InputBox] =
         Seq(serviceInputBox, initiationPaymentInputBox)
 
+      // Create Tx and sign
       val sltLendInitiationTx: SLTLendInitiationTx =
         SLTLendInitiationTx(inputBoxes)
       sltLendInitiationTx.signTx
 
+      // Get out boxes of tx
       val outBoxes: Seq[OutBox] = sltLendInitiationTx.getOutBoxes
       val outBoxAsInputBox: Seq[InputBox] =
         sltLendInitiationTx.getOutBoxesAsInputBoxes(dummyTxId)
       val lendOutBox: OutBox = outBoxes(1)
 
+      // Wrap out boxes
       val outSLTServiceBox: SLTServiceBox =
         new SLTServiceBox(outBoxAsInputBox.head)
       val outSLTLendBox: SLTLendBox = new SLTLendBox(outBoxAsInputBox(1))
@@ -100,6 +104,6 @@ class SLTLendInitiationTxSpec extends ErgoTestBase {
     }
   }
 
-  // How to would other people hack the proxy contract?
+  // How would other people hack the proxy contract?
   // Send it to box other than LendBox
 }

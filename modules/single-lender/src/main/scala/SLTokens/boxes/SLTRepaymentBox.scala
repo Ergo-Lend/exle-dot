@@ -5,6 +5,7 @@ import SLTokens.contracts.SLTRepaymentBoxContract
 import boxes.{Box, BoxWrapper, FundsToAddressBox}
 import commons.boxes.registers.RegisterTypes.CollByteRegister
 import commons.configs.Tokens
+import commons.ergo.ErgCommons
 import commons.errors.IncompatibleTokenException
 import commons.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegisterV2, SingleLenderRegister}
 import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
@@ -156,9 +157,13 @@ object SLTRepaymentDistribution {
   def getOutRepaymentBox(sltRepaymentBox: SLTRepaymentBox): SLTRepaymentBox = {
     val loanTokenId: ErgoId = new ErgoId(sltRepaymentBox.loanTokenIdRegister.value)
     val sigUSDToken: ErgoToken = sltRepaymentBox.tokens.filter(_.getId.equals(loanTokenId)).head
+    val totalRepaid: Long = sltRepaymentBox.repaymentDetailsRegister.repaymentPaid + sigUSDToken.getValue
+    val valueLeft: Long = sltRepaymentBox.value - (ErgCommons.MinBoxFee * 3)
     val repaymentAddedSLTRepaymentBox: SLTRepaymentBox = sltRepaymentBox.copy(
+      value = valueLeft,
       tokens = sltRepaymentBox.tokens.filter(!_.getId.equals(loanTokenId)),
-      repaymentDetailsRegister = sltRepaymentBox.repaymentDetailsRegister.copy(repaymentPaid = sigUSDToken.getValue)
+      repaymentDetailsRegister = sltRepaymentBox.repaymentDetailsRegister.copy(
+        repaymentPaid = totalRepaid)
     )
 
     repaymentAddedSLTRepaymentBox

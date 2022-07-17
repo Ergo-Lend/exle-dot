@@ -1,5 +1,7 @@
 package SLTokens.txs
 
-class SLTRepaymentFullyFundedTxSpec {
+import common.ErgoTestBase
+
+class SLTRepaymentFullyFundedTxSpec extends ErgoTestBase {
 
 }

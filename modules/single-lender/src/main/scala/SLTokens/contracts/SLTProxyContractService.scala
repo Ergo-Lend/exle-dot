@@ -4,6 +4,7 @@ import SLTokens.SLTTokens
 import commons.contracts.{ExleContracts, ProxyContracts}
 import commons.node.Client
 import org.ergoplatform.appkit.{Address, ConstantsBuilder, ErgoContract, ErgoId}
+import tokens.SigUSD
 
 import javax.inject.Inject
 
@@ -12,7 +13,7 @@ class SLTProxyContractService @Inject() (client: Client)
 
   def getSLTLendCreateProxyContract(
     borrowerPk: String,
-    loanToken: String,
+    loanToken: Array[Byte],
     deadlineHeight: Long,
     goal: Long,
     interestRate: Long,
@@ -21,14 +22,13 @@ class SLTProxyContractService @Inject() (client: Client)
     try {
       val sltServiceNFTId = SLTTokens.serviceNFTId.getBytes
       val sltLendTokenId = SLTTokens.lendTokenId.getBytes
-      val loanTokenId = ErgoId.create(loanToken).getBytes
       val borrowerAddress =
         Address.create(borrowerPk).getErgoAddress.script.bytes
 
       val contractConstants = ConstantsBuilder
         .create()
         .item("_BorrowerPk", borrowerAddress)
-        .item("_LoanTokenId", loanTokenId)
+        .item("_LoanTokenId", loanToken)
         .item("_MinFee", minFee)
         .item("_RefundHeightThreshold", getRefundHeightThreshold)
         .item("_Goal", goal)
@@ -48,6 +48,23 @@ class SLTProxyContractService @Inject() (client: Client)
     } catch {
       case e: Exception => throw e
     }
+
+  // SigUSD Implementation of CreateLendBoxProxyContract
+  def getSigUSDCreateLendBoxProxyContract(
+                                           borrowerPk: String,
+                                           deadlineHeight: Long,
+                                           goal: Long,
+                                           interestRate: Long,
+                                           repaymentHeightLength: Long
+                                         ): ErgoContract = {
+    getSLTLendCreateProxyContract(
+      borrowerPk = borrowerPk,
+      loanToken = SigUSD.id.getBytes,
+      deadlineHeight = deadlineHeight,
+      goal = goal,
+      interestRate = interestRate,
+      repaymentHeightLength = repaymentHeightLength)
+  }
 
   def getSLTFundLendBoxProxyContract(
     lendBoxId: String,

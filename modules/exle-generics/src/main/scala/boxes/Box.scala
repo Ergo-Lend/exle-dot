@@ -62,7 +62,7 @@ abstract class BoxWrapper {
   def getOutBox(ctx: BlockchainContext, txB: UnsignedTransactionBuilder): OutBox
   def getContract(ctx: BlockchainContext): ErgoContract
 
-  def toInputBox(
+  def getAsInputBox(
     ctx: BlockchainContext,
     txB: UnsignedTransactionBuilder,
     txId: String,
