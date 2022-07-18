@@ -39,7 +39,9 @@
     val ServiceBoxVerification: Boolean             = INPUTS(0).tokens(0)._1 == _SLTServiceBoxNFTId
     val RepaymentNotFullyFunded: Boolean            =
         if (SELF.tokens.size > 1) {
-            SELF.tokens(0)._1 == _SLTRepaymentTokenId && SELF.tokens(1)._1 == _loanTokenId.get && SELF.tokens(1)._2 < _repaymentAmountGoal
+            SELF.tokens(0)._1 == _SLTRepaymentTokenId &&
+            SELF.tokens(1)._1 == _loanTokenId.get &&
+            SELF.tokens(1)._2 < _repaymentAmountGoal
         }
         else {
             SELF.tokens(0)._1 == _SLTRepaymentTokenId

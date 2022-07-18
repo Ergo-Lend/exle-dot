@@ -18,9 +18,9 @@ class SLTRepaymentFundTxSpec extends ErgoTestBase {
       val inRepaymentBox: SLTRepaymentBox = createWrappedSLTRepaymentBox()
       val repaymentInputBox: InputBox =
         inRepaymentBox.getOutBox(ctx, txB).convertToInputWith(dummyTxId, 0)
-      val fundLendPaymentInputBox: InputBox = createFundLendPaymentBox(
+      val fundLendPaymentInputBox: InputBox = createFundRepaymentPaymentBox(
         repaymentInputBox.getId.toString,
-        value = inRepaymentBox.fundingInfoRegister.fundingGoal
+        sigUSDValue = inRepaymentBox.fundingInfoRegister.fundingGoal
       )
 
       val inputBoxes: Seq[InputBox] =

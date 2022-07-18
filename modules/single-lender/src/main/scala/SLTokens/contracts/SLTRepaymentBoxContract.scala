@@ -18,7 +18,7 @@ object SLTRepaymentBoxContract {
 
   def build(minFee: Long, serviceBoxId: ErgoId, repaymentTokenId: ErgoId)(
     implicit ctx: BlockchainContext
-  ): SLTRepaymentBoxContract =
+  ): SLTRepaymentBoxContract = {
     SLTRepaymentBoxContract(
       Contract.build(
         ExleContracts.SLTRepaymentBoxGuardScript.contractScript,
@@ -30,6 +30,7 @@ object SLTRepaymentBoxContract {
       serviceBoxId,
       repaymentTokenId
     )
+  }
 
   def getContract(implicit ctx: BlockchainContext): SLTRepaymentBoxContract =
     this.build(

@@ -40,7 +40,7 @@ class SLTProxyContractSpec extends ErgoTestBase {
           val outputHackerBox: OutBox = FundsToAddressBox(
             value = serviceFee - minFee,
             address = hackerAddress
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(createSLTLendPaymentBox).asJava)
@@ -61,7 +61,7 @@ class SLTProxyContractSpec extends ErgoTestBase {
           val outputBorrowerBox: OutBox = FundsToAddressBox(
             value = serviceFee - minFee,
             address = dummyAddress
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(createSLTLendPaymentBox).asJava)

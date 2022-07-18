@@ -97,32 +97,9 @@ object SLTRepaymentBox {
 
   def fundBox(
     sltRepaymentBox: SLTRepaymentBox,
-    amount: Long
-  ): SLTRepaymentBox = {
-    val zeroRepaid: Boolean = sltRepaymentBox.tokens.length == 1
-    if (zeroRepaid) {
-      sltRepaymentBox.copy(tokens =
-        Seq(sltRepaymentBox.tokens.head, SigUSD(amount).toErgoToken)
-      )
-    } else {
-      def incrementSigUSDValue(token: ErgoToken, amount: Long): ErgoToken =
-        if (token.getId.toString.equals(Tokens.sigUSD)) {
-          new ErgoToken(token.getId, token.getValue + amount)
-        } else {
-          token
-        }
-      val fundedTokenList: Seq[ErgoToken] =
-        sltRepaymentBox.tokens.map(incrementSigUSDValue(_, amount))
-
-      sltRepaymentBox.copy(tokens = fundedTokenList)
-    }
-  }
-
-  def fundBox(
-    sltRepaymentBox: SLTRepaymentBox,
     paymentBox: InputBox
   ): SLTRepaymentBox = {
-    // @todo, check if there are token
+    // @todo kii, check if there are token
     val token: ErgoToken = paymentBox.getTokens.asScala.toSeq.head
     if (!token.getId.getBytes.sameElements(
           sltRepaymentBox.loanTokenIdRegister.value
@@ -137,7 +114,26 @@ object SLTRepaymentBox {
     }
 
     val tokenAmount: Long = token.getValue
-    fundBox(sltRepaymentBox, tokenAmount)
+    // If the box has not been repaid at all
+    val zeroRepaid: Boolean = sltRepaymentBox.tokens.length == 1
+    if (zeroRepaid) {
+      sltRepaymentBox.copy(
+        value = paymentBox.getValue,
+        tokens =
+          Seq(sltRepaymentBox.tokens.head, SigUSD(tokenAmount).toErgoToken)
+      )
+    } else {
+      def incrementSigUSDValue(token: ErgoToken, amount: Long): ErgoToken =
+        if (token.getId.toString.equals(Tokens.sigUSD)) {
+          new ErgoToken(token.getId, token.getValue + amount)
+        } else {
+          token
+        }
+      val fundedTokenList: Seq[ErgoToken] =
+        sltRepaymentBox.tokens.map(incrementSigUSDValue(_, tokenAmount))
+
+      sltRepaymentBox.copy(value = paymentBox.getValue, tokens = fundedTokenList)
+    }
   }
 
   def fromFundedLendBox(
@@ -194,14 +190,20 @@ object SLTRepaymentDistribution {
    * @return Seq[LendersShare, ProtocolOwnerShare]
    */
   def calculateRepayment(totalAmount: Long, interestRatePercent: Long, profitSharingPercent: Long, percentageDenominator: Long): Seq[Long] = {
-    val interestAmount = (totalAmount * interestRatePercent) / percentageDenominator
-    val protocolOwnerShare: Long = (interestAmount * profitSharingPercent) / percentageDenominator
+    val interestAmount =
+      (totalAmount * interestRatePercent) / percentageDenominator
+    val protocolOwnerShare: Long =
+      (interestAmount * profitSharingPercent) / percentageDenominator
     val lendersShare: Long = totalAmount - protocolOwnerShare
 
     Seq(lendersShare, protocolOwnerShare)
   }
 
   def calculateRepayment(totalAmount: Long, interestRatePercent: Long, profitSharingPercent: Long): Seq[Long] = {
-    calculateRepayment(totalAmount, interestRatePercent, profitSharingPercent, 1000L)
+    calculateRepayment(
+      totalAmount,
+      interestRatePercent,
+      profitSharingPercent,
+      1000L)
   }
 }

@@ -133,7 +133,7 @@ class SLEServiceBox(
     val ownerProfitSharingBox =
       new FundsToAddressBox(profitSharePercentage, ergoLendPubKey.address)
 
-    ownerProfitSharingBox.getOutputBox(ctx, txB)
+    ownerProfitSharingBox.getOutputBox(txB)
   }
 
   def negateLendToken(): SLEServiceBox =
@@ -230,12 +230,12 @@ class SLEServiceBox(
         repaymentBox.repaymentDetailsRegister.totalInterestAmount) / 1000
       val outputLendersPaymentBox = repaymentBox
         .repaidLendersPaymentBox(ergoLendInterest)
-        .getOutputBox(ctx, txB)
+        .getOutputBox(txB)
       outputBoxList =
         List(incrementedServiceBox, outputLendersPaymentBox, profitSharingBox)
     } else {
       val outputLendersPaymentBox =
-        repaymentBox.repaidLendersPaymentBox(0).getOutputBox(ctx, txB)
+        repaymentBox.repaidLendersPaymentBox(0).getOutputBox(txB)
       outputBoxList = List(incrementedServiceBox, outputLendersPaymentBox)
     }
 

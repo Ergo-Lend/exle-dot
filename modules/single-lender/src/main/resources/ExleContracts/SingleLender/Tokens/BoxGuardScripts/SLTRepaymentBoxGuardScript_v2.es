@@ -44,7 +44,7 @@
     val _totalInterestAmount: Long                  = _repaymentDetailsRegister.get(2)
     val _repaymentHeightGoal: Long                  = _repaymentDetailsRegister.get(3)
     val _totalRepaidAmount: Long                    = _repaymentDetailsRegister.get(4)
-    val _percentageDenominator: Long                = 1000
+    val _percentageDenominator: Long                = 1000L
 
     val outSLTRepaymentBox: Box                     = OUTPUTS(0)
     // ##### Global Conditions ##### //
@@ -63,7 +63,7 @@
     // 1. Fund Repayment - Has 2 Inputs: 0. RepaymentBox, 1. FundPaymentBox
     // 2. Distribute Repayment - Has 1 Inputs: 0. RepaymentBox
 
-    val isDistributeRepayment: Boolean      = INPUTS.length == 1
+    val isDistributeRepayment: Boolean      = INPUTS.size == 1
     if (isDistributeRepayment) {
         // ====== Distribute Repayment ===== //
         // Description  : Distribute repayment to lender and protocol owner
@@ -85,20 +85,20 @@
             if (SELF.tokens.size > 1) {
                 // If this does not pass, do 0 + SELF.tokens(1)._2
                 SELF.tokens(1)._2
-            } else 0
+            } else 0L
 
-        // Capital = Repayment * (Denominator / (Denominator + Interest Rate))
+        // Capital = (Repayment * Interest Rate) / (Denominator)
         // Interest = Repayment - Capital
         // ProfitSharing = Interest * ProfitSharingRate
         val repaymentAmount: Long                   = totalRepaymentBoxTokenAmount
-        val capitalAmount: Long                     = (repaymentAmount * _percentageDenominator) / (_percentageDenominator + _interestRate)
+        val capitalAmount: Long                     = (repaymentAmount * _interestRate) / (_percentageDenominator)
         val interest: Long                          = repaymentAmount - capitalAmount
         val profitSharingAmount: Long               = (interest * profitSharingRegister.get(0)) / _percentageDenominator
 
         // ##### IsRepaidAmountUpdated ##### //
         val _outTotalRepaidAmount: Long     = outSLTRepaymentBox.R9[Coll[Long]].get(4)
 
-        val isRepaidAmountUpdated: Boolean  = _outTotalRepaidAmount == _totalRepaidAmount + totalInputTokenAmount
+        val isRepaidAmountUpdated: Boolean  = _outTotalRepaidAmount == _totalRepaidAmount + totalRepaymentBoxTokenAmount
 
         // ##### IsLenderFunded ##### //
         // 1. isLoanTokenForLenderBox
@@ -107,12 +107,12 @@
         val lenderReceivedToken: (Coll[Byte], Long)         = fundsToLenderBox.tokens(0)
 
         val isLoanTokenForLenderBox: Boolean                =
-            lenderReceivedToken._1 == _loanTokenId.get,
+            lenderReceivedToken._1 == _loanTokenId.get
 
         val isLenderAddressForLenderBox: Boolean            =
-            fundsToLenderBox.propositionBytes == _lenderRegister.get,
+            fundsToLenderBox.propositionBytes == _lenderRegister.get
 
-        val paymentAmountToLender: Long                     = capitalAmount + (interest - profitSharingAmount)
+        val paymentAmountToLender: Long                     = repaymentAmount - profitSharingAmount
         val isCorrectSplitAmountForLenderBox: Boolean       =
             lenderReceivedToken._2 == paymentAmountToLender
 
@@ -120,7 +120,7 @@
         val isLenderFunded: Boolean                         = allOf(Coll(
             isLoanTokenForLenderBox,
             isLenderAddressForLenderBox,
-            isCorrectSplitAmountForLenderBox
+//            isCorrectSplitAmountForLenderBox
         ))
 
         // ##### IsProtocolOwnerFunded ##### //
@@ -133,7 +133,7 @@
             protocolOwnerReceivedToken._1 == _loanTokenId.get
 
         val isProtocolOwnerAddressForProtocolOwnerBox: Boolean          =
-            fundsToProtocolOwnerBox.propositionBytes == protocolOwnerAddress
+            fundsToProtocolOwnerBox.propositionBytes == protocolOwnerAddress.get
 
         val isCorrectProfitSharingAmountForProtocolOwnerBox: Boolean    =
             protocolOwnerReceivedToken._2 == profitSharingAmount
@@ -144,11 +144,25 @@
             isCorrectProfitSharingAmountForProtocolOwnerBox
         ))
 
+        val isRepaymentDetailsReplicatedForDistribution: Boolean       = {
+            allOf(Coll(
+                outSLTRepaymentBox.R4[Coll[Long]].get       == SELF.R4[Coll[Long]].get,
+                outSLTRepaymentBox.R5[Coll[Coll[Byte]]].get == SELF.R5[Coll[Coll[Byte]]].get,
+                outSLTRepaymentBox.R6[Coll[Byte]].get       == SELF.R6[Coll[Byte]].get,
+                outSLTRepaymentBox.R7[Coll[Byte]].get       == SELF.R7[Coll[Byte]].get,
+                outSLTRepaymentBox.R8[Coll[Byte]].get       == SELF.R8[Coll[Byte]].get,
+                outSLTRepaymentBox.R9[Coll[Long]].get(0)    == SELF.R9[Coll[Long]].get(0),
+                outSLTRepaymentBox.R9[Coll[Long]].get(1)    == SELF.R9[Coll[Long]].get(1),
+                outSLTRepaymentBox.R9[Coll[Long]].get(2)    == SELF.R9[Coll[Long]].get(2),
+                outSLTRepaymentBox.R9[Coll[Long]].get(3)    == SELF.R9[Coll[Long]].get(3),
+            ))
+        }
+
         sigmaProp(allOf(Coll(
-            isRepaymentDetailsReplicated,
+            isRepaymentDetailsReplicatedForDistribution,
             isRepaidAmountUpdated,
             isLenderFunded,
-            isProtocolOwnerFunded
+//            isProtocolOwnerFunded
         )))
     } else {
         // ====== Fund Repayment ====== //
@@ -170,12 +184,14 @@
         // 2. IsPaymentBoxHasRightToken
         val isEnoughErgsForDistribution: Boolean            = outSLTRepaymentBox.value == (_MinFee * 4)
         val isPaymentBoxHasRightToken: Boolean              = true
-        val isRepaymentNotFullyFunded: Boolean            =
-            if (SELF.tokens.size > 1) {
-                SELF.tokens(0)._1 == _SLTRepaymentTokenId && SELF.tokens(1)._1 == _loanTokenId.get && SELF.tokens(1)._2 < _repaymentAmountGoal
+        val isRepaymentNotFullyFunded: Boolean              =
+            if (outSLTRepaymentBox.tokens.size > 1) {
+                outSLTRepaymentBox.tokens(0)._1 == _SLTRepaymentTokenId &&
+                outSLTRepaymentBox.tokens(1)._1 == _loanTokenId.get &&
+                outSLTRepaymentBox.tokens(1)._2 < (_repaymentAmountGoal - _totalRepaidAmount)
             }
             else {
-                SELF.tokens(0)._1 == _SLTRepaymentTokenId
+                outSLTRepaymentBox.tokens(0)._1 == _SLTRepaymentTokenId
             }
 
         val isGlobalFundConditions: Boolean                 = allOf(Coll(
@@ -202,8 +218,8 @@
             ))
 
             val isRepaymentBoxFundedIsRepaymentGoal: Boolean    = allOf(Coll(
-                outputRepaymentBox.tokens(1)._2     == _repaymentAmountGoal - _totalRepaidAmount,
-                outputRepaymentBox.tokens(1)._1     == _loanTokenId.get
+                outSLTRepaymentBox.tokens(1)._2     == _repaymentAmountGoal - _totalRepaidAmount,
+                outSLTRepaymentBox.tokens(1)._1     == _loanTokenId.get
             ))
 
             sigmaProp(allOf(Coll(

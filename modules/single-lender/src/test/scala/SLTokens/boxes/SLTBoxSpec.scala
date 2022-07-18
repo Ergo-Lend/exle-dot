@@ -1,26 +1,13 @@
 package SLTokens.boxes
 
-import SLTokens.{
-  createGenesisServiceBox,
-  createWrappedSLTLendBox,
-  createWrappedSLTRepaymentBox,
-  SLTTokens
-}
+import SLTokens.{SLTTokens, createGenesisServiceBox, createWrappedSLTLendBox, createWrappedSLTRepaymentBox}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import SLErgs.{
-  client,
-  dummyAddress,
-  dummyTxId,
-  goal,
-  interestRate,
-  loanDescription,
-  loanName,
-  repaymentHeightLength
-}
+import SLErgs.{client, dummyAddress, dummyTxId, goal, interestRate, loanDescription, loanName, repaymentHeightLength}
+import boxes.FundsToAddressBox
 import commons.configs.ServiceConfig.serviceOwner
 import commons.configs.{ServiceConfig, Tokens}
-import org.ergoplatform.appkit.InputBox
+import org.ergoplatform.appkit.{ErgoToken, InputBox}
 import tokens.SigUSD
 
 class SLTBoxSpec extends AnyWordSpec with Matchers {
@@ -72,7 +59,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
         "SLTLendBox: Loan Description Incorrect"
       )
       assert(
-        wrappedLendBox.loanTokenIdRegister.value == Tokens.sigUSD,
+        wrappedLendBox.loanTokenIdRegister.value sameElements Tokens.sigUSD.getBytes,
         "SLTLendBox: Incorrect Loan Token"
       )
     }
@@ -145,7 +132,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
         "SLTRepaymentBox: Loan Description Incorrect"
       )
       assert(
-        wrappedRepaymentBox.loanTokenIdRegister.value == Tokens.sigUSD,
+        wrappedRepaymentBox.loanTokenIdRegister.value sameElements Tokens.sigUSD.getBytes,
         "SLTRepaymentBox: Incorrect Loan Token"
       )
       assert(
@@ -170,8 +157,12 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
     "fund RepaymentBox has correct loan token value" in {
       client.getClient.execute { ctx =>
         val fundedValue: Long = 1000
+        val paymentBox: InputBox = FundsToAddressBox(
+          address = dummyAddress,
+          tokens = Seq(SigUSD.apply(fundedValue).toErgoToken))
+          .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val fundedSLTRepaymentInputBox: InputBox = SLTRepaymentBox
-          .fundBox(wrappedRepaymentBox, fundedValue)
+          .fundBox(wrappedRepaymentBox, paymentBox)
           .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val fundedWrappedSLTRepaymentBox: SLTRepaymentBox =
           new SLTRepaymentBox(fundedSLTRepaymentInputBox)

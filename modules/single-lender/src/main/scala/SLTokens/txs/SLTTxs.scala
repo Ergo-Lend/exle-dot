@@ -130,19 +130,18 @@ case class SLTRepaymentFundTx(inputBoxes: Seq[InputBox])(
     }
 
   override def getOutBoxes: Seq[OutBox] =
-    if (!checkInputBoxes(inputBoxes)) throw new IllegalArgumentException()
-    else {
-      val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-      val paymentBox: InputBox = inputBoxes(1)
-      val wrappedSLTRepaymentBox: SLTRepaymentBox = new SLTRepaymentBox(
-        inputBoxes.head
-      )
+  {
+    val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+    val paymentBox: InputBox = inputBoxes(1)
+    val wrappedSLTRepaymentBox: SLTRepaymentBox = new SLTRepaymentBox(
+      inputBoxes.head
+    )
 
-      val wrappedOutSLTRepaymentBox: SLTRepaymentBox =
-        SLTRepaymentBox.fundBox(wrappedSLTRepaymentBox, paymentBox)
+    val wrappedOutSLTRepaymentBox: SLTRepaymentBox =
+      SLTRepaymentBox.fundBox(wrappedSLTRepaymentBox, paymentBox)
 
-      Seq(wrappedOutSLTRepaymentBox.getOutBox(ctx, txB))
-    }
+    Seq(wrappedOutSLTRepaymentBox.getOutBox(ctx, txB))
+  }
 }
 // </editor-fold>
 
@@ -178,23 +177,6 @@ case class SLTLendToRepaymentTx(inputBoxes: Seq[InputBox])(
 
       Seq(wrappedOutSLTServiceBox.getOutBox(ctx, txB), wrappedOutSLTRepaymentBox.getOutBox(ctx, txB), wrappedOutBorrowerFundedBox.getOutBox(ctx, txB))
     }
-}
-// </editor-fold>
-
-// <editor-fold desc="SLT REPAYMENT FULLY FUND SUCCESS TX">
-/**
- * // ================== SLT REPAYMENT FULLY FUNDED TX ================ //
- * @todo kii Remove Fully Funded. Tx. Just make it unspendable
- * @param inputBoxes 1. SLTServiceBox 2. SLTRepaymentBox
- * OutBox: 1. SLTServiceBox 2. MiningFee
- */
-case class SLTRepaymentFullyFundedTx(inputBoxes: Seq[InputBox])(implicit val ctx: BlockchainContext) extends Tx {
-  override def getOutBoxes: Seq[OutBox] = {
-    val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-    val wrappedSLTServiceBox: SLTServiceBox = SLTServiceBox.absorbRepaymentBox(new SLTServiceBox(inputBoxes.head))
-
-    Seq(wrappedSLTServiceBox.getOutBox(ctx, txB))
-  }
 }
 // </editor-fold>
 

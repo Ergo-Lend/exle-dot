@@ -121,7 +121,7 @@ package object SLTokens {
       val loanTokenIdRegister = new CollByteRegister(SigUSD.id.getBytes)
 
       val lendToken: ErgoToken =
-        new ErgoToken(SLTTokens.lendTokenId, repaymentTokenAmount)
+        new ErgoToken(SLTTokens.repaymentTokenId, repaymentTokenAmount)
       val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, sigUSDAmount)
       val tokens: Seq[ErgoToken] = {
         if (sigUSDAmount != 0) Seq(lendToken, sigUSD) else Seq(lendToken)
@@ -221,11 +221,12 @@ package object SLTokens {
 
   def createFundRepaymentPaymentBox(
     repaymentBoxId: String,
-    value: Long = ServiceConfig.serviceFee + (ErgCommons.MinMinerFee * 2),
+    sigUSDValue: Long,
+    value: Long = ErgCommons.MinMinerFee * 4,
     funderAddress: Address = dummyAddress
   ): InputBox =
     client.getClient.execute { ctx =>
-      val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, value)
+      val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, sigUSDValue)
 
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
       val contractValueBoxBuilder: OutBoxBuilder = txB
@@ -236,7 +237,7 @@ package object SLTokens {
             funderAddress = funderAddress.toString
           )
         )
-        .value(Parameters.MinFee)
+        .value(value)
         .tokens(sigUSD)
 
       contractValueBoxBuilder.build().convertToInputWith(dummyTxId, 0)

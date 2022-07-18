@@ -72,7 +72,7 @@ class SingleLenderLendInitiationTx(
       new FundsToAddressBox(
         ServiceConfig.serviceFee,
         ServiceConfig.serviceOwner.toString
-      ).getOutputBox(ctx, txB)
+      ).getOutputBox(txB)
 
     val inputBoxes = Seq(serviceBox) ++ lendInitiationProxyContractPayment
 
@@ -206,7 +206,7 @@ class SLELendBoxFundedTx(val serviceBox: InputBox, var lendBox: InputBox)
     val outputFundedBorrowerBox = new FundsToAddressBox(
       value = fundedValue,
       inputLendBox.getBorrowersAddress
-    ).getOutputBox(ctx, txB)
+    ).getOutputBox(txB)
 
     val inputBoxes = List(serviceBox, lendBox).asJava
 
