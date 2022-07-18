@@ -184,6 +184,7 @@ case class SLTLendToRepaymentTx(inputBoxes: Seq[InputBox])(
 // <editor-fold desc="SLT REPAYMENT FULLY FUND SUCCESS TX">
 /**
  * // ================== SLT REPAYMENT FULLY FUNDED TX ================ //
+ * @todo kii Remove Fully Funded. Tx. Just make it unspendable
  * @param inputBoxes 1. SLTServiceBox 2. SLTRepaymentBox
  * OutBox: 1. SLTServiceBox 2. MiningFee
  */
@@ -212,7 +213,7 @@ case class SLTRepaymentFundDistributionTx(inputBoxes: Seq[InputBox], override va
     val wrappedSLTServiceBox: SLTServiceBox = new SLTServiceBox(dataInputs.head)
 
     val outSLTRepaymentBox: SLTRepaymentBox = SLTRepaymentDistribution.getOutRepaymentBox(wrappedSLTRepaymentBox)
-    // 0. FundsToLender 1. FundsToExle
+    // FundsToAddressBoxes: 0. FundsToLender 1. FundsToExle
     val outFundsToAddressesBox: Seq[FundsToAddressBox] = SLTRepaymentDistribution.getFundsRepaidBox(wrappedSLTRepaymentBox, wrappedSLTServiceBox)
 
     Seq(outSLTRepaymentBox.getOutBox(ctx, txB), outFundsToAddressesBox.head.getOutBox(ctx, txB), outFundsToAddressesBox(1).getOutBox(ctx, txB))
