@@ -1,7 +1,14 @@
 package SLTokens.txs
 
 import SLTokens.boxes.{SLTLendBox, SLTRepaymentBox}
-import SLTokens.{SLTTokens, createFundLendPaymentBox, createFundRepaymentPaymentBox, createGenesisServiceBox, createWrappedSLTLendBox, createWrappedSLTRepaymentBox}
+import SLTokens.{
+  createFundLendPaymentBox,
+  createFundRepaymentPaymentBox,
+  createGenesisServiceBox,
+  createWrappedSLTLendBox,
+  createWrappedSLTRepaymentBox,
+  SLTTokens
+}
 import common.ErgoTestBase
 import org.ergoplatform.appkit.{InputBox, UnsignedTransactionBuilder}
 
@@ -9,7 +16,8 @@ class SLTRepaymentFundTxSpec extends ErgoTestBase {
   "Fund Repayment Tx" should {
     client.getClient.execute { implicit ctx =>
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-      val serviceBox: InputBox = createGenesisServiceBox().getAsInputBox(ctx, txB, dummyTxId, 0)
+      val serviceBox: InputBox =
+        createGenesisServiceBox().getAsInputBox(ctx, txB, dummyTxId, 0)
       val inRepaymentBox: SLTRepaymentBox = createWrappedSLTRepaymentBox()
       val repaymentInputBox: InputBox =
         inRepaymentBox.getOutBox(ctx, txB).convertToInputWith(dummyTxId, 0)

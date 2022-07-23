@@ -122,7 +122,10 @@ case class SLTLendFundTx(inputBoxes: Seq[InputBox])(
   * @param inputBoxes 1. SLTRepaymentBox 2. Fund Repayment Payment Box
   *                   (Repayment box does not need any registers filled)
   */
-case class SLTRepaymentFundTx(inputBoxes: Seq[InputBox], override val dataInputs: Seq[InputBox])(
+case class SLTRepaymentFundTx(
+  inputBoxes: Seq[InputBox],
+  override val dataInputs: Seq[InputBox]
+)(
   implicit val ctx: BlockchainContext
 ) extends Tx {
 

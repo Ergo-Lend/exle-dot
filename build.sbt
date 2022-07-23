@@ -20,7 +20,6 @@ lazy val commonSettings = List(
   scalaVersion := "2.12.15",
   organization := "io.exle",
   version := "0.1",
-  coverageEnabled := false,
   resolvers ++= Seq(
     Resolver.sonatypeRepo("public"),
     Resolver.sonatypeRepo("snapshots"),
