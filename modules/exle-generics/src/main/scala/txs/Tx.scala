@@ -2,15 +2,9 @@ package txs
 
 import commons.configs.ServiceConfig
 import commons.ergo.ErgCommons
-import commons.errors.ProveException
-import org.ergoplatform.appkit.{
-  BlockchainContext,
-  InputBox,
-  OutBox,
-  SignedTransaction,
-  UnsignedTransaction,
-  UnsignedTransactionBuilder
-}
+import commons.errors.{ProveException, ReducedException}
+import org.ergoplatform.P2PKAddress
+import org.ergoplatform.appkit.{BlockchainContext, InputBox, OutBox, ReducedTransaction, SignedTransaction, UnsignedTransaction, UnsignedTransactionBuilder}
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
@@ -18,6 +12,7 @@ trait Tx {
   var signedTx: Option[SignedTransaction] = None
   val inputBoxes: Seq[InputBox]
   val dataInputs: Seq[InputBox] = Seq.empty
+  val changeAddress: P2PKAddress = ServiceConfig.serviceOwner.asP2PK()
   implicit val ctx: BlockchainContext
 
   def getOutBoxes: Seq[OutBox]
@@ -38,7 +33,7 @@ trait Tx {
           .boxesToSpend(inputBoxes.asJava)
           .outputs(outBoxes: _*)
           .fee(ErgCommons.MinMinerFee)
-          .sendChangeTo(ServiceConfig.serviceOwner.getErgoAddress)
+          .sendChangeTo(changeAddress)
           .build()
       case _ =>
         txB
@@ -46,7 +41,7 @@ trait Tx {
           .outputs(outBoxes: _*)
           .withDataInputs(dataInputs.asJava)
           .fee(ErgCommons.MinMinerFee)
-          .sendChangeTo(ServiceConfig.serviceOwner.getErgoAddress)
+          .sendChangeTo(changeAddress)
           .build()
     }
     tx
@@ -61,6 +56,14 @@ trait Tx {
       case e: Throwable => {
         throw ProveException(e.getMessage)
       }
+    }
+
+  def reduceTx: ReducedTransaction =
+    try {
+      ctx.newProverBuilder().build().reduce(buildTx, 0)
+    } catch {
+      case e: Throwable =>
+        throw ReducedException(e.getMessage)
     }
 }
 

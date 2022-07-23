@@ -1,10 +1,6 @@
 import common.ErgoTestBase
 import contracts.Contract
-import org.ergoplatform.appkit.{
-  BlockchainContext,
-  ConstantsBuilder,
-  ErgoContract
-}
+import org.ergoplatform.appkit.{BlockchainContext, Constants, ConstantsBuilder, ErgoContract}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -20,7 +16,7 @@ class ContractSpec extends ErgoTestBase {
       |}
       |""".stripMargin
 
-  val constantsBuilder =
+  val constantsBuilder: Constants =
     new ConstantsBuilder()
       .item(dummyConstant1._1, dummyConstant1._2)
       .item(dummyConstant2._1, dummyConstant2._2)

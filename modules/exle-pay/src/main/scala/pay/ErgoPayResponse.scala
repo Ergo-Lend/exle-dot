@@ -72,7 +72,7 @@ object ErgoPayResponse {
         .toBytes
 
     val ergoPayResponseMessage =
-      if (!message.isEmpty) message
+      if (message.nonEmpty) message
       else s"Send ${nanoErgsToErgs(ergAmount)} Ergs to $recipient"
 
     ErgoPayResponse(
