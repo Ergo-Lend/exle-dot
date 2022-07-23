@@ -19,6 +19,9 @@ object versions {
   val SlickVersion = "3.3.0"
   val ScalaJHttpVersion = "2.4.2"
 
+  // Cats
+  val CatsVersion = "2.0.0"
+
   // DB
   val PostgresqlVersion = "42.2.24"
   val DoobieVersion = "1.0.0-RC1"

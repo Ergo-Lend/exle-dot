@@ -24,7 +24,7 @@ class RefundProxyContractTx(
 
     val refundToLenderBox =
       new FundsToAddressBox(paymentBoxValue - Parameters.MinFee, funderAddress)
-        .getOutputBox(ctx, txB)
+        .getOutputBox(txB)
 
     val inputBox = paymentBoxes.asJava
 

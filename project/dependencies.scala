@@ -1,4 +1,5 @@
 import play.sbt.PlayImport.{guice, jdbc}
+import sbt.Keys.libraryDependencies
 import sbt._
 import versions._
 
@@ -6,7 +7,8 @@ object dependencies {
 
   val Ergo: List[ModuleID] = List(
     "org.scorexfoundation" %% "scrypto"     % ScryptoVersion,
-    "org.ergoplatform"     %% "ergo-appkit" % ErgoAppKitVersion
+    "org.ergoplatform"     %% "ergo-appkit" % ErgoAppKitVersion,
+    "org.scorexfoundation" %% "sigma-state" % SigmaStateVersion
   )
 
   val Circe: List[ModuleID] = List(
@@ -18,6 +20,10 @@ object dependencies {
     "org.postgresql"     % "postgresql"      % PostgresqlVersion,
     "com.typesafe.slick" %% "slick"          % SlickVersion,
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion
+  )
+
+  val Cats: List[ModuleID] = List(
+    "org.typelevel" %% "cats-core" % CatsVersion
   )
 
   val DoobieDB: List[ModuleID] = List(

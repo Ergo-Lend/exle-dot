@@ -1,0 +1,183 @@
+# ================ Box Info ================= #
+# Name      : SLT [Single Lender Ergs] Repayment Box
+# Type      : Box
+# Author    : Kii
+# Version   : v 1.0
+
+box:
+  slt_repayment_box:
+    hard_coded_constants:
+      _MinFee:
+        type: Long
+        value: minFee
+      _SLTServiceBoxNFTId:
+        type: Coll[Byte]
+      _SLTRepaymentTokenId:
+        type: Coll[Byte]
+    tokens:
+      0:
+        name: slt_repayment_token
+        amount: 1
+      1:
+        # if amount is not stated, it means its variable
+        name: loan_token
+        amount: 0 -> repaymentGoal
+    additional_registers:
+      r4:
+        name: "funding info register"
+        type: Coll[Long]
+        values:
+          - fundingGoal
+          - deadlineHeight
+          - interestRatePercent
+          - repaymentHeightLength
+          - creationHeight
+      r5:
+        name: "lending project details register"
+        type: Coll[Coll[Byte]]
+        values:
+          - projectName
+          - description
+      r6:
+        name: "borrower register"
+        type: Coll[Byte]
+        value: borrowerPk
+      r7:
+        name: "loan token type register"
+        type: Coll[Byte]
+        value: loanTokenId
+      r8:
+        name: "single lender register"
+        type: Coll[Byte]
+        value: lenderPk
+      r9:
+        name: "repayment details register"
+        type: Coll[Long]
+        values:
+          - fundedHeight
+          - repaymentAmountGoal
+          - totalInterestAmount
+          - repaymentHeightGoal
+          - repaymentRepaid
+    action_conditions:
+      contract_constants:
+        values:
+          _fundingInfoRegister: self.R4[Coll[Long]]
+          _projectDetailsRegister: self.R5[Coll[Coll[Byte]]
+          _borrowerRegister: self.R6[Coll[Byte]]
+          _loanTokenId: self.R7[Coll[Byte]]
+          _lenderRegister: self.R8[Coll[Byte]]
+          _repaymentDetailsRegister: self.R9[Coll[Long]]
+          _repaymentAmountGoal: repayment_details_register.get(1)
+          _totalInterestAmount: repayment_details_register.get(2)
+          _repaymentHeightGoal: repayment_details_register.get(3)
+        conditions:
+          repayment_tokens_correct: self.tokens(1)._1 == _loanTokenId.get
+          service_box_verification:
+            input_slt_service_box.tokens(0)._1 == _SLTServiceBoxNFTId
+          repayment_not_fully_funded:
+            self.tokens(1)._2 < _repaymentAmountGoal
+      not_funded:
+        trigger_conditions:
+          not_service_box:
+            !action_conditions.contract_constants.conditions.service_box_verification
+          repayment_not_fully_funded:
+            action_conditions.contract_constants.conditions.repayment_not_fully_funded
+        contract_constants:
+          values:
+            total_input_token_amount:
+              payment_box.tokens(0)._2 + self.tokens(1)._2
+          conditions:
+            payment_box_is_right_token:
+              payment_box.tokens(0)._1 == _loanTokenId.get
+            repayment_box_detail_check:
+              - output_repayment_box.R4[Coll[Long]] == input_repayment_box.R4[Coll[Long]]
+              - output_repayment_box.R5[Coll[Coll[Byte]]] == input_repayment_box.R5[Coll[Coll[Byte]]]
+              - output_repayment_box.R6[Coll[Byte]] == input_repayment_box.R6[Coll[Byte]]
+              - output_repayment_box.R7[Coll[Byte]] == input_repayment_box.R7[Coll[Byte]]
+              - output_repayment_box.R8[Coll[Byte]] == input_repayment_box.R8[Coll[Byte]]
+              - output_repayment_box.R9[Coll[Long]] == input_repayment_box.R9[Coll[Long]]
+        overfunded:
+          boxes:
+            input_boxes:
+              0: self | input_repayment_box
+              1: payment_box
+            output_boxes:
+              0: output_repayment_box
+              1: return_to_funder_box
+              2: mining_fee
+          trigger_conditions:
+            total_funded_value_more_than_repayment_goal:
+              total_input_token_amount > _repaymentAmountGoal
+          conditions_check:
+            repayment_box_funded_is_repayment_goal:
+              - output_repayment_box.tokens(1)._2 == _repaymentAmountGoal
+              - output_repayment_box.tokens(1)._1 == _loanTokenId.get
+            return_to_funder_box_correct_amount:
+              - return_to_funder_box.tokens(0)._2 == total_input_token_amount - repayment_amount_goal
+              - return_to_funder_box.tokens(0)._1 == _loanTokenId.get
+            repayment_not_fully_funded:
+              not_funded.contract_constants.conditions.repayment_not_fully_funded
+            repayment_box_detail_check:
+              action_conditions.contract_constants.conditions.repayment_box_detail_check
+        funding:
+          boxes:
+            input_boxes:
+              0: self | input_repayment_box
+              1: payment_box
+            output_boxes:
+              0: output_repayment_box
+              1: mining_fee
+          conditions_check:
+            value_transferred:
+              - output_repayment_box.tokens(1)._2 == total_input_token_amount
+              - output_repayment_box.tokens(1)._1 == _loanTokenId
+            payment_box_is_right_token:
+              payment_box.tokens(0)._1 == _loanTokenId.get
+            repayment_not_fully_funded:
+              not_funded.contract_constants.conditions.repayment_not_fully_funded
+            repayment_box_detail_check:
+              action_conditions.contract_constants.conditions.repayment_box_detail_check
+      funded:
+        fund_success:
+          contract_constants:
+            values:
+              profitSharingValue:
+                _totalInterestAmount * (slt_service_box.R8[Coll[Long]].get(0) / 1000)
+          boxes:
+            input_boxes:
+              0: input_slt_service_box
+              1: self | input_repayment_box
+            output_boxes:
+              0: output_slt_service_box
+              1: profit_sharing_box
+              2: repayment_to_lender_box
+              3: mining_fee
+          trigger_conditions:
+            repayment_funding_goal_reached:
+              self.tokens(1)._2 == _repaymentAmountGoal
+          conditions_check:
+            repayment_to_lender_box_funded:
+              - repayment_to_lender_box.tokens(0)._1 == _loanTokenId
+              - repayment_to_lender_box.tokens(0)._2 == _repaymentAmountGoal - fund_success.contract_constants.values.profitSharingValue
+              - repayment_to_lender_box.propositionBytes == _lenderRegister.get
+            service_box_verification:
+              input_slt_service_box.tokens(0)._1 == _SLTServiceBoxNFTId
+        defaulted:
+          description: "all funds go back to lender,
+            but we keep the repayment box and record
+            what was repaid (remove the tokens though"
+          boxes:
+            input_boxes:
+              0: input_slt_service_box
+              1: self | input_repayment_box
+              2: lender_trigger_box
+            output_boxes:
+              0: output_slt_service_box
+              1: output_repayment_box
+              2: repayment_to_lender_box
+              3: mining_fee
+          trigger_conditions:
+            repayment_height_goal_passed:
+              CONTEXT.HEIGHT > _repaymentHeightGoal
+          condition_check:

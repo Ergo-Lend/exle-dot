@@ -192,7 +192,7 @@ class EdgeCasesSpec extends AnyWordSpec with Matchers {
         val outputOwnerFeeBox = FundsToAddressBox(
           value = service.serviceFee,
           address = service.serviceOwner
-        ).getOutputBox(ctx, txB)
+        ).getOutputBox(txB)
 
         val tx = txB
           .boxesToSpend(Seq(inputServiceBox, inputProxyContract).asJava)

@@ -8,13 +8,11 @@ import org.ergoplatform.appkit.{
   OutBox,
   UnsignedTransactionBuilder
 }
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import sigmastate.lang.exceptions.InterpreterException
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
-class SLTProxyContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
+class SLTProxyContractSpec extends ErgoTestBase {
   val SLTProxyContractService = new SLTProxyContractService(client)
 
   "SLT CreateLendBox ProxyContract" when {
@@ -39,10 +37,10 @@ class SLTProxyContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
         client.getClient.execute { ctx =>
           // TxB create for other address
           val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-          val outputHackerBox: OutBox = new FundsToAddressBox(
+          val outputHackerBox: OutBox = FundsToAddressBox(
             value = serviceFee - minFee,
             address = hackerAddress
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(createSLTLendPaymentBox).asJava)
@@ -60,10 +58,10 @@ class SLTProxyContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
       "Refund back to borrower" in {
         client.getClient.execute { ctx =>
           val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-          val outputBorrowerBox: OutBox = new FundsToAddressBox(
+          val outputBorrowerBox: OutBox = FundsToAddressBox(
             value = serviceFee - minFee,
             address = dummyAddress
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(createSLTLendPaymentBox).asJava)

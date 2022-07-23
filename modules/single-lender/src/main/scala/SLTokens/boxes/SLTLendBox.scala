@@ -9,8 +9,10 @@ import commons.registers.{
 }
 import SLTokens.SLTTokens
 import SLTokens.contracts.SLTLendBoxContract
-import boxes.{Box, BoxWrapper}
-import commons.boxes.registers.RegisterTypes.StringRegister
+import boxes.{Box, BoxWrapper, FundsToAddressBox}
+import commons.boxes.registers.RegisterTypes.CollByteRegister
+import commons.configs.ServiceConfig
+import commons.ergo.ErgCommons
 import org.ergoplatform.appkit.{
   Address,
   BlockchainContext,
@@ -32,7 +34,7 @@ case class SLTLendBox(
   fundingInfoRegister: FundingInfoRegister,
   lendingProjectDetailsRegister: LendingProjectDetailsRegister,
   borrowerRegister: BorrowerRegister,
-  loanTokenIdRegister: StringRegister,
+  loanTokenIdRegister: CollByteRegister,
   singleLenderRegister: SingleLenderRegister,
   override val id: ErgoId = ErgoId.create(""),
   override val tokens: Seq[ErgoToken] = Seq(
@@ -41,7 +43,6 @@ case class SLTLendBox(
   override val box: Option[Box] = Option(null)
 ) extends BoxWrapper {
   def this(inputBox: InputBox) = this(
-    value = inputBox.getValue,
     fundingInfoRegister = new FundingInfoRegister(
       inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Long]].toArray
     ),
@@ -55,7 +56,7 @@ case class SLTLendBox(
     borrowerRegister = new BorrowerRegister(
       inputBox.getRegisters.get(2).getValue.asInstanceOf[Coll[Byte]].toArray
     ),
-    loanTokenIdRegister = new StringRegister(
+    loanTokenIdRegister = new CollByteRegister(
       inputBox.getRegisters.get(3).getValue.asInstanceOf[Coll[Byte]].toArray
     ),
     singleLenderRegister =
@@ -65,6 +66,7 @@ case class SLTLendBox(
         )
       else
         SingleLenderRegister.emptyRegister,
+    value = inputBox.getValue,
     id = inputBox.getId,
     tokens = inputBox.getTokens.asScala.toSeq,
     box = Option(Box(inputBox))
@@ -97,6 +99,7 @@ case class SLTLendBox(
           lendingProjectDetailsRegister.toRegister,
           borrowerRegister.toRegister,
           loanTokenIdRegister.toRegister,
+          // Add single lender register
           singleLenderRegister.toRegister
         )
       }
@@ -108,14 +111,38 @@ case class SLTLendBox(
 object SLTLendBox {
 
   def getFunded(sltLendBox: SLTLendBox, lenderAddress: Address): SLTLendBox = {
+    val token: ErgoToken = SigUSD(sltLendBox.fundingInfoRegister.fundingGoal).toErgoToken
     val fundedSLTLendBox: SLTLendBox =
       sltLendBox.copy(
         singleLenderRegister = new SingleLenderRegister(lenderAddress),
-        tokens = sltLendBox.tokens ++ Seq(
-          SigUSD(sltLendBox.fundingInfoRegister.fundingGoal).toErgoToken
-        )
+        tokens = sltLendBox.tokens ++ Seq(token)
       )
 
     fundedSLTLendBox
+  }
+
+  def getFunded(sltLendBox: SLTLendBox, paymentBox: InputBox): SLTLendBox = {
+    val lenderAddressRegister: SingleLenderRegister = new SingleLenderRegister(
+      paymentBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Byte]].toArray
+    )
+    val lenderAddress: Address =
+      Address.create(lenderAddressRegister.lendersAddress)
+
+    getFunded(sltLendBox, lenderAddress)
+  }
+
+  def fromCreatePaymentBox(paymentInputBox: InputBox): SLTLendBox =
+    new SLTLendBox(paymentInputBox).copy(
+      value =
+        paymentInputBox.getValue - ServiceConfig.serviceFee - ErgCommons.MinMinerFee,
+      tokens = Seq(new ErgoToken(SLTTokens.lendTokenId, 1))
+    )
+
+  def getBorrowerFundedBox(sltLendBox: SLTLendBox): FundsToAddressBox = {
+    val tokenId: ErgoId = new ErgoId(sltLendBox.loanTokenIdRegister.value)
+    FundsToAddressBox(
+      Address.create(sltLendBox.borrowerRegister.address),
+      tokens = sltLendBox.tokens.filter(_.getId.equals(tokenId))
+    )
   }
 }

@@ -17,7 +17,7 @@ import special.collection.Coll
 
 import java.math.BigInteger
 
-class BoxSpec extends AnyWordSpec with Matchers with ErgoTestBase {
+class BoxSpec extends ErgoTestBase {
 
   val dummyContract: String =
     """
@@ -56,6 +56,8 @@ class BoxSpec extends AnyWordSpec with Matchers with ErgoTestBase {
         .convertToInputWith(dummyTxId, 0)
 
       val box: Box = Box(inputBox)
+      val tokens: Seq[ErgoToken] = box.tokens
+      val primaryToken: ErgoToken = tokens.head
 
       "registers populated correctly" in {
         assert(box.R4.toErgoValue == r4)

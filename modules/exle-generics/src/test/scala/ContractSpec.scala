@@ -8,7 +8,7 @@ import org.ergoplatform.appkit.{
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-class ContractSpec extends AnyWordSpec with Matchers with ErgoTestBase {
+class ContractSpec extends ErgoTestBase {
   val dummyConstant1: (String, Long) = ("_DummyConstants1", 123)
   val dummyConstant2: (String, String) = ("_DummyConstants2", "abc")
   val dummyConstant2Subst: (String, String) = ("_DummyConstants2", "321")

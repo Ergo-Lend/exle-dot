@@ -27,7 +27,7 @@
 
     // the amount of boxes as outputs, else return
     if (OUTPUTS.size != 2) {
-        val isLenderPkDefined = OUTPUTS(1).R7[GroupElement].isDefined
+        val isLenderPkDefined: Boolean = OUTPUTS(1).R8[GroupElement].isDefined
 
         sigmaProp(
             allOf(Coll(

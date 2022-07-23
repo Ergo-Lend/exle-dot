@@ -36,9 +36,16 @@
     val _repaymentHeightGoal: Long                  = _repaymentDetailsRegister.get(3)
 
     // ##### Conditions ##### //
-    val RepaymentTokensCorrect: Boolean             = SELF.tokens(1)._1 == _loanTokenId.get
     val ServiceBoxVerification: Boolean             = INPUTS(0).tokens(0)._1 == _SLTServiceBoxNFTId
-    val RepaymentNotFullyFunded: Boolean            = SELF.tokens(1)._2 < _repaymentAmountGoal
+    val RepaymentNotFullyFunded: Boolean            =
+        if (SELF.tokens.size > 1) {
+            SELF.tokens(0)._1 == _SLTRepaymentTokenId &&
+            SELF.tokens(1)._1 == _loanTokenId.get &&
+            SELF.tokens(1)._2 < _repaymentAmountGoal
+        }
+        else {
+            SELF.tokens(0)._1 == _SLTRepaymentTokenId
+        }
 
     // ===== Not Funded Actions ===== //
     // Description  : Repayment box is not funded yet, therefore
@@ -51,7 +58,10 @@
         val outputRepaymentBox: Box         = OUTPUTS(0)
 
         // ##### Values ##### //
-        val totalInputTokenAmount: Long     = paymentBox.tokens(0)._2 + SELF.tokens(1)._2
+        val totalInputTokenAmount: Long     =
+            if (SELF.tokens.size > 1) {
+                paymentBox.tokens(0)._2 + SELF.tokens(1)._2
+            } else paymentBox.tokens(0)._2
 
         // ##### Conditions ##### //
         val paymentBoxIsRightToken: Boolean     = paymentBox.tokens(0)._1 == _loanTokenId.get
@@ -73,8 +83,8 @@
         // Input Boxes  : 0 -> SELF, 1 -> PaymentBox
         // Output Boxes : 0 -> OutputRepaymentBox, 1 -> ReturnToFunderBox, 2 -> MiningFee
         val totalFundedValueMoreThanRepaymentGoal: Boolean  = totalInputTokenAmount > _repaymentAmountGoal
-        val isOverfunded: Boolean                           = totalFundedValueMoreThanRepaymentGoal
-        if (isOverfunded)
+        val isOverFunded: Boolean                           = totalFundedValueMoreThanRepaymentGoal
+        if (isOverFunded)
         {
             val returnToFunderBox: Box      = OUTPUTS(1)
 

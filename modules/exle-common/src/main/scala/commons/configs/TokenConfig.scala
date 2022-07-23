@@ -4,7 +4,7 @@ import commons.configs.Configs.readKey
 import org.ergoplatform.appkit.{ErgoId, ErgoToken}
 
 trait Token {
-  val id: ErgoId
+  val id: String
   val value: Long
 
   def toErgoToken: ErgoToken =

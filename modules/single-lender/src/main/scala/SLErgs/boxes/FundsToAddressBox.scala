@@ -1,11 +1,14 @@
 package SLErgs.boxes
 
+import com.google.common.graph.Network
 import commons.boxes.Box
 import commons.ergo.ContractUtils
 import org.ergoplatform.ErgoAddress
 import org.ergoplatform.appkit.{
   Address,
   BlockchainContext,
+  InputBox,
+  NetworkType,
   OutBox,
   UnsignedTransactionBuilder
 }
@@ -21,8 +24,12 @@ case class FundsToAddressBox(val value: Long, val address: Address) {
     address = Address.create(address)
   )
 
+  def this(inputBox: InputBox) = this(
+    value = inputBox.getValue,
+    address = Address.fromErgoTree(inputBox.getErgoTree, NetworkType.MAINNET)
+  )
+
   def getOutputBox(
-    ctx: BlockchainContext,
     txB: UnsignedTransactionBuilder
   ): OutBox = {
     val outputBox = txB

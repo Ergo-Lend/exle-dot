@@ -18,9 +18,10 @@ import SLErgs.{
   loanName,
   repaymentHeightLength
 }
+import boxes.FundsToAddressBox
 import commons.configs.ServiceConfig.serviceOwner
 import commons.configs.{ServiceConfig, Tokens}
-import org.ergoplatform.appkit.InputBox
+import org.ergoplatform.appkit.{ErgoToken, InputBox}
 import tokens.SigUSD
 
 class SLTBoxSpec extends AnyWordSpec with Matchers {
@@ -39,7 +40,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
     "inputBox" in {
       client.getClient.execute { ctx =>
         val sltInputBox: InputBox =
-          wrappedLendBox.toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          wrappedLendBox.getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val wrappedSLTLendInputBox: SLTLendBox = new SLTLendBox(sltInputBox)
 
         assert(
@@ -72,7 +73,8 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
         "SLTLendBox: Loan Description Incorrect"
       )
       assert(
-        wrappedLendBox.loanTokenIdRegister.value == Tokens.sigUSD,
+        wrappedLendBox.loanTokenIdRegister.value
+          .sameElements(SigUSD.id.getBytes),
         "SLTLendBox: Incorrect Loan Token"
       )
     }
@@ -81,7 +83,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
       client.getClient.execute { ctx =>
         val fundedLendInputBox = SLTLendBox
           .getFunded(wrappedLendBox, dummyAddress)
-          .toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val wrappedLendInputBox = new SLTLendBox(fundedLendInputBox)
 
         checkLendBox(wrappedLendInputBox)
@@ -114,7 +116,12 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
     "inputBox" in {
       client.getClient.execute { ctx =>
         val sltInputBox: InputBox =
-          wrappedRepaymentBox.toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          wrappedRepaymentBox.getAsInputBox(
+            ctx,
+            ctx.newTxBuilder(),
+            dummyTxId,
+            0
+          )
         val wrappedSLTRepaymentInputBox: SLTRepaymentBox =
           new SLTRepaymentBox(sltInputBox)
 
@@ -145,7 +152,8 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
         "SLTRepaymentBox: Loan Description Incorrect"
       )
       assert(
-        wrappedRepaymentBox.loanTokenIdRegister.value == Tokens.sigUSD,
+        wrappedRepaymentBox.loanTokenIdRegister.value
+          .sameElements(SigUSD.id.getBytes),
         "SLTRepaymentBox: Incorrect Loan Token"
       )
       assert(
@@ -170,9 +178,13 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
     "fund RepaymentBox has correct loan token value" in {
       client.getClient.execute { ctx =>
         val fundedValue: Long = 1000
+        val paymentBox: InputBox = FundsToAddressBox(
+          address = dummyAddress,
+          tokens = Seq(SigUSD.apply(fundedValue).toErgoToken)
+        ).getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val fundedSLTRepaymentInputBox: InputBox = SLTRepaymentBox
-          .fundBox(wrappedRepaymentBox, fundedValue)
-          .toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          .fundBox(wrappedRepaymentBox, paymentBox)
+          .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val fundedWrappedSLTRepaymentBox: SLTRepaymentBox =
           new SLTRepaymentBox(fundedSLTRepaymentInputBox)
 
@@ -200,7 +212,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
     "input box created is accurate" in {
       client.getClient.execute { ctx =>
         val sltInputBox: InputBox =
-          wrappedServiceBox.toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          wrappedServiceBox.getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val wrappedSLTRepaymentInputBox: SLTServiceBox =
           new SLTServiceBox(sltInputBox)
 
@@ -225,7 +237,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
       client.getClient.execute { ctx =>
         val createLendServiceInputBox: InputBox = SLTServiceBox
           .createLendBox(wrappedServiceBox)
-          .toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val createLendWrappedServiceBox: SLTServiceBox =
           new SLTServiceBox(createLendServiceInputBox)
 
@@ -249,7 +261,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
         assert(
           createLendWrappedServiceBox
             .tokens(1)
-            .getValue == wrappedServiceBox.tokens(1).getValue + 1,
+            .getValue == wrappedServiceBox.tokens(1).getValue - 1,
           "SLTServiceBox: Lend Token Value incorrect"
         )
         assert(
@@ -272,7 +284,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
       client.getClient.execute { ctx =>
         val mutateLendServiceInputBox: InputBox = SLTServiceBox
           .mutateLendToRepaymentBox(wrappedServiceBox)
-          .toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val mutateLendWrappedServiceBox: SLTServiceBox =
           new SLTServiceBox(mutateLendServiceInputBox)
 
@@ -319,7 +331,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
       client.getClient.execute { ctx =>
         val absorbRepaymentServiceInputBox: InputBox = SLTServiceBox
           .absorbRepaymentBox(wrappedServiceBox)
-          .toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val absorbRepaymentWrappedServiceBox: SLTServiceBox =
           new SLTServiceBox(absorbRepaymentServiceInputBox)
 
@@ -366,7 +378,7 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
       client.getClient.execute { ctx =>
         val absorbLendServiceInputBox: InputBox = SLTServiceBox
           .absorbLendBox(wrappedServiceBox)
-          .toInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+          .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
         val absorbLendWrappedServiceBox: SLTServiceBox =
           new SLTServiceBox(absorbLendServiceInputBox)
 

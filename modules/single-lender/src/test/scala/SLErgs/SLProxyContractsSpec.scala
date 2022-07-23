@@ -86,7 +86,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         val outputOwnerFeeBox = new FundsToAddressBox(
           value = service.serviceFee,
           address = service.serviceOwner
-        ).getOutputBox(ctx, txB)
+        ).getOutputBox(txB)
 
         val tx = txB
           .boxesToSpend(Seq(inputServiceBox, inputProxyContract).asJava)
@@ -262,7 +262,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         val refundToBorrower = new FundsToAddressBox(
           inputProxyContract.getValue - Parameters.MinFee,
           dummyAddress.toString
-        ).getOutputBox(ctx, txB)
+        ).getOutputBox(txB)
 
         val tx = txB
           .boxesToSpend(Seq(inputProxyContract).asJava)
@@ -303,7 +303,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           val refundToBorrower = new FundsToAddressBox(
             inputProxyContract.getValue - Parameters.MinFee,
             service.serviceOwner.toString
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(inputProxyContract).asJava)
@@ -471,7 +471,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             val fundsToAddressBox = new FundsToAddressBox(
               fundAmount - Parameters.MinFee,
               dummyAddress.toString
-            ).getOutputBox(ctx, txB)
+            ).getOutputBox(txB)
 
             val tx = txB
               .boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
@@ -515,7 +515,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           val refundToLender = new FundsToAddressBox(
             inputProxyContract.getValue - Parameters.MinFee,
             dummyAddress.toString
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(inputProxyContract).asJava)
@@ -561,7 +561,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             val refundToLender = new FundsToAddressBox(
               inputProxyContract.getValue - Parameters.MinFee,
               service.serviceOwner.toString
-            ).getOutputBox(ctx, txB)
+            ).getOutputBox(txB)
 
             val tx = txB
               .boxesToSpend(Seq(inputProxyContract).asJava)
@@ -612,7 +612,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           val borrowerFunds = new FundsToAddressBox(
             wrappedLendBox.fundingInfoRegister.fundingGoal,
             service.serviceOwner.toString
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
@@ -658,7 +658,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           val borrowerFunds = new FundsToAddressBox(
             wrappedLendBox.fundingInfoRegister.fundingGoal,
             wrappedLendBox.borrowerRegister.borrowersAddress
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
@@ -703,7 +703,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           val borrowerFunds = new FundsToAddressBox(
             wrappedLendBox.fundingInfoRegister.fundingGoal,
             wrappedLendBox.borrowerRegister.borrowersAddress
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
@@ -743,7 +743,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           val borrowerFunds = new FundsToAddressBox(
             wrappedLendBox.fundingInfoRegister.fundingGoal + Parameters.MinFee,
             service.serviceOwner.toString
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
@@ -922,7 +922,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             val fundBackToFunderBox = new FundsToAddressBox(
               fundAmount + Parameters.MinFee - outputRepaymentBox.getValue,
               service.serviceOwner.toString
-            ).getOutputBox(ctx, txB)
+            ).getOutputBox(txB)
 
             val totalInputVal =
               inputRepaymentBox.getValue + inputProxyContract.getValue
@@ -978,7 +978,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             val fundBackToFunderBox = new FundsToAddressBox(
               fundAmount + Parameters.MinFee - outputRepaymentBox.getValue,
               dummyAddress.toString
-            ).getOutputBox(ctx, txB)
+            ).getOutputBox(txB)
 
             val totalInputVal =
               inputRepaymentBox.getValue + inputProxyContract.getValue
@@ -1029,7 +1029,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           val refundToFunder = new FundsToAddressBox(
             inputProxyContract.getValue - Parameters.MinFee,
             dummyAddress.toString
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val tx = txB
             .boxesToSpend(Seq(inputProxyContract).asJava)
@@ -1076,7 +1076,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
               val refundToLender = new FundsToAddressBox(
                 inputProxyContract.getValue - Parameters.MinFee,
                 service.serviceOwner.toString
-              ).getOutputBox(ctx, txB)
+              ).getOutputBox(txB)
 
               val tx = txB
                 .boxesToSpend(Seq(inputProxyContract).asJava)
@@ -1142,7 +1142,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
         val outputHackedBox = new FundsToAddressBox(
           wrappedRepaymentBox.value - ergoLendInterest - Parameters.MinFee,
           service.serviceOwner.toString
-        ).getOutputBox(ctx, txB)
+        ).getOutputBox(txB)
 
         val tx = txB
           .boxesToSpend(Seq(inputServiceBox, inputRepaymentBox).asJava)
@@ -1197,7 +1197,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
             wrappedRepaymentBox.value - Parameters.MinFee,
             if (!isHackerHackRepaidBox) { dummyAddress.toString }
             else { service.serviceOwner.toString }
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
           val totalInputVal =
             inputServiceBox.getValue + inputRepaymentBox.getValue
@@ -1473,7 +1473,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
           new FundsToAddressBox(
             wrappedLendBox.fundingInfoRegister.fundingGoal,
             wrappedLendBox.singleLenderRegister.lendersAddress
-          ).getOutputBox(ctx, txB)
+          ).getOutputBox(txB)
 
         tx = txB
           .boxesToSpend(Seq(inputServiceBox, inputLendBox).asJava)
@@ -1527,7 +1527,7 @@ class SLProxyContractsSpec extends AnyWordSpec with Matchers {
       val fundsToAddressBox = new FundsToAddressBox(
         fundAmount - outputLendBox.getValue,
         if (hacked) service.serviceOwner.toString else dummyAddress.toString
-      ).getOutputBox(ctx, txB)
+      ).getOutputBox(txB)
 
       val tx = txB
         .boxesToSpend(Seq(inputLendBox, inputProxyContract).asJava)

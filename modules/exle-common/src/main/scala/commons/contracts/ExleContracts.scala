@@ -12,8 +12,14 @@ sealed trait ExleContract extends EnumEntry {
   val exleDomainType: String = ""
   val contractType: ContractType = ContractTypes.None
   val fileExtension: String = ".es"
-  val fileName: String = this.toString + fileExtension
   val dirName: String = "ExleContracts"
+  val version: Long = 0
+
+  lazy val fileName: String = if (version <= 1) {
+    this.toString + fileExtension
+  } else {
+    this.toString + s"_v$version" + fileExtension
+  }
   lazy val contractScript: String = get()
 
   def getPath: String =
@@ -72,10 +78,14 @@ object ExleContracts extends Enum[ExleContract] {
   // SLT Box Guard Scripts
   case object SLTServiceBoxGuardScript extends SLTBoxGuardScript
   case object SLTLendBoxGuardScript extends SLTBoxGuardScript
-  case object SLTRepaymentBoxGuardScript extends SLTBoxGuardScript
+
+  case object SLTRepaymentBoxGuardScript extends SLTBoxGuardScript {
+    override val version: Long = 2
+  }
 
   // ===== Test Assets ===== //
   case object DummyErgoScript extends TestAssetsContract
+  case object FalseScript extends TestAssetsContract
 }
 
 //<editor-fold desc="Contract Domains">

@@ -66,7 +66,7 @@
         val fundsToBorrowerBox: Box                 = OUTPUTS(2)
 
         val loanToken: (Coll[Byte], Long)           = SELF.tokens(1)
-        val repaymentDetails: Coll[Long]            = outputSLTRepaymentBox.R8[Coll[Long]]
+        val repaymentDetails: Coll[Long]            = outputSLTRepaymentBox.R9[Coll[Long]]
         val repaymentBoxFundedHeight: Long          = repaymentDetails.get(0)
         val repaymentBoxRepaymentAmount: Long       = repaymentDetails.get(1)
         val repaymentBoxInterestRate: Long          = repaymentDetails.get(2)
@@ -125,8 +125,6 @@
         //              In this else bracket, we exists in the not funded state.
         //              We can go through multiple steps within this stage.
         //
-        // #### Not Funded Constants ####
-        val loanToken: (Coll[Byte], Long)           = SELF.tokens(1)
 
         // ===== Refund: Deadline Passed ===== //
         // Description  : When the deadline passed, the box will definitely be
@@ -134,11 +132,16 @@
         //              just consume the lend box
         // Input Boxes  : 0 -> SLTServiceBox, 1 -> SELF
         // Output Boxes : 0 -> SLTServiceBox, 1 -> MiningFee
-        val loanDidNotHitFundingGoal: Boolean       = loanToken._2 <= _fundingGoal
+        // Loan token would not exist.
         val deadlinePassed: Boolean                 = HEIGHT > _deadlineHeight
-        if (deadlinePassed && loanDidNotHitFundingGoal)
+        if (deadlinePassed)
         {
-            val serviceBoxInteraction: Boolean      = INPUTS(0).tokens(0)._1 == _SLTServiceNFTId
+            // #### Not Funded Constants ####
+            val loanDidNotHitFundingGoal: Boolean       =
+                if (SELF.tokens.size > 1) {
+                    SELF.tokens(1)._2 < _fundingGoal
+                } else true
+            val serviceBoxInteraction: Boolean          = INPUTS(0).tokens(0)._1 == _SLTServiceNFTId
 
             sigmaProp(allOf(Coll(
                 serviceBoxInteraction,
@@ -188,15 +191,21 @@
                 // #### Boxes #### //
                 val outputSLTLendBox: Box               = OUTPUTS(0)
 
-                val lenderRegisterDefined: Boolean      = _lenderRegister.isDefined
-                val fundedValueTransferred: Boolean     = outputSLTLendBox.tokens(1)._2 == _fundingGoal
+                val lenderRegisterDefined: Boolean      = outputSLTLendBox.R8[Coll[Byte]].isDefined
+                val fundedValueTransferred: Boolean     = {
+                    allOf(Coll(
+                        // @todo kii check all loantokenId comparison
+                        outputSLTLendBox.tokens(1)._1           == _loanTokenId.get,
+                        outputSLTLendBox.tokens(1)._2           == _fundingGoal
+                    ))
+                }
+
                 val lendBoxDetailReplication: Boolean   = {
                     allOf(Coll(
                         outputSLTLendBox.R4[Coll[Long]]         == _fundingInfoRegister,
                         outputSLTLendBox.R5[Coll[Coll[Byte]]]   == _projectDetailRegister,
                         outputSLTLendBox.R6[Coll[Byte]]         == _borrowerRegister,
                         outputSLTLendBox.R7[Coll[Byte]]         == _loanTokenId,
-                        outputSLTLendBox.R8[Coll[Byte]]         == _lenderRegister
                     ))
                 }
 
