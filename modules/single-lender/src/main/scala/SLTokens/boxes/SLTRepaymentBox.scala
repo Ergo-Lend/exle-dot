@@ -7,8 +7,24 @@ import commons.boxes.registers.RegisterTypes.CollByteRegister
 import commons.configs.Tokens
 import commons.ergo.ErgCommons
 import commons.errors.IncompatibleTokenException
-import commons.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegisterV2, SingleLenderRegister}
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, Parameters, UnsignedTransactionBuilder}
+import commons.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  RepaymentDetailsRegisterV2,
+  SingleLenderRegister
+}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  ErgoContract,
+  ErgoId,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  Parameters,
+  UnsignedTransactionBuilder
+}
 import special.collection.Coll
 import tokens.SigUSD
 
@@ -132,64 +148,82 @@ object SLTRepaymentBox {
       val fundedTokenList: Seq[ErgoToken] =
         sltRepaymentBox.tokens.map(incrementSigUSDValue(_, tokenAmount))
 
-      sltRepaymentBox.copy(value = paymentBox.getValue, tokens = fundedTokenList)
+      sltRepaymentBox.copy(
+        value = paymentBox.getValue,
+        tokens = fundedTokenList
+      )
     }
   }
 
   def fromFundedLendBox(
     sltLendBox: SLTLendBox,
-    fundedHeight: Long): SLTRepaymentBox = {
+    fundedHeight: Long
+  ): SLTRepaymentBox =
     new SLTRepaymentBox(sltLendBox, fundedHeight)
-  }
 }
 
 object SLTRepaymentDistribution {
+
   /**
-   * Increment the Repayment Register with the new funded value
-   * and remove the sigUSD token
-   * @param sltRepaymentBox slt repayment box
-   * @return
-   */
+    * Increment the Repayment Register with the new funded value
+    * and remove the sigUSD token
+    * @param sltRepaymentBox slt repayment box
+    * @return
+    */
   def getOutRepaymentBox(sltRepaymentBox: SLTRepaymentBox): SLTRepaymentBox = {
-    val loanTokenId: ErgoId = new ErgoId(sltRepaymentBox.loanTokenIdRegister.value)
-    val sigUSDToken: ErgoToken = sltRepaymentBox.tokens.filter(_.getId.equals(loanTokenId)).head
-    val totalRepaid: Long = sltRepaymentBox.repaymentDetailsRegister.repaymentPaid + sigUSDToken.getValue
+    val loanTokenId: ErgoId = new ErgoId(
+      sltRepaymentBox.loanTokenIdRegister.value
+    )
+    val sigUSDToken: ErgoToken =
+      sltRepaymentBox.tokens.filter(_.getId.equals(loanTokenId)).head
+    val totalRepaid: Long =
+      sltRepaymentBox.repaymentDetailsRegister.repaymentPaid + sigUSDToken.getValue
     val valueLeft: Long = sltRepaymentBox.value - (ErgCommons.MinBoxFee * 3)
     val repaymentAddedSLTRepaymentBox: SLTRepaymentBox = sltRepaymentBox.copy(
       value = valueLeft,
       tokens = sltRepaymentBox.tokens.filter(!_.getId.equals(loanTokenId)),
       repaymentDetailsRegister = sltRepaymentBox.repaymentDetailsRegister.copy(
-        repaymentPaid = totalRepaid)
+        repaymentPaid = totalRepaid
+      )
     )
 
     repaymentAddedSLTRepaymentBox
   }
 
-  def getFundsRepaidBox(sltRepaymentBox: SLTRepaymentBox, sltServiceBox: SLTServiceBox): Seq[FundsToAddressBox] = {
+  def getFundsRepaidBox(
+    sltRepaymentBox: SLTRepaymentBox,
+    sltServiceBox: SLTServiceBox
+  ): Seq[FundsToAddressBox] = {
     val repaymentShare: Seq[ErgoToken] = calculateRepayment(
-        sltRepaymentBox.tokens(1).getValue,
-        sltRepaymentBox.fundingInfoRegister.interestRatePercent,
-        sltServiceBox.profitSharingRegister.profitSharingPercentage)
-      .map(
-        new ErgoToken(sltRepaymentBox.loanTokenIdRegister.value, _))
+      sltRepaymentBox.tokens(1).getValue,
+      sltRepaymentBox.fundingInfoRegister.interestRatePercent,
+      sltServiceBox.profitSharingRegister.profitSharingPercentage
+    ).map(new ErgoToken(sltRepaymentBox.loanTokenIdRegister.value, _))
     val fundsToLenderBox: FundsToAddressBox = FundsToAddressBox(
       address = Address.create(sltRepaymentBox.singleLenderRegister.address),
-      tokens = Seq(repaymentShare.head))
+      tokens = Seq(repaymentShare.head)
+    )
     val fundsToProfitSharingBox: FundsToAddressBox = FundsToAddressBox(
       address = Address.create(sltServiceBox.exlePubKey.address),
-      tokens = Seq(repaymentShare(1)))
+      tokens = Seq(repaymentShare(1))
+    )
 
     Seq(fundsToLenderBox, fundsToProfitSharingBox)
   }
 
   /**
-   *
-   * @param totalAmount Amount to be repaid
-   * @param interestRatePercent Interest rate of the loan
-   * @param profitSharingPercent Profit Sharing Percentage for owner
-   * @return Seq[LendersShare, ProtocolOwnerShare]
-   */
-  def calculateRepayment(totalAmount: Long, interestRatePercent: Long, profitSharingPercent: Long, percentageDenominator: Long): Seq[Long] = {
+    *
+    * @param totalAmount Amount to be repaid
+    * @param interestRatePercent Interest rate of the loan
+    * @param profitSharingPercent Profit Sharing Percentage for owner
+    * @return Seq[LendersShare, ProtocolOwnerShare]
+    */
+  def calculateRepayment(
+    totalAmount: Long,
+    interestRatePercent: Long,
+    profitSharingPercent: Long,
+    percentageDenominator: Long
+  ): Seq[Long] = {
     val interestAmount =
       (totalAmount * interestRatePercent) / percentageDenominator
     val protocolOwnerShare: Long =
@@ -199,11 +233,15 @@ object SLTRepaymentDistribution {
     Seq(lendersShare, protocolOwnerShare)
   }
 
-  def calculateRepayment(totalAmount: Long, interestRatePercent: Long, profitSharingPercent: Long): Seq[Long] = {
+  def calculateRepayment(
+    totalAmount: Long,
+    interestRatePercent: Long,
+    profitSharingPercent: Long
+  ): Seq[Long] =
     calculateRepayment(
       totalAmount,
       interestRatePercent,
       profitSharingPercent,
-      1000L)
-  }
+      1000L
+    )
 }

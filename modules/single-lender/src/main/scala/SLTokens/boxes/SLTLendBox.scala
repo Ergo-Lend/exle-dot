@@ -1,18 +1,33 @@
 package SLTokens.boxes
 
-import commons.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, RepaymentDetailsRegister, SingleLenderRegister}
+import commons.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister,
+  RepaymentDetailsRegister,
+  SingleLenderRegister
+}
 import SLTokens.SLTTokens
 import SLTokens.contracts.SLTLendBoxContract
 import boxes.{Box, BoxWrapper, FundsToAddressBox}
 import commons.boxes.registers.RegisterTypes.CollByteRegister
 import commons.configs.ServiceConfig
 import commons.ergo.ErgCommons
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, OutBoxBuilder, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  ErgoContract,
+  ErgoId,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  OutBoxBuilder,
+  UnsignedTransactionBuilder
+}
 import special.collection.Coll
 import tokens.SigUSD
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
-
 
 case class SLTLendBox(
   value: Long,
@@ -127,6 +142,7 @@ object SLTLendBox {
     val tokenId: ErgoId = new ErgoId(sltLendBox.loanTokenIdRegister.value)
     FundsToAddressBox(
       Address.create(sltLendBox.borrowerRegister.address),
-      tokens = sltLendBox.tokens.filter(_.getId.equals(tokenId)))
+      tokens = sltLendBox.tokens.filter(_.getId.equals(tokenId))
+    )
   }
 }

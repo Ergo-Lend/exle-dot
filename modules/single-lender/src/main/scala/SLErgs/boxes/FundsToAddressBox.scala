@@ -4,7 +4,14 @@ import com.google.common.graph.Network
 import commons.boxes.Box
 import commons.ergo.ContractUtils
 import org.ergoplatform.ErgoAddress
-import org.ergoplatform.appkit.{Address, BlockchainContext, InputBox, NetworkType, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  InputBox,
+  NetworkType,
+  OutBox,
+  UnsignedTransactionBuilder
+}
 
 /**
   * Funds to Address

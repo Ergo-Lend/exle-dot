@@ -91,8 +91,8 @@
         // Interest = Repayment - Capital
         // ProfitSharing = Interest * ProfitSharingRate
         val repaymentAmount: Long                   = totalRepaymentBoxTokenAmount
-        val capitalAmount: Long                     = (repaymentAmount * _interestRate) / (_percentageDenominator)
-        val interest: Long                          = repaymentAmount - capitalAmount
+        val interest: Long                          = (repaymentAmount * _interestRate) / (_percentageDenominator)
+        val capital: Long                           = repaymentAmount - interest
         val profitSharingAmount: Long               = (interest * profitSharingRegister.get(0)) / _percentageDenominator
 
         // ##### IsRepaidAmountUpdated ##### //
@@ -120,7 +120,7 @@
         val isLenderFunded: Boolean                         = allOf(Coll(
             isLoanTokenForLenderBox,
             isLenderAddressForLenderBox,
-//            isCorrectSplitAmountForLenderBox
+            isCorrectSplitAmountForLenderBox
         ))
 
         // ##### IsProtocolOwnerFunded ##### //
@@ -162,7 +162,7 @@
             isRepaymentDetailsReplicatedForDistribution,
             isRepaidAmountUpdated,
             isLenderFunded,
-//            isProtocolOwnerFunded
+            isProtocolOwnerFunded
         )))
     } else {
         // ====== Fund Repayment ====== //

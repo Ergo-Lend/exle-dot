@@ -14,6 +14,7 @@ sealed trait ExleContract extends EnumEntry {
   val fileExtension: String = ".es"
   val dirName: String = "ExleContracts"
   val version: Long = 0
+
   lazy val fileName: String = if (version <= 1) {
     this.toString + fileExtension
   } else {
@@ -77,6 +78,7 @@ object ExleContracts extends Enum[ExleContract] {
   // SLT Box Guard Scripts
   case object SLTServiceBoxGuardScript extends SLTBoxGuardScript
   case object SLTLendBoxGuardScript extends SLTBoxGuardScript
+
   case object SLTRepaymentBoxGuardScript extends SLTBoxGuardScript {
     override val version: Long = 2
   }

@@ -51,20 +51,20 @@ class SLTProxyContractService @Inject() (client: Client)
 
   // SigUSD Implementation of CreateLendBoxProxyContract
   def getSigUSDCreateLendBoxProxyContract(
-                                           borrowerPk: String,
-                                           deadlineHeight: Long,
-                                           goal: Long,
-                                           interestRate: Long,
-                                           repaymentHeightLength: Long
-                                         ): ErgoContract = {
+    borrowerPk: String,
+    deadlineHeight: Long,
+    goal: Long,
+    interestRate: Long,
+    repaymentHeightLength: Long
+  ): ErgoContract =
     getSLTLendCreateProxyContract(
       borrowerPk = borrowerPk,
       loanToken = SigUSD.id.getBytes,
       deadlineHeight = deadlineHeight,
       goal = goal,
       interestRate = interestRate,
-      repaymentHeightLength = repaymentHeightLength)
-  }
+      repaymentHeightLength = repaymentHeightLength
+    )
 
   def getSLTFundLendBoxProxyContract(
     lendBoxId: String,

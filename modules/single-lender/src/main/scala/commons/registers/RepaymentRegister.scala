@@ -75,13 +75,13 @@ object RepaymentDetailsRegister {
 }
 
 final case class RepaymentDetailsRegisterV2(
-                                             fundedHeight: Long,
-                                             repaymentAmount: Long,
-                                             totalInterestAmount: Long,
-                                             repaymentHeightGoal: Long,
-                                             repaymentPaid: Long
-                                           ) extends LongRegister
-  with RepaymentRegister {
+  fundedHeight: Long,
+  repaymentAmount: Long,
+  totalInterestAmount: Long,
+  repaymentHeightGoal: Long,
+  repaymentPaid: Long
+) extends LongRegister
+    with RepaymentRegister {
 
   def toRegister: ErgoValue[Coll[Long]] = {
     val register: Array[Long] = new Array[Long](5)
@@ -107,9 +107,9 @@ final case class RepaymentDetailsRegisterV2(
 object RepaymentDetailsRegisterV2 {
 
   def apply(
-             fundedHeight: Long,
-             fundingInfoRegister: FundingInfoRegister
-           ): RepaymentDetailsRegisterV2 = {
+    fundedHeight: Long,
+    fundingInfoRegister: FundingInfoRegister
+  ): RepaymentDetailsRegisterV2 = {
     val fundingGoal: Long = fundingInfoRegister.fundingGoal
     val interestRate: Long = fundingInfoRegister.interestRatePercent
     val repaymentHeightLength: Long = fundingInfoRegister.repaymentHeightLength
