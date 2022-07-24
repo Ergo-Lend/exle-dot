@@ -99,7 +99,7 @@ lazy val pay = utils
         Circe ++
         DependencyInjection
   )
-  .dependsOn(common)
+  .dependsOn(Seq(common, testCommons).map(_ % allConfigDependency): _*)
 
 lazy val db = utils
   .mkModule("db", "Doobs")

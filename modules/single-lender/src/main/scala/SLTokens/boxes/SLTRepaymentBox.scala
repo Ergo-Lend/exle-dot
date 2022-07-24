@@ -113,10 +113,10 @@ object SLTRepaymentBox {
 
   def fundBox(
     sltRepaymentBox: SLTRepaymentBox,
-    paymentBox: InputBox
+    paymentBox: SLTFundRepaymentProxyBox
   ): SLTRepaymentBox = {
     // @todo kii, check if there are token
-    val token: ErgoToken = paymentBox.getTokens.asScala.toSeq.head
+    val token: ErgoToken = paymentBox.tokens.head
     if (!token.getId.getBytes.sameElements(
           sltRepaymentBox.loanTokenIdRegister.value
         )) {
@@ -134,7 +134,7 @@ object SLTRepaymentBox {
     val zeroRepaid: Boolean = sltRepaymentBox.tokens.length == 1
     if (zeroRepaid) {
       sltRepaymentBox.copy(
-        value = paymentBox.getValue,
+        value = paymentBox.value,
         tokens =
           Seq(sltRepaymentBox.tokens.head, SigUSD(tokenAmount).toErgoToken)
       )
@@ -149,7 +149,7 @@ object SLTRepaymentBox {
         sltRepaymentBox.tokens.map(incrementSigUSDValue(_, tokenAmount))
 
       sltRepaymentBox.copy(
-        value = paymentBox.getValue,
+        value = paymentBox.value,
         tokens = fundedTokenList
       )
     }

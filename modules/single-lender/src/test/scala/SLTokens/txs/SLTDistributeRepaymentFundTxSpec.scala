@@ -12,7 +12,7 @@ import common.ErgoTestBase
 import commons.ergo.ErgCommons
 import org.ergoplatform.appkit.{InputBox, UnsignedTransactionBuilder}
 
-class SLTRepaymentFundDistributionSpec extends ErgoTestBase {
+class SLTDistributeRepaymentFundTxSpec extends ErgoTestBase {
   "Repayment Fund Distribution Tx" should {
     val wrappedSLTServiceBox: SLTServiceBox = createGenesisServiceBox()
     val wrappedSLTRepaymentBox: SLTRepaymentBox = createWrappedSLTRepaymentBox(

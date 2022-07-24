@@ -1,36 +1,18 @@
 package SLTokens.contracts
 
 import SLErgs.boxes.FundsToAddressBox
+import SLTokens.createInitiationPaymentBox
 import common.ErgoTestBase
-import org.ergoplatform.appkit.{
-  ErgoContract,
-  InputBox,
-  OutBox,
-  UnsignedTransactionBuilder
-}
+import org.ergoplatform.appkit.{Address, InputBox, OutBox, UnsignedTransactionBuilder}
 import sigmastate.lang.exceptions.InterpreterException
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 class SLTProxyContractSpec extends ErgoTestBase {
-  val SLTProxyContractService = new SLTProxyContractService(client)
-
   "SLT CreateLendBox ProxyContract" when {
-    val sltLendCreateProxyContract: ErgoContract =
-      SLTProxyContractService
-        .getSLTLendCreateProxyContract(
-          borrowerPk = dummyAddress.toString,
-          loanToken = loanToken,
-          deadlineHeight = deadlineHeightLength,
-          goal = goal,
-          interestRate = interestRate,
-          repaymentHeightLength = repaymentHeightLength
-        )
-
-    val createSLTLendPaymentBox: InputBox = createPaymentBox(
-      sltLendCreateProxyContract,
-      serviceFee
-    )
+    val borrowerAddress: Address = dummyAddress
+    val createSLTLendPaymentBox: InputBox = createInitiationPaymentBox(
+      borrowerAddress = borrowerAddress)
 
     "Creating" should {
       "Not be hacked by others into their account" in {
@@ -59,7 +41,7 @@ class SLTProxyContractSpec extends ErgoTestBase {
         client.getClient.execute { ctx =>
           val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
           val outputBorrowerBox: OutBox = FundsToAddressBox(
-            value = serviceFee - minFee,
+            value = serviceFee + minFee,
             address = dummyAddress
           ).getOutputBox(txB)
 

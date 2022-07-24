@@ -1,6 +1,11 @@
 import common.ErgoTestBase
 import contracts.Contract
-import org.ergoplatform.appkit.{BlockchainContext, Constants, ConstantsBuilder, ErgoContract}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  Constants,
+  ConstantsBuilder,
+  ErgoContract
+}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

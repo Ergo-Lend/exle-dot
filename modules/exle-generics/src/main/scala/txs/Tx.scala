@@ -4,7 +4,15 @@ import commons.configs.ServiceConfig
 import commons.ergo.ErgCommons
 import commons.errors.{ProveException, ReducedException}
 import org.ergoplatform.P2PKAddress
-import org.ergoplatform.appkit.{BlockchainContext, InputBox, OutBox, ReducedTransaction, SignedTransaction, UnsignedTransaction, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  InputBox,
+  OutBox,
+  ReducedTransaction,
+  SignedTransaction,
+  UnsignedTransaction,
+  UnsignedTransactionBuilder
+}
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 

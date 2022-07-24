@@ -121,20 +121,18 @@ object SLTLendBox {
     fundedSLTLendBox
   }
 
-  def getFunded(sltLendBox: SLTLendBox, paymentBox: InputBox): SLTLendBox = {
-    val lenderAddressRegister: SingleLenderRegister = new SingleLenderRegister(
-      paymentBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Byte]].toArray
-    )
+  def getFunded(sltLendBox: SLTLendBox, paymentBox: SLTFundLendProxyBox): SLTLendBox = {
+    val lenderAddressRegister: SingleLenderRegister = paymentBox.lenderRegister
     val lenderAddress: Address =
       Address.create(lenderAddressRegister.lendersAddress)
 
     getFunded(sltLendBox, lenderAddress)
   }
 
-  def fromCreatePaymentBox(paymentInputBox: InputBox): SLTLendBox =
-    new SLTLendBox(paymentInputBox).copy(
+  def fromCreatePaymentBox(paymentInputBox: SLTCreateLendProxyBox): SLTLendBox =
+    new SLTLendBox(paymentInputBox.box.get.input).copy(
       value =
-        paymentInputBox.getValue - ServiceConfig.serviceFee - ErgCommons.MinMinerFee,
+        paymentInputBox.value - ServiceConfig.serviceFee - ErgCommons.MinMinerFee,
       tokens = Seq(new ErgoToken(SLTTokens.lendTokenId, 1))
     )
 

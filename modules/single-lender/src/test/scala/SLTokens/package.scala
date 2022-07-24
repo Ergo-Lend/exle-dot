@@ -197,14 +197,7 @@ package object SLTokens {
       val contractValueBoxBuilder: OutBoxBuilder = txB
         .outBoxBuilder()
         .contract(
-          sltProxyContractService.getSLTLendCreateProxyContract(
-            borrowerPk = borrowerAddress.getErgoAddress.toString,
-            loanToken = SigUSD.id.getBytes,
-            ctx.getHeight + deadlineHeightLength,
-            goal = goal,
-            interestRate = interestRate,
-            repaymentHeightLength = repaymentHeightLength
-          )
+          sltProxyContractService.getSLTLendCreateProxyContract
         )
         .value(value)
 
@@ -219,27 +212,27 @@ package object SLTokens {
     }
 
   def createFundLendPaymentBox(
-    lendBoxId: String,
+    lendBoxId: Array[Byte],
     value: Long = ServiceConfig.serviceFee + (ErgCommons.MinMinerFee * 2),
     lenderAddress: Address = dummyAddress
   ): InputBox =
     client.getClient.execute { ctx =>
-      val lenderRegister = new SingleLenderRegister(lenderAddress.toString)
+      val lenderRegister: SingleLenderRegister = new SingleLenderRegister(lenderAddress.toString)
+      val boxIdRegister: CollByteRegister = new CollByteRegister(lendBoxId)
       val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, value)
 
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+      // @todo kii fix this part to use new proxy box
       val contractValueBoxBuilder: OutBoxBuilder = txB
         .outBoxBuilder()
         .contract(
-          sltProxyContractService.getSLTFundLendBoxProxyContract(
-            lendBoxId = lendBoxId,
-            lenderAddress = lenderAddress.toString
-          )
+          sltProxyContractService.getSLTFundLendBoxProxyContract
         )
         .value(Parameters.MinFee)
         .tokens(sigUSD)
 
       contractValueBoxBuilder.registers(
+        boxIdRegister.toRegister,
         lenderRegister.toRegister
       )
 
@@ -247,22 +240,25 @@ package object SLTokens {
     }
 
   def createFundRepaymentPaymentBox(
-    repaymentBoxId: String,
+    repaymentBoxId: Array[Byte],
     sigUSDValue: Long,
     value: Long = ErgCommons.MinMinerFee * 4,
     funderAddress: Address = dummyAddress
   ): InputBox =
     client.getClient.execute { ctx =>
+      val lenderRegister: SingleLenderRegister = new SingleLenderRegister(funderAddress.toString)
+      val boxIdRegister: CollByteRegister = new CollByteRegister(repaymentBoxId)
       val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, sigUSDValue)
 
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
       val contractValueBoxBuilder: OutBoxBuilder = txB
         .outBoxBuilder()
         .contract(
-          sltProxyContractService.getSLTFundRepaymentBoxProxyContract(
-            repaymentBoxId = repaymentBoxId,
-            funderAddress = funderAddress.toString
-          )
+          sltProxyContractService.getSLTFundRepaymentBoxProxyContract
+        )
+        .registers(
+          boxIdRegister.toRegister,
+          lenderRegister.toRegister
         )
         .value(value)
         .tokens(sigUSD)

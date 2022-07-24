@@ -4,7 +4,7 @@ import commons.ergo.ErgCommons.nanoErgsToErgs
 import io.circe.generic.codec.DerivedAsObjectCodec.deriveCodec
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Json}
-import org.ergoplatform.appkit.Address
+import org.ergoplatform.appkit.{Address, ReducedTransaction}
 import pay.Severity.Severity
 
 import java.util.Base64
@@ -50,6 +50,7 @@ object ErgoPayResponse {
     )(ErgoPayResponse.apply)
   }
 
+  // @todo kii deprecate this
   def get(
     deadline: Long,
     sender: String,
@@ -82,8 +83,41 @@ object ErgoPayResponse {
       messageSeverity = Severity.INFORMATION
     )
   }
+
+  /**
+   * // ========= Controller use ========== //
+   * Retrieve an address and reduced tx to give back
+   * an ErgoPayResponse. Since we're moving forward
+   * with no manual txs, we're gonna be heavily utilizing
+   * this
+   *
+   * @todo LGD Controller to call this
+   *
+   * @param recipient address of recipient
+   * @param reducedTx the tx that is reduced to bytes
+   * @param message message for the response
+   * @param messageSeverity the severity of this message
+   * @param replyTo honestly I dont know what this is for
+   * @return
+   */
+  def getResponse(
+    recipient: Address,
+    reducedTx: ReducedTransaction,
+    message: String = "",
+    messageSeverity: Severity = Severity.NONE,
+    replyTo: String = ""
+         ): ErgoPayResponse = {
+    ErgoPayResponse(
+      reducedTx = Base64.getUrlEncoder.encodeToString(reducedTx.toBytes),
+      address = recipient.getErgoAddress.toString,
+      message = message,
+      messageSeverity = messageSeverity,
+      replyTo = replyTo
+    )
+  }
 }
 
+// @todo kii deprecate
 case class ProxyContractErgoPayResponse(
   deadline: Long,
   recipient: String,
@@ -95,6 +129,7 @@ case class ProxyContractErgoPayResponse(
     this.asJson
 }
 
+// @todo kii deprecate
 object ProxyContractErgoPayResponse {
 
   def getResponse(
