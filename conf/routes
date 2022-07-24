@@ -3,27 +3,33 @@
 # https://www.playframework.com/documentation/latest/ScalaRouting
 # ~~~~
 
-# An example controller showing a sample home page
+# Test
+GET     /api/lend/test                      controllers.LendGateController.test
 
-GET     /                               controllers.LendController.test
 # Lend
-GET     /api/lend/test                  controllers.LendController.test
-GET     /api/lend/:lendId               controllers.LendController.getLendBoxById(lendId: String)
-GET     /api/lend                       controllers.LendController.getLendBoxes(offset: Int?=0, limit: Int?=100)
-POST    /api/lend/create                controllers.LendController.createLendBox
-POST    /api/lend/fund                  controllers.LendController.fundLendBox
-POST    /api/lend/mockCreate            controllers.LendController.mockCreateLendBox
-POST    /api/lend/mockFund              controllers.LendController.mockFundLendBox
+GET     /api/lend/                          controllers.LendGateController.getBoxes(offset: Int?=0, limit: Int?=100)
+GET     /api/lend/:lendId                   controllers.LendGateController.getBoxById(lendId: String)
 
-GET     /api/repayment/:repaymentId     controllers.LendController.getRepaymentBoxById(repaymentId: String)
-GET     /api/repayment                  controllers.LendController.getRepaymentBoxes(offset: Int?=0, limit: Int?=100)
-POST    /api/repayment/fund             controllers.LendController.fundRepaymentBox
-POST    /api/repayment/fullFund         controllers.LendController.fundRepaymentBoxFully
-POST    /api/repayment/mockFund         controllers.LendController.mockFundRepaymentBox
-POST    /api/repayment/mockFullFund     controllers.LendController.mockFundRepaymentBoxFully
+POST    /api/lend/create                    controllers.LendGateController.create
+POST    /api/lend/fund                      controllers.LendGateController.fund
+
+# Repayment
+GET     /api/repayment/                     controllers.LendGateController.getBoxes(offset: Int?=0, limit: Int?=100)
+GET     /api/repayment/:repaymentId         controllers.LendGateController.getBoxById(repaymentId: String)
+
+POST    /api/repayment/fund                 controllers.LendGateController.fund
+POST    /api/repayment/fullFund             controllers.LendGateController.fullFund
+
+# Mock Lend
+POST    /api/lend/mockCreate                controllers.LendGateController.mockCreate
+POST    /api/lend/mockFund                  controllers.LendGateController.mockFund
+
+# Mock Repayment
+POST    /api/repayment/mockFund             controllers.LendGateController.mockFund
+POST    /api/repayment/mockFullFund         controllers.LendGateController.mockFullFund
 
 # ErgoPay Test
-GET     /pay/roundtrip/:address         controllers.PayController.roundtrip(address: String)
+GET     /pay/roundtrip/:address             controllers.PayController.roundtrip(address: String)
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)

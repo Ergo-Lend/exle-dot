@@ -20,3 +20,14 @@ config.env
 
 # DB Stuff
 data
+
+# metals
+project/.bloop
+project/project
+project/target
+project/metals.sbt
+.metals
+.bloop
+
+# vs code
+.vscode
