@@ -1,10 +1,25 @@
 package SLTokens.txs
 
 import SLTokens.SLTTokens
-import SLTokens.boxes.{SLTCreateLendProxyBox, SLTFundLendProxyBox, SLTFundRepaymentProxyBox, SLTLendBox, SLTRepaymentBox, SLTRepaymentDistribution, SLTServiceBox}
+import SLTokens.boxes.{
+  SLTCreateLendProxyBox,
+  SLTFundLendProxyBox,
+  SLTFundRepaymentProxyBox,
+  SLTLendBox,
+  SLTRepaymentBox,
+  SLTRepaymentDistribution,
+  SLTServiceBox
+}
 import boxes.FundsToAddressBox
 import commons.configs.ServiceConfig
-import org.ergoplatform.appkit.{BlockchainContext, ErgoId, ErgoToken, InputBox, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  ErgoId,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  UnsignedTransactionBuilder
+}
 import txs.Tx
 
 // <editor-fold desc="SLT LEND INITIATION TX">
@@ -38,7 +53,9 @@ case class SLTLendInitiationTx(inputBoxes: Seq[InputBox])(
     if (!checkInputBoxes(inputBoxes)) throw new IllegalArgumentException()
     else {
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-      val paymentBox: SLTCreateLendProxyBox = new SLTCreateLendProxyBox(inputBoxes(1))
+      val paymentBox: SLTCreateLendProxyBox = new SLTCreateLendProxyBox(
+        inputBoxes(1)
+      )
       val wrappedSLTServiceBox: SLTServiceBox = new SLTServiceBox(
         inputBoxes.head
       )
@@ -133,7 +150,9 @@ case class SLTRepaymentFundTx(
 
   override def getOutBoxes: Seq[OutBox] = {
     val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
-    val paymentBox: SLTFundRepaymentProxyBox = new SLTFundRepaymentProxyBox(inputBoxes(1))
+    val paymentBox: SLTFundRepaymentProxyBox = new SLTFundRepaymentProxyBox(
+      inputBoxes(1)
+    )
     val wrappedSLTRepaymentBox: SLTRepaymentBox = new SLTRepaymentBox(
       inputBoxes.head
     )

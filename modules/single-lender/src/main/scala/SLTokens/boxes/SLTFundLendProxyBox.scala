@@ -1,13 +1,22 @@
 package SLTokens.boxes
 
-import SLTokens.SLTTokens
+import SLTokens.{SLTTokens, TxFeeCosts}
 import boxes.{Box, BoxWrapper}
 import commons.boxes.registers.RegisterTypes.CollByteRegister
 import commons.contracts.ExleContracts
 import commons.ergo.ErgCommons
 import commons.registers.SingleLenderRegister
 import contracts.Contract
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  ErgoContract,
+  ErgoId,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  UnsignedTransactionBuilder
+}
 import special.collection.Coll
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
@@ -26,8 +35,12 @@ class SLTFundLendProxyBox(
     tokens = inputBox.getTokens.asScala.toSeq,
     id = inputBox.getId,
     box = Option(Box(inputBox)),
-    boxIdRegister = new CollByteRegister(inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Byte]].toArray),
-    lenderRegister = new SingleLenderRegister(inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Byte]].toArray)
+    boxIdRegister = new CollByteRegister(
+      inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Byte]].toArray
+    ),
+    lenderRegister = new SingleLenderRegister(
+      inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Byte]].toArray
+    )
   )
 
   /**
@@ -79,7 +92,7 @@ object SLTFundLendProxyBox {
     boxId: Array[Byte],
     lenderAddress: Address,
     tokens: Seq[ErgoToken],
-    value: Long
+    value: Long = TxFeeCosts.fundLendTxFee
   ): SLTFundLendProxyBox = {
     val lenderRegister: SingleLenderRegister = new SingleLenderRegister(
       lenderAddress

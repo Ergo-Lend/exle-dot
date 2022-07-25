@@ -217,7 +217,8 @@ package object SLTokens {
     lenderAddress: Address = dummyAddress
   ): InputBox =
     client.getClient.execute { ctx =>
-      val lenderRegister: SingleLenderRegister = new SingleLenderRegister(lenderAddress.toString)
+      val lenderRegister: SingleLenderRegister =
+        new SingleLenderRegister(lenderAddress.toString)
       val boxIdRegister: CollByteRegister = new CollByteRegister(lendBoxId)
       val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, value)
 
@@ -246,7 +247,8 @@ package object SLTokens {
     funderAddress: Address = dummyAddress
   ): InputBox =
     client.getClient.execute { ctx =>
-      val lenderRegister: SingleLenderRegister = new SingleLenderRegister(funderAddress.toString)
+      val lenderRegister: SingleLenderRegister =
+        new SingleLenderRegister(funderAddress.toString)
       val boxIdRegister: CollByteRegister = new CollByteRegister(repaymentBoxId)
       val sigUSD: ErgoToken = new ErgoToken(Tokens.sigUSD, sigUSDValue)
 

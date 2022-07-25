@@ -3,7 +3,12 @@ package SLTokens.contracts
 import SLErgs.boxes.FundsToAddressBox
 import SLTokens.createInitiationPaymentBox
 import common.ErgoTestBase
-import org.ergoplatform.appkit.{Address, InputBox, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  InputBox,
+  OutBox,
+  UnsignedTransactionBuilder
+}
 import sigmastate.lang.exceptions.InterpreterException
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
@@ -11,8 +16,8 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 class SLTProxyContractSpec extends ErgoTestBase {
   "SLT CreateLendBox ProxyContract" when {
     val borrowerAddress: Address = dummyAddress
-    val createSLTLendPaymentBox: InputBox = createInitiationPaymentBox(
-      borrowerAddress = borrowerAddress)
+    val createSLTLendPaymentBox: InputBox =
+      createInitiationPaymentBox(borrowerAddress = borrowerAddress)
 
     "Creating" should {
       "Not be hacked by others into their account" in {

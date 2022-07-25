@@ -59,7 +59,6 @@
         // Input Boxes      -> (0: SLTLendBox, 1: PaymentBox)
         // Output Boxes     -> (0: SLTLendBox, [Optional: 1. RefundOverfundedToLenderBox])
         val deadlineReached: Boolean    = deadlineHeight < HEIGHT
-        // @todo kii this is the area with issue
         val boxIdCheck: Boolean         = _BoxIdToFund == lendBoxId
         val fundable: Boolean           = boxIdCheck && !deadlineReached
 

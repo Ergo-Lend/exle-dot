@@ -2,7 +2,13 @@ package payTest
 
 import common.ErgoTestBase
 import commons.configs.{GetNodeConfig, NodeConfig}
-import org.ergoplatform.appkit.{Address, Parameters, ReducedTransaction, RestApiErgoClient, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  Parameters,
+  ReducedTransaction,
+  RestApiErgoClient,
+  UnsignedTransactionBuilder
+}
 import pay.{ErgoPayResponse, ErgoPayUtils, Severity}
 import pay.ErgoPayUtils.getReducedSendTx
 import pay.Severity.Severity
@@ -53,11 +59,15 @@ class ErgoPaySpec extends ErgoTestBase {
         replyTo = replyTo
       )
 
-      assert(Base64.getUrlDecoder.decode(ergoPayResponse.reducedTx) sameElements reducedTx.toBytes)
+      assert(
+        Base64.getUrlDecoder
+          .decode(ergoPayResponse.reducedTx)
+          .sameElements(reducedTx.toBytes)
+      )
       assert(Address.create(ergoPayResponse.address).equals(recipient))
-      assert(ergoPayResponse.message equals message)
-      assert(ergoPayResponse.messageSeverity equals messageSeverity)
-      assert(ergoPayResponse.replyTo equals replyTo)
+      assert(ergoPayResponse.message.equals(message))
+      assert(ergoPayResponse.messageSeverity.equals(messageSeverity))
+      assert(ergoPayResponse.replyTo.equals(replyTo))
     }
   }
 }

@@ -1,21 +1,30 @@
 package SLTokens.boxes
 
-import SLTokens.SLTTokens
+import SLTokens.{SLTTokens, TxFeeCosts}
 import boxes.{Box, BoxWrapper}
 import commons.boxes.registers.RegisterTypes.{AddressRegister, CollByteRegister}
 import commons.contracts.ExleContracts
 import commons.ergo.ErgCommons
 import commons.registers.SingleLenderRegister
 import contracts.Contract
-import org.ergoplatform.appkit.{Address, BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  Address,
+  BlockchainContext,
+  ErgoContract,
+  ErgoId,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  UnsignedTransactionBuilder
+}
 import special.collection.Coll
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 
 class SLTFundRepaymentProxyBox(
   override val value: Long,
-  boxIdRegister: CollByteRegister,
-  fundersAddress: AddressRegister,
+  val boxIdRegister: CollByteRegister,
+  val fundersAddress: AddressRegister,
   override val tokens: Seq[ErgoToken] = Seq.empty,
   override val id: ErgoId = ErgoId.create(""),
   override val box: Option[Box] = Option(null)
@@ -26,8 +35,12 @@ class SLTFundRepaymentProxyBox(
     tokens = inputBox.getTokens.asScala.toSeq,
     id = inputBox.getId,
     box = Option(Box(inputBox)),
-    boxIdRegister = new CollByteRegister(inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Byte]].toArray),
-    fundersAddress = new SingleLenderRegister(inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Byte]].toArray)
+    boxIdRegister = new CollByteRegister(
+      inputBox.getRegisters.get(0).getValue.asInstanceOf[Coll[Byte]].toArray
+    ),
+    fundersAddress = new SingleLenderRegister(
+      inputBox.getRegisters.get(1).getValue.asInstanceOf[Coll[Byte]].toArray
+    )
   )
 
   /**
@@ -82,8 +95,9 @@ object SLTFundRepaymentProxyBox {
     boxId: Array[Byte],
     fundersAddress: Address,
     tokens: Seq[ErgoToken],
-    value: Long
+    currentBoxValue: Long = 0
   ): SLTFundRepaymentProxyBox = {
+    val calculatedValue: Long = TxFeeCosts.fundRepaymentTxFee(currentBoxValue)
     val fundersRegister: AddressRegister = new AddressRegister(
       fundersAddress.toString
     )
@@ -92,7 +106,7 @@ object SLTFundRepaymentProxyBox {
     )
 
     new SLTFundRepaymentProxyBox(
-      value = value,
+      value = calculatedValue,
       tokens = tokens,
       fundersAddress = fundersRegister,
       boxIdRegister = boxIdRegister

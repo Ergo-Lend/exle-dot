@@ -6,6 +6,7 @@ import SLTokens.boxes.{
   SLTFundRepaymentProxyBox
 }
 import commons.configs.ServiceConfig
+import commons.ergo.ErgCommons
 import org.ergoplatform.P2PKAddress
 import org.ergoplatform.appkit.{
   Address,
@@ -60,8 +61,8 @@ case class UserFundRetriever(
 }
 
 /**
- * Returns (Address, ReducedTransaction)
- */
+  * Returns (Address, ReducedTransaction)
+  */
 object SLTProxyContractReducedTxRetriever {
 
   // Create Lend Proxy Contract
@@ -86,15 +87,15 @@ object SLTProxyContractReducedTxRetriever {
     // GetOutBoxes
     val sltCreateLendProxyBox: SLTCreateLendProxyBox =
       SLTCreateLendProxyBox.getBox(
-        value,
-        borrowerPk,
-        loanToken,
-        projectName,
-        description,
-        deadlineHeight,
-        goal,
-        interestRate,
-        repaymentHeightLength
+        borrowerPk = borrowerPk,
+        loanToken = loanToken,
+        projectName = projectName,
+        description = description,
+        deadlineHeight = deadlineHeight,
+        goal = goal,
+        interestRate = interestRate,
+        repaymentHeightLength = repaymentHeightLength,
+        value = value
       )
 
     // Insert into transaction
@@ -124,7 +125,7 @@ object SLTProxyContractReducedTxRetriever {
     repaymentHeightLength: Long
   )(implicit ctx: BlockchainContext): (Address, ReducedTransaction) =
     getCreateLendProxyContract(
-      value = ServiceConfig.serviceFee,
+      value = ServiceConfig.serviceFee + ErgCommons.MinMinerFee * 2,
       borrowerPk,
       loanToken,
       projectName,
@@ -186,7 +187,7 @@ object SLTProxyContractReducedTxRetriever {
       SLTFundRepaymentProxyBox
         .getBox(
           boxId = repaymentBoxId,
-          value = value,
+          currentBoxValue = value,
           tokens = tokens,
           fundersAddress = funderAddress
         )

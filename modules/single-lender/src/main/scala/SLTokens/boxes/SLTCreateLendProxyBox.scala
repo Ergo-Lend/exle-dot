@@ -1,23 +1,37 @@
 package SLTokens.boxes
 
-import SLTokens.SLTTokens
+import SLTokens.{SLTTokens, TxFeeCosts}
 import boxes.{Box, BoxWrapper}
 import commons.boxes.registers.RegisterTypes.CollByteRegister
+import commons.configs.ServiceConfig
 import commons.contracts.ExleContracts
 import commons.ergo.ErgCommons
-import commons.registers.{BorrowerRegister, FundingInfoRegister, LendingProjectDetailsRegister, SingleLenderRegister}
+import commons.registers.{
+  BorrowerRegister,
+  FundingInfoRegister,
+  LendingProjectDetailsRegister
+}
 import contracts.Contract
-import org.ergoplatform.appkit.{BlockchainContext, ErgoContract, ErgoId, ErgoToken, InputBox, OutBox, UnsignedTransactionBuilder}
+import org.ergoplatform.appkit.{
+  BlockchainContext,
+  ErgoContract,
+  ErgoId,
+  ErgoToken,
+  InputBox,
+  OutBox,
+  OutBoxBuilder,
+  UnsignedTransactionBuilder
+}
 import special.collection.Coll
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 
 class SLTCreateLendProxyBox(
   override val value: Long,
-  fundingInfoRegister: FundingInfoRegister,
-  lendingProjectDetailsRegister: LendingProjectDetailsRegister,
-  borrowerRegister: BorrowerRegister,
-  loanTokenIdRegister: CollByteRegister,
+  val fundingInfoRegister: FundingInfoRegister,
+  val lendingProjectDetailsRegister: LendingProjectDetailsRegister,
+  val borrowerRegister: BorrowerRegister,
+  val loanTokenIdRegister: CollByteRegister,
   override val tokens: Seq[ErgoToken] = Seq(),
   override val id: ErgoId = ErgoId.create(""),
   override val box: Option[Box] = Option(null)
@@ -56,19 +70,26 @@ class SLTCreateLendProxyBox(
   override def getOutBox(
     ctx: BlockchainContext,
     txB: UnsignedTransactionBuilder
-  ): OutBox =
-    txB
+  ): OutBox = {
+    val outBoxBuilder: OutBoxBuilder = txB
       .outBoxBuilder()
       .value(value)
       .contract(this.getContract(ctx))
-      .tokens(tokens: _*)
       .registers(
         fundingInfoRegister.toRegister,
         lendingProjectDetailsRegister.toRegister,
         borrowerRegister.toRegister,
         loanTokenIdRegister.toRegister
       )
-      .build()
+
+    val outBoxBuilderWithTokenCheck: OutBoxBuilder =
+      if (tokens.nonEmpty)
+        outBoxBuilder.tokens(tokens: _*)
+      else
+        outBoxBuilder
+
+    outBoxBuilderWithTokenCheck.build()
+  }
 
   // Get Contract from the registers.
   // use Exle-generics. Contract
@@ -109,7 +130,6 @@ object CreateLendProxyContractConstants {
 object SLTCreateLendProxyBox {
 
   def getBox(
-    value: Long,
     borrowerPk: String,
     loanToken: Array[Byte],
     projectName: String,
@@ -117,7 +137,8 @@ object SLTCreateLendProxyBox {
     deadlineHeight: Long,
     goal: Long,
     interestRate: Long,
-    repaymentHeightLength: Long
+    repaymentHeightLength: Long,
+    value: Long = TxFeeCosts.creationTxFee
   )(implicit ctx: BlockchainContext): SLTCreateLendProxyBox = {
     val fundingInfoRegister: FundingInfoRegister = FundingInfoRegister(
       fundingGoal = goal,

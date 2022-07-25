@@ -1,9 +1,24 @@
 package SLTokens.boxes
 
-import SLTokens.{SLTTokens, createFundRepaymentPaymentBox, createGenesisServiceBox, createWrappedSLTLendBox, createWrappedSLTRepaymentBox}
+import SLTokens.{
+  createFundRepaymentPaymentBox,
+  createGenesisServiceBox,
+  createWrappedSLTLendBox,
+  createWrappedSLTRepaymentBox,
+  SLTTokens
+}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import SLErgs.{client, dummyAddress, dummyTxId, goal, interestRate, loanDescription, loanName, repaymentHeightLength}
+import SLErgs.{
+  client,
+  dummyAddress,
+  dummyTxId,
+  goal,
+  interestRate,
+  loanDescription,
+  loanName,
+  repaymentHeightLength
+}
 import boxes.FundsToAddressBox
 import commons.configs.ServiceConfig.serviceOwner
 import commons.configs.{ServiceConfig, Tokens}
@@ -166,16 +181,22 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
         val fundedValue: Long = 1000
 
         // Get repayment box as InputBox
-        val inputRepaymentBox: InputBox = wrappedRepaymentBox.
-          getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+        val inputRepaymentBox: InputBox = wrappedRepaymentBox.getAsInputBox(
+          ctx,
+          ctx.newTxBuilder(),
+          dummyTxId,
+          0
+        )
 
         // Create Fund Repayment Proxy Box
         val repaymentPaymentBox: SLTFundRepaymentProxyBox =
-          new SLTFundRepaymentProxyBox(createFundRepaymentPaymentBox(
-            repaymentBoxId = inputRepaymentBox.getId.getBytes,
-            funderAddress = dummyAddress,
-            sigUSDValue = fundedValue
-          ))
+          new SLTFundRepaymentProxyBox(
+            createFundRepaymentPaymentBox(
+              repaymentBoxId = inputRepaymentBox.getId.getBytes,
+              funderAddress = dummyAddress,
+              sigUSDValue = fundedValue
+            )
+          )
 
         // Create Funded Repayment Input Box
         // by inserting the created inputRepaymentBox and the payment box

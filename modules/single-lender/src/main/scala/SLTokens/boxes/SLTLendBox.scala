@@ -121,7 +121,10 @@ object SLTLendBox {
     fundedSLTLendBox
   }
 
-  def getFunded(sltLendBox: SLTLendBox, paymentBox: SLTFundLendProxyBox): SLTLendBox = {
+  def getFunded(
+    sltLendBox: SLTLendBox,
+    paymentBox: SLTFundLendProxyBox
+  ): SLTLendBox = {
     val lenderAddressRegister: SingleLenderRegister = paymentBox.lenderRegister
     val lenderAddress: Address =
       Address.create(lenderAddressRegister.lendersAddress)
