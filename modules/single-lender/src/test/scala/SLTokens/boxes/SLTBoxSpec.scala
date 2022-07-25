@@ -1,6 +1,7 @@
 package SLTokens.boxes
 
 import SLTokens.{
+  createFundRepaymentPaymentBox,
   createGenesisServiceBox,
   createWrappedSLTLendBox,
   createWrappedSLTRepaymentBox,
@@ -178,13 +179,32 @@ class SLTBoxSpec extends AnyWordSpec with Matchers {
     "fund RepaymentBox has correct loan token value" in {
       client.getClient.execute { ctx =>
         val fundedValue: Long = 1000
-        val paymentBox: InputBox = FundsToAddressBox(
-          address = dummyAddress,
-          tokens = Seq(SigUSD.apply(fundedValue).toErgoToken)
-        ).getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+
+        // Get repayment box as InputBox
+        val inputRepaymentBox: InputBox = wrappedRepaymentBox.getAsInputBox(
+          ctx,
+          ctx.newTxBuilder(),
+          dummyTxId,
+          0
+        )
+
+        // Create Fund Repayment Proxy Box
+        val repaymentPaymentBox: SLTFundRepaymentProxyBox =
+          new SLTFundRepaymentProxyBox(
+            createFundRepaymentPaymentBox(
+              repaymentBoxId = inputRepaymentBox.getId.getBytes,
+              funderAddress = dummyAddress,
+              sigUSDValue = fundedValue
+            )
+          )
+
+        // Create Funded Repayment Input Box
+        // by inserting the created inputRepaymentBox and the payment box
         val fundedSLTRepaymentInputBox: InputBox = SLTRepaymentBox
-          .fundBox(wrappedRepaymentBox, paymentBox)
+          .fundBox(new SLTRepaymentBox(inputRepaymentBox), repaymentPaymentBox)
           .getAsInputBox(ctx, ctx.newTxBuilder(), dummyTxId, 0)
+
+        // Wrap the new funded repayment box
         val fundedWrappedSLTRepaymentBox: SLTRepaymentBox =
           new SLTRepaymentBox(fundedSLTRepaymentInputBox)
 

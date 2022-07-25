@@ -12,7 +12,7 @@ import SLTokens.{
 import common.ErgoTestBase
 import org.ergoplatform.appkit.{InputBox, UnsignedTransactionBuilder}
 
-class SLTRepaymentFundTxSpec extends ErgoTestBase {
+class SLTFundRepaymentTxSpec extends ErgoTestBase {
   "Fund Repayment Tx" should {
     client.getClient.execute { implicit ctx =>
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
@@ -22,7 +22,7 @@ class SLTRepaymentFundTxSpec extends ErgoTestBase {
       val repaymentInputBox: InputBox =
         inRepaymentBox.getOutBox(ctx, txB).convertToInputWith(dummyTxId, 0)
       val fundLendPaymentInputBox: InputBox = createFundRepaymentPaymentBox(
-        repaymentInputBox.getId.toString,
+        repaymentInputBox.getId.getBytes,
         sigUSDValue = inRepaymentBox.fundingInfoRegister.fundingGoal
       )
 
@@ -37,7 +37,8 @@ class SLTRepaymentFundTxSpec extends ErgoTestBase {
       val outBoxAsInputBox: Seq[InputBox] =
         sltRepaymentFundTx.getOutBoxesAsInputBoxes(dummyTxId)
 
-      val outRepaymentBox: SLTLendBox = new SLTLendBox(outBoxAsInputBox.head)
+      val outRepaymentBox: SLTRepaymentBox =
+        new SLTRepaymentBox(outBoxAsInputBox.head)
 
       "repayment box correct" in {
         assert(inRepaymentBox.tokens.length == 1)
@@ -52,7 +53,7 @@ class SLTRepaymentFundTxSpec extends ErgoTestBase {
         )
         assert(
           outRepaymentBox.borrowerRegister.address == inRepaymentBox.borrowerRegister.address,
-          s"OutLendBox: ${outRepaymentBox.borrowerRegister.address}, InLendBox: ${inRepaymentBox.borrowerRegister.address}"
+          s"OutRepaymentBox: ${outRepaymentBox.borrowerRegister.address}, InRepaymentBox: ${inRepaymentBox.borrowerRegister.address}"
         )
         assert(
           outRepaymentBox.loanTokenIdRegister.value

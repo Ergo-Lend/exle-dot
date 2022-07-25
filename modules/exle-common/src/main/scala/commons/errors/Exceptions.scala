@@ -37,6 +37,13 @@ final case class ProveException(
       if (additionalInfo.nonEmpty) s"${message}: ${additionalInfo}" else message
     )
 
+final case class ReducedException(
+  private val message: String = "Tx proving failed",
+  val additionalInfo: String = ""
+) extends Throwable(
+      if (additionalInfo.nonEmpty) s"${message}: ${additionalInfo}" else message
+    )
+
 final case class IncorrectBoxStateException(
   private val message: String = s"BoxState is incorrect",
   val additionalInfo: String = ""

@@ -11,30 +11,14 @@ import javax.inject.Inject
 class SLTProxyContractService @Inject() (client: Client)
     extends ProxyContracts(client) {
 
-  def getSLTLendCreateProxyContract(
-    borrowerPk: String,
-    loanToken: Array[Byte],
-    deadlineHeight: Long,
-    goal: Long,
-    interestRate: Long,
-    repaymentHeightLength: Long
-  ): ErgoContract =
+  def getSLTLendCreateProxyContract: ErgoContract =
     try {
       val sltServiceNFTId = SLTTokens.serviceNFTId.getBytes
       val sltLendTokenId = SLTTokens.lendTokenId.getBytes
-      val borrowerAddress =
-        Address.create(borrowerPk).getErgoAddress.script.bytes
 
       val contractConstants = ConstantsBuilder
         .create()
-        .item("_BorrowerPk", borrowerAddress)
-        .item("_LoanTokenId", loanToken)
         .item("_MinFee", minFee)
-        .item("_RefundHeightThreshold", getRefundHeightThreshold)
-        .item("_Goal", goal)
-        .item("_DeadlineHeight", deadlineHeight)
-        .item("_InterestRate", interestRate)
-        .item("_RepaymentHeightLength", repaymentHeightLength)
         .item("_SLTServiceNFTId", sltServiceNFTId)
         .item("_SLTLendTokenId", sltLendTokenId)
         .build()
@@ -49,35 +33,10 @@ class SLTProxyContractService @Inject() (client: Client)
       case e: Exception => throw e
     }
 
-  // SigUSD Implementation of CreateLendBoxProxyContract
-  def getSigUSDCreateLendBoxProxyContract(
-    borrowerPk: String,
-    deadlineHeight: Long,
-    goal: Long,
-    interestRate: Long,
-    repaymentHeightLength: Long
-  ): ErgoContract =
-    getSLTLendCreateProxyContract(
-      borrowerPk = borrowerPk,
-      loanToken = SigUSD.id.getBytes,
-      deadlineHeight = deadlineHeight,
-      goal = goal,
-      interestRate = interestRate,
-      repaymentHeightLength = repaymentHeightLength
-    )
-
-  def getSLTFundLendBoxProxyContract(
-    lendBoxId: String,
-    lenderAddress: String
-  ): ErgoContract =
+  def getSLTFundLendBoxProxyContract: ErgoContract =
     try {
-      val lenderPk =
-        Address.create(lenderAddress).getErgoAddress.script.bytes
-
       val contractConstants = ConstantsBuilder
         .create()
-        .item("_BoxIdToFund", ErgoId.create(lendBoxId).getBytes)
-        .item("_LenderPk", lenderPk)
         .item("_MinFee", minFee)
         .item("_SLTLendTokenId", SLTTokens.lendTokenId.getBytes)
         .build()
@@ -92,25 +51,17 @@ class SLTProxyContractService @Inject() (client: Client)
       case e: Exception => throw e
     }
 
-  def getSLTFundRepaymentBoxProxyContract(
-    repaymentBoxId: String,
-    funderAddress: String
-  ): ErgoContract =
+  def getSLTFundRepaymentBoxProxyContract: ErgoContract =
     try {
-      val funderPk =
-        Address.create(funderAddress).getErgoAddress.script.bytes
-
       val contractConstants = ConstantsBuilder
         .create()
-        .item("_BoxIdToFund", ErgoId.create(repaymentBoxId).getBytes)
-        .item("_FunderPk", funderPk)
         .item("_MinFee", minFee)
         .item("_SLTRepaymentTokenId", SLTTokens.repaymentTokenId.getBytes)
         .build()
 
       val proxyContract = compile(
         contractConstants,
-        ExleContracts.DummyErgoScript.contractScript
+        ExleContracts.SLTFundRepaymentBoxProxyContract.contractScript
       )
 
       proxyContract

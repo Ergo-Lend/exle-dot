@@ -13,7 +13,7 @@ import org.ergoplatform.appkit.{
   * In this test, we will need 2 components mainly.
   * LendBox, and ServiceBox
   */
-class SLTLendRefundTxSpec extends ErgoTestBase {
+class SLTRefundLendTxSpec extends ErgoTestBase {
   "Lend Refund Tx" should {
     val sltServiceBox: SLTServiceBox = createGenesisServiceBox()
     val sltLendBox: SLTLendBox =

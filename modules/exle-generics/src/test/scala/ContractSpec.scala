@@ -2,6 +2,7 @@ import common.ErgoTestBase
 import contracts.Contract
 import org.ergoplatform.appkit.{
   BlockchainContext,
+  Constants,
   ConstantsBuilder,
   ErgoContract
 }
@@ -20,7 +21,7 @@ class ContractSpec extends ErgoTestBase {
       |}
       |""".stripMargin
 
-  val constantsBuilder =
+  val constantsBuilder: Constants =
     new ConstantsBuilder()
       .item(dummyConstant1._1, dummyConstant1._2)
       .item(dummyConstant2._1, dummyConstant2._2)

@@ -71,9 +71,17 @@ object ExleContracts extends Enum[ExleContract] {
 
   // ===== SLT [Single Lender Tokens] ===== //
   // SLT Proxy Contracts
-  case object SLTCreateLendBoxProxyContract extends SLTProxyContract
-  case object SLTFundLendBoxProxyContract extends SLTProxyContract
-  case object SLTFundRepaymentBoxProxyContract extends SLTProxyContract
+  case object SLTCreateLendBoxProxyContract extends SLTProxyContract {
+    override val version: Long = 2
+  }
+
+  case object SLTFundLendBoxProxyContract extends SLTProxyContract {
+    override val version: Long = 2
+  }
+
+  case object SLTFundRepaymentBoxProxyContract extends SLTProxyContract {
+    override val version: Long = 2
+  }
 
   // SLT Box Guard Scripts
   case object SLTServiceBoxGuardScript extends SLTBoxGuardScript
@@ -90,7 +98,7 @@ object ExleContracts extends Enum[ExleContract] {
 
 //<editor-fold desc="Contract Domains">
 /**
-  * ===== Contract Domains Instantiation =====
+  * // ===== Contract Domains Instantiation =====
   */
 // Single Lender Tokens
 sealed trait SLTContract extends ExleContract {

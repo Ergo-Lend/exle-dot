@@ -23,6 +23,7 @@ trait ErgoTestBase extends UnitSpec {
 
   // contract: true && false
   val trueAndFalseAddress: Address = Address.create("m3iBKr65o53izn")
+  val ergolendDevAddress: Address = Address.create("9f83nJY4x9QkHmeek6PJMcTrf2xcaHAT3j5HD5sANXibXjMUixn")
 
   val dummyAddress: Address = trueAddress
   val dummyTxId: String =

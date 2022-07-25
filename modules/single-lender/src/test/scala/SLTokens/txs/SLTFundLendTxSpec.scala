@@ -10,26 +10,36 @@ import SLTokens.{
 import common.ErgoTestBase
 import org.ergoplatform.appkit.{InputBox, OutBox, UnsignedTransactionBuilder}
 
-class SLTLendFundTxSpec extends ErgoTestBase {
+class SLTFundLendTxSpec extends ErgoTestBase {
   "Fund Lend Tx" should {
     client.getClient.execute { implicit ctx =>
       val txB: UnsignedTransactionBuilder = ctx.newTxBuilder()
+
+      // Create a wrapped SLT Lend Box
       val inLendBox: SLTLendBox = createWrappedSLTLendBox()
+
+      // Turn the LendBox into an InputBox
       val lendInputBox: InputBox =
         inLendBox.getOutBox(ctx, txB).convertToInputWith(dummyTxId, 0)
+
+      // Create a PaymentBox to fund the LendBox
       val fundLendPaymentInputBox: InputBox = createFundLendPaymentBox(
-        lendInputBox.getId.toString,
+        lendBoxId = lendInputBox.getId.getBytes,
         value = inLendBox.fundingInfoRegister.fundingGoal
       )
 
+      // Put both boxes into a Seq
       val inputBoxes: Seq[InputBox] = Seq(lendInputBox, fundLendPaymentInputBox)
 
+      // Create the FundLendTx and sign the tx
       val sltLendFundTx: SLTLendFundTx = SLTLendFundTx(inputBoxes)
       sltLendFundTx.signTx
 
+      // Get the outboxes as Input Boxes
       val outBoxAsInputBox: Seq[InputBox] =
         sltLendFundTx.getOutBoxesAsInputBoxes(dummyTxId)
 
+      // Wrap the OutBox LendBox
       val outLendBox: SLTLendBox = new SLTLendBox(outBoxAsInputBox.head)
 
       "lend box correct" in {
